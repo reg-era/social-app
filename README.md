@@ -37,8 +37,10 @@ Any new file structure is welcome this struct doesnt follow any pattern so just 
 ├── backend/
 │   ├── cmd/
 │   │   └── server/
-│   │       └── main.go
-│   ├── internal/
+|   |   |   └── main.go
+│   │   │
+│   │   └── handler.go
+│   ├── core/
 │   │   ├── auth/
 │   │   ├── user/
 │   │   ├── post/
