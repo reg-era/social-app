@@ -1,6 +1,8 @@
 .vscode/
 
-*.db
-*.sqlite
+# *.db
+# *.sqlite
 
 .env
+
+migrate/
