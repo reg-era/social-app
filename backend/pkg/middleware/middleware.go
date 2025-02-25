@@ -5,7 +5,9 @@ import (
 	"net/http"
 )
 
-func MiddleWare(w http.ResponseWriter, r *http.Request, db *sql.DB, next http.Handler) http.Handler {
+type CustomizedHandler func(http.ResponseWriter, *http.Request, *sql.DB, int)
+
+func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -15,6 +17,10 @@ func MiddleWare(w http.ResponseWriter, r *http.Request, db *sql.DB, next http.Ha
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		next.ServeHTTP(w, r)
+
+		// handle 401
+		userId := 69
+
+		handler(w, r, db, userId)
 	})
 }

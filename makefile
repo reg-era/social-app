@@ -1,6 +1,6 @@
 run-backend:
 	@echo "Running backend..."
-	@cd backend && PORT=8080 go run cmd/main.go
+	@cd backend && PORT=8080 go run cmd/server/main.go
 
 run-frontend:
 	@echo "Running frontend..."
