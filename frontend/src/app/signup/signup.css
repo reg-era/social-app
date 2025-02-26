@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #6c5ce7;
+  --primary-hover: #5649c0;
+  --bg-color: #1a1a2e;
+  --card-bg: #16213e;
+  --text-color: #e5e5e5;
+  --input-bg: #0f3460;
+  --input-border: #2a4375;
+  --input-focus: #a4b8fd;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.2) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(145, 105, 245, 0.2) 0%, transparent 20%);
+  overflow-x: hidden;
+}
+
+.signup-container {
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  width: 380px;
+  max-width: 90%;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.signup-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.signup-container::-webkit-scrollbar-track {
+  background: var(--card-bg);
+}
+
+.signup-container::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 6px;
+}
+
+.signup-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--primary-color), #fc5c7d, var(--primary-color));
+  z-index: -1;
+  border-radius: 1.1rem;
+  filter: blur(10px);
+  opacity: 0.4;
+}
+
+.signup-container h1 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 1px;
+  position: relative;
+  display: inline-block;
+}
+
+.signup-container h1::after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  bottom: -8px;
+  left: 20%;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-form label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.signup-form input,
+.signup-form textarea {
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.signup-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.signup-form input:focus,
+.signup-form textarea:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(164, 184, 253, 0.3);
+}
+
+.signup-form button {
+  padding: 0.8rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.signup-form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.6s ease;
+  z-index: -1;
+}
+
+.signup-form button:hover::before {
+  left: 100%;
+}
+
+.signup-form button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+}
+
+.signup-form p {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #b8b8d4;
+}
+
+.signup-form a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.signup-form a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.signup-form a:hover {
+  color: #a4b8fd;
+}
+
+.signup-form a:hover::after {
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .signup-container {
+    padding: 1.5rem;
+    width: 95%;
+  }
+  
+  .signup-container h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Special styling for file input */
+input[type="file"] {
+  background-color: transparent;
+  border: 1px dashed var(--input-border);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+input[type="file"]:hover {
+  border-color: var(--primary-color);
+}
+
+/* Date input styling */
+input[type="date"] {
+  color-scheme: dark;
+}
