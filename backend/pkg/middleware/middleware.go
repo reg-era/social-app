@@ -19,7 +19,7 @@ func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 		}
 
 		// handle 401
-		userId := 69
+		userId := 1
 
 		handler(w, r, db, userId)
 	})

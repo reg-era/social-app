@@ -14,5 +14,5 @@ export function middleware(req) {
 
 function checkAuthentication(req) {
     // fetch from backend to see session
-    return false;
+    return true;
 }

@@ -6,13 +6,13 @@ import (
 	"os"
 
 	server "social/cmd"
-	"social/pkg/db"
+	data "social/pkg/db"
 )
 
 func main() {
 	port := os.Getenv("PORT")
 
-	dataConn, err := db.Init()
+	dataConn, err := data.Init()
 	if err != nil {
 		log.Fatalf("initialize database faild: %v\n", err)
 	}
