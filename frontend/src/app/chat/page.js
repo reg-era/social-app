@@ -14,10 +14,10 @@ const ChatPage = () => {
   
   // Sample data - replace with your actual data
   const users = [
-    { id: 1, name: 'Jane Smith', status: 'online', lastMessage: 'Hey, how are you?', time: '10:30 AM', unread: 2 },
-    { id: 2, name: 'John Doe', status: 'offline', lastMessage: 'See you tomorrow!', time: 'Yesterday', unread: 0 },
-    { id: 3, name: 'Sarah Williams', status: 'online', lastMessage: 'Thanks for your help!', time: '09:15 AM', unread: 1 },
-    { id: 5, name: 'Emily Davis', status: 'online', lastMessage: 'Did you see the new post?', time: '11:45 AM', unread: 3 },
+    { id: 1, name: 'TIKCHBILA', status: 'online', time: '10:30 AM', unread: 2 },
+    { id: 2, name: 'TIWLIWLA', status: 'offline', time: 'Yesterday', unread: 0 },
+    { id: 3, name: 'L33VVAK', status: 'online', time: '09:15 AM', unread: 1 },
+    { id: 5, name: 'CHIWA7ED', status: 'online', time: '11:45 AM', unread: 3 },
   ];
 
   return (
