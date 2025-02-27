@@ -79,7 +79,7 @@ func AddUser(user *User, db *sql.DB) (int, error) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return 500, fmt.Errorf("Status Internal Server Error")
+		return 500, fmt.Errorf("status internal server error")
 	}
 
 	if _, err := data.Create(db,

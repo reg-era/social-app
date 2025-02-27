@@ -3,7 +3,6 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	data "social/pkg/db"
@@ -76,6 +75,5 @@ func ValidateSession(session string, db *sql.DB) (int, error) {
 	if err := info.Scan(&userId); err != nil {
 		return 0, err
 	}
-	fmt.Println(userId)
 	return userId, nil
 }

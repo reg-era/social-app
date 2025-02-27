@@ -32,7 +32,7 @@ export default function Signup() {
       })
 
       if (res.ok) {
-        window.location.href = '/home';
+        window.location.href = '/login';
       } else {
         throw new Error('faild to singup');
       }

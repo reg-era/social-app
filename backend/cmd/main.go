@@ -21,12 +21,12 @@ func main() {
 	router := http.NewServeMux()
 
 	handlers := map[string]middleware.CustomizedHandler{
+		"/api/":        nil,
 		"/api/user":    core.HandleUser,
 		"/api/post":    core.HandlePost,
 		"/api/comment": core.HandleComment,
 		"/api/group":   core.HandleGroup,
 		"/api/ws":      core.HandleWS,
-		"/api/":        nil,
 	}
 
 	for endpoint, handler := range handlers {

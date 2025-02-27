@@ -29,12 +29,11 @@ export default function Login() {
       if (res.ok) {
         const auth = res.headers.get('Authorization');
         document.cookie = `auth_session=${auth}; path=/;`;
-        window.location.href = '/home';
+        window.location.href = '/';
       } else {
         throw new Error('faild to singin');
       }
     } catch (error) {
-      console.log(error)
       setError('Invalid credentials. Please try again.');
     }
   };

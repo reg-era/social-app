@@ -14,7 +14,6 @@ func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		// w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -26,46 +25,13 @@ func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 			return
 		}
 
-		if handler == nil {
-			switch r.URL.Path {
-			case "/api/login":
-				if r.Method == http.MethodPost {
-					core.HandleLogin(w, r, db)
-				}
-
-			case "/api/check":
-				if r.Method == http.MethodPost {
-					token := r.Header.Get("Authorization")
-					if token == "" {
-						utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{
-							"error": "Unauthorized operation",
-						})
-						return
-					}
-
-					_, err := core.ValidateSession(token, db)
-					if err != nil {
-						utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{
-							"error": "Unauthorized operation",
-						})
-					} else {
-						utils.RespondWithJSON(w, http.StatusOK, map[string]string{
-							"valid": "valid user",
-						})
-					}
-					return
-				}
-
-			default:
-				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{
-					"error": "Page Not Found",
-				})
-			}
+		if r.URL.Path == "/api/login" && r.Method == http.MethodPost {
+			core.HandleLogin(w, r, db)
 			return
 		}
 
 		token := r.Header.Get("Authorization")
-		if token == ""  {
+		if token == "" {
 			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{
 				"error": "Unauthorized operation",
 			})
@@ -76,6 +42,13 @@ func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{
 				"error": "Unauthorized operation",
+			})
+			return
+		}
+
+		if r.URL.Path == "/api/check" {
+			utils.RespondWithJSON(w, http.StatusOK, map[string]string{
+				"valid": "valid user",
 			})
 			return
 		}

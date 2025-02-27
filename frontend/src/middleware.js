@@ -6,7 +6,7 @@ const privateRoutes = ['/', '/profile', '/chat', '/group']
 export async function middleware(req) {
     const path = req.nextUrl.pathname
 
-    const authorized = await checkAuthentication(req.cookies.get('auth_session'))
+    const authorized = await checkAuthentication(req.cookies.get('auth_session')?.value)
 
     if (privateRoutes.includes(path) && !authorized) {
         return NextResponse.redirect(new URL('/login', req.nextUrl));
@@ -21,13 +21,13 @@ export async function middleware(req) {
 
 async function checkAuthentication(token) {
     try {
-        if (token.value.length <= 0) {
+        if (!token || token.length <= 0) {
             return false
         }
         const res = await fetch('http://127.0.0.1:8080/api/check', {
             method: 'POST',
             headers: {
-                'Authorization': token.value,
+                'Authorization': token,
             },
         });
 
