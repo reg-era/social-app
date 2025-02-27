@@ -27,8 +27,9 @@ export default function Login() {
       })
 
       if (res.ok) {
-        console.log(res.headers)
-        // window.location.href = '/home';
+        const auth = res.headers.get('Authorization');
+        document.cookie = `auth_session=${auth}; path=/;`;
+        window.location.href = '/home';
       } else {
         throw new Error('faild to singin');
       }

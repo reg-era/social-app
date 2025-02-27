@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	data "social/pkg/db"
@@ -58,12 +59,23 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	w.Header().Set("Authorization", "Bearer "+token)
+	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
+	w.Header().Set("Authorization", token)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
 		"valid": "user login succesfully ",
 	})
 }
 
 func ValidateSession(session string, db *sql.DB) (int, error) {
-	return 0, nil
+	info, err := data.Read(db, `SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
+	if err != nil {
+		return 0, err
+	}
+
+	var userId int
+	if err := info.Scan(&userId); err != nil {
+		return 0, err
+	}
+	fmt.Println(userId)
+	return userId, nil
 }
