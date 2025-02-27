@@ -10,6 +10,8 @@ import (
 
 	data "social/pkg/db"
 	"social/pkg/utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -75,12 +77,17 @@ func AddUser(user *User, db *sql.DB) (int, error) {
 		return 404, fmt.Errorf("invalid input format")
 	}
 
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 500, fmt.Errorf("Status Internal Server Error")
+	}
+
 	if _, err := data.Create(db,
 		`INSERT INTO users
 			(email, password_hash, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public)
 		VALUES
 			(?, ?, ?, ?, ?, ?, ?, ?, ?) ;`,
-		user.Email, user.Password, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {
+		user.Email, hash, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {
 		return 409, fmt.Errorf("faild to add user")
 	}
 	return 200, nil
@@ -92,13 +99,13 @@ func ReadUser(id int, db *sql.DB) (User, error) {
 	FROM users WHERE id = ? ;
 	`, id)
 	if err != nil {
-		log.Printf("reading user: %v\n",err)
+		log.Printf("reading user: %v\n", err)
 		return User{}, err
 	}
 
 	var user User
 	if err := data.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {
-		log.Printf("Scaning user: %v\n",err)
+		log.Printf("Scaning user: %v\n", err)
 		return User{}, err
 	}
 

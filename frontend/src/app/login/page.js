@@ -15,7 +15,11 @@ export default function Login() {
         return
       }
 
-      const res = await fetch('127.0.0.1:8080/api/user', {
+      const res = await fetch('http://127.0.0.1:8080/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           email: e.target.email.value,
           password: e.target.password.value,
@@ -23,11 +27,13 @@ export default function Login() {
       })
 
       if (res.ok) {
-        window.location.href = '/home';
+        console.log(res.headers)
+        // window.location.href = '/home';
       } else {
         throw new Error('faild to singin');
       }
     } catch (error) {
+      console.log(error)
       setError('Invalid credentials. Please try again.');
     }
   };

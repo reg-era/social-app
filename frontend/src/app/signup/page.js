@@ -26,7 +26,7 @@ export default function Signup() {
         return;
       }
 
-      const res = await fetch('127.0.0.1:8080/api/user', {
+      const res = await fetch('http://127.0.0.1:8080/api/user', {
         method: 'POST',
         body: JSON.stringify(data)
       })
@@ -79,23 +79,23 @@ export default function Signup() {
 }
 
 function checkDataValidation(data) {
-  if (!data.password.length <= 0 || !data.firstName.length <= 0 || !data.lastName.length <= 0 || (data.aboutMe && data.aboutMe.length > 100)) {
-    return false;
-  }
+  // if (!data.password.length <= 0 || !data.firstName.length <= 0 || !data.lastName.length <= 0 || (data.aboutMe && data.aboutMe.length > 100)) {
+    // return false;
+  // }
+// 
+  // const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  // if (!emailRegex.test(data.email)) {
+    // return false;
+  // }
+// 
+// 
+  // if (isNaN(new Date(data.dateOfBirth))) {
+    // return false;
+  // }
 
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  if (!emailRegex.test(data.email)) {
-    return false;
-  }
-
-
-  if (isNaN(new Date(data.dateOfBirth))) {
-    return false;
-  }
-
-  if (data.avatarUrl && !/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(data.avatarUrl)) {
-    return false;
-  }
+  // if (data.avatarUrl && !/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(data.avatarUrl)) {
+    // return false;
+  // }
 
   return true;
 }
