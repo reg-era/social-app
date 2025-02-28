@@ -30,6 +30,10 @@ func MiddleWare(db *sql.DB, handler CustomizedHandler) http.Handler {
 			return
 		}
 
+		if r.URL.Path == "/api/posts" && r.Method == http.MethodPost || r.URL.Path == "/api/posts" && r.Method == http.MethodGet {
+			core.HandlePost(w, r, db, 0)
+			return
+		}
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{
