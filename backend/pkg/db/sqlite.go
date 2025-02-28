@@ -13,7 +13,7 @@ import (
 )
 
 func Init() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "data/data.db")
+	db, err := sql.Open("sqlite3", "./data/data.db")
 	if err != nil {
 		return nil, fmt.Errorf("Creating db: %v", err)
 	}
