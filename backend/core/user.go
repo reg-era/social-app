@@ -2,14 +2,16 @@ package core
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 
 	data "social/pkg/db"
 	"social/pkg/utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -28,16 +30,35 @@ type User struct {
 func HandleUser(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
 	switch r.Method {
 	case http.MethodPost:
-		var user User
-
-		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Status Internal Server Error",
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "Status Bad Request",
 			})
 			return
 		}
 
+		var user User
+
+		user.Email = r.FormValue("email")
+		user.Password = r.FormValue("password")
+		user.FirstName = r.FormValue("firstName")
+		user.LastName = r.FormValue("lastName")
+		user.DateOfBirth = r.FormValue("dateOfBirth")
+		user.Nickname = r.FormValue("nickname")
+		user.AboutMe = r.FormValue("aboutMe")
+
+		hostedPath, basePath, err := utils.UploadFileData(r)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+			return
+		}
+		user.AvatarUrl = hostedPath
+
 		if status, err := AddUser(&user, db); err != nil {
+			_ = os.Remove(basePath)
 			utils.RespondWithJSON(w, status, map[string]string{
 				"error": err.Error(),
 			})
@@ -75,12 +96,17 @@ func AddUser(user *User, db *sql.DB) (int, error) {
 		return 404, fmt.Errorf("invalid input format")
 	}
 
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 500, fmt.Errorf("status internal server error")
+	}
+
 	if _, err := data.Create(db,
 		`INSERT INTO users
 			(email, password_hash, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public)
 		VALUES
 			(?, ?, ?, ?, ?, ?, ?, ?, ?) ;`,
-		user.Email, user.Password, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {
+		user.Email, hash, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {
 		return 409, fmt.Errorf("faild to add user")
 	}
 	return 200, nil
@@ -92,13 +118,13 @@ func ReadUser(id int, db *sql.DB) (User, error) {
 	FROM users WHERE id = ? ;
 	`, id)
 	if err != nil {
-		log.Printf("reading user: %v\n",err)
+		log.Printf("reading user: %v\n", err)
 		return User{}, err
 	}
 
 	var user User
 	if err := data.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {
-		log.Printf("Scaning user: %v\n",err)
+		log.Printf("Scaning user: %v\n", err)
 		return User{}, err
 	}
 

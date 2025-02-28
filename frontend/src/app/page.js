@@ -1,5 +1,5 @@
-export default function Global() {
+export default function Home() {
   return (
-      <h1>GLOBAL</h1>
+      <h1>HOME</h1>
   );
 }

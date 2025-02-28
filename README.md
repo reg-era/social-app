@@ -36,26 +36,30 @@ Any new file structure is welcome this struct doesnt follow any pattern so just 
 ```
 ├── backend/
 │   ├── cmd/
-│   │   └── server/
-|   |   |   └── main.go
-│   │   │
-│   │   └── handler.go
+|   |   └── main.go
 │   ├── core/
-│   │   ├── auth/
-│   │   ├── user/
-│   │   ├── post/
-│   │   ├── group/
-│   │   ├── chat/
-│   │   └── notification/
+│   │   ├── auth.go
+│   │   ├── user.go
+│   │   ├── post.go
+│   │   ├── group.go
+│   │   ├── chat.go
+│   │   └── notification.go
+│   ├── data/
+│   │   ├── global/
+│   │   │   └── uploaded images ...
+│   │   └── data.db
 │   ├── pkg/
 │   │   ├── db/
 │   │   │   ├── migrations/
-│   │   │   │   └── sqlite/
-│   │   │   │       ├── 000001_create_users.up.sql
-│   │   │   │       ├── 000001_create_users.down.sql
-│   │   │   │       └── ... other migrations
+│   │   │   │    ├── 000001_create_users.up.sql
+│   │   │   │    ├── 000001_create_users.down.sql
+│   │   │   │    └── ... other migrations
 │   │   │   └── sqlite.go
 │   │   ├── middleware/
+│   │   │   └── middleware.go
+│   │   ├── utils/
+│   │   │   ├── file_upload.go
+│   │   │   └── helper.go
 │   │   └── websocket/
 │   ├── Dockerfile
 │   └── go.mod

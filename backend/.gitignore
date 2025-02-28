@@ -1,6 +1,7 @@
 .vscode/
 
-*.db
+data/global/*
+data.db
 *.sqlite
 
 .env

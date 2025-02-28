@@ -25,7 +25,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.2) 0%, transparent 20%),
     radial-gradient(circle at 90% 80%, rgba(145, 105, 245, 0.2) 0%, transparent 20%);
   overflow-x: hidden;
@@ -37,20 +37,25 @@ body {
   border-radius: 1rem;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   width: 380px;
-  max-width: 90%;
+  width: 90%;
   text-align: center;
   position: relative;
   z-index: 1;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: fadeIn 0.5s ease-in-out;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .signup-container::-webkit-scrollbar {
@@ -101,11 +106,13 @@ body {
 }
 
 .signup-form {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 .signup-form label {
+  max-width: 50%;
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--text-color);
@@ -116,6 +123,7 @@ body {
 
 .signup-form input,
 .signup-form textarea {
+  width: 100%;
   padding: 0.8rem 1rem;
   margin-bottom: 1.2rem;
   border: 1px solid var(--input-border);
@@ -153,6 +161,8 @@ body {
   position: relative;
   overflow: hidden;
   z-index: 1;
+  grid-column: span 4;
+  /* Span across all columns */
 }
 
 .signup-form button::before {
@@ -181,6 +191,7 @@ body {
   margin-top: 1.5rem;
   font-size: 0.9rem;
   color: #b8b8d4;
+  grid-column: span 4;
 }
 
 .signup-form a {
@@ -210,19 +221,20 @@ body {
   width: 100%;
 }
 
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .signup-container {
-    padding: 1.5rem;
-    width: 95%;
+@media (max-width: 600px) {
+  .signup-form {
+    display: block;
   }
-  
-  .signup-container h1 {
-    font-size: 1.5rem;
+
+  .signup-form input,
+  .signup-form textarea,
+  .signup-form button {
+    width: 100%;
+    margin-bottom: 1.2rem;
   }
 }
 
-/* Special styling for file input */
+
 input[type="file"] {
   background-color: transparent;
   border: 1px dashed var(--input-border);
