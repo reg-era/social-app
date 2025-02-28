@@ -1,0 +1,43 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+
+const Sidebar = () => {
+    return (
+        <div className="sidebar left-sidebar">
+            <div className="sidebar-menu">
+                <div className="menu-item active">
+                    <FontAwesomeIcon icon={faHome} />
+                    <span>Home</span>
+                </div>
+                <div className="menu-item">
+                    <FontAwesomeIcon icon={faUser} />
+                    <span>Profile</span>
+                </div>
+                <div className="menu-item">
+                    <FontAwesomeIcon icon={faUsers} />
+                    <span>Groups</span>
+                </div>
+            </div>
+            <div className="sidebar-section">
+                <h3>Your Groups</h3>
+                <div className="sidebar-item">
+                    <div className="sidebar-icon group-icon"></div>
+                    <span>Web Development</span>
+                </div>
+                <div className="sidebar-item">
+                    <div className="sidebar-icon group-icon"></div>
+                    <span>UI/UX Design</span>
+                </div>
+                <div className="sidebar-item">
+                    <div className="sidebar-icon group-icon"></div>
+                    <span>Photography Club</span>
+                </div>
+                <div className="sidebar-item view-more">
+                    <span>See All Groups</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Sidebar;

@@ -1,6 +1,6 @@
 "use client"
 
-import './login.css';
+import '../../style/login.css';
 import { useState } from 'react';
 
 export default function Login() {

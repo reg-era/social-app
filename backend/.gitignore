@@ -1,7 +1,0 @@
-.vscode/
-
-data/global/*
-data.db
-*.sqlite
-
-.env

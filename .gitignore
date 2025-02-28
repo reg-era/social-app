@@ -23,3 +23,16 @@ Thumbs.db
 
 # Typescript
 *.tsbuildinfo
+
+
+.vscode/
+
+.png
+.jpg
+.jpeg
+.gif
+
+data.db
+.sqlite
+
+.env
