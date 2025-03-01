@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	data "social/pkg/db"
 	"social/pkg/utils"
@@ -30,7 +32,7 @@ type User struct {
 func HandleUser(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
 	switch r.Method {
 	case http.MethodPost:
-		err := r.ParseMultipartForm(10 << 20)
+		err := r.ParseMultipartForm(100 << 20)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
 				"error": "Status Bad Request",
@@ -48,17 +50,22 @@ func HandleUser(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 		user.Nickname = r.FormValue("nickname")
 		user.AboutMe = r.FormValue("aboutMe")
 
-		hostedPath, basePath, err := utils.UploadFileData(r)
-		if err != nil {
-			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
-				"error": err.Error(),
-			})
-			return
+		file, handler, err := r.FormFile("avatar")
+		if err == nil {
+			path, err := utils.UploadFileData(file, handler)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+					"error": err.Error(),
+				})
+				return
+			}
+			user.AvatarUrl = filepath.Join("api/global/", path)
 		}
-		user.AvatarUrl = hostedPath
 
 		if status, err := AddUser(&user, db); err != nil {
-			_ = os.Remove(basePath)
+			if user.AvatarUrl != "" {
+				_ = os.Remove(strings.ReplaceAll(user.AvatarUrl, "api/global/", "data/global/"))
+			}
 			utils.RespondWithJSON(w, status, map[string]string{
 				"error": err.Error(),
 			})

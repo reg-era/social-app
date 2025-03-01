@@ -27,12 +27,12 @@ Thumbs.db
 
 .vscode/
 
-.png
-.jpg
-.jpeg
-.gif
+*.png
+*.jpg
+*.jpeg
+*.gif
 
-data.db
-.sqlite
+*.db
+*.sqlite
 
 .env
