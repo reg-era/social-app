@@ -3,10 +3,11 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"path"
 
 	data "social/pkg/db"
+	"social/pkg/utils"
 )
 
 type Post struct {
@@ -20,24 +21,36 @@ type Post struct {
 }
 
 func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
-	fmt.Println("Handling post")
-
 	switch r.Method {
 	case http.MethodPost:
-		var post Post
-		if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		content := r.FormValue("post")
+		file, handler, err := r.FormFile("image")
+		var imagePath string
+		if err == nil {
+			imagePath, err = utils.UploadFileData(file, handler)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+					"error": err.Error(),
+				})
+				return
+			}
 		}
-		query := "INSERT INTO posts (id, user_id, content, image_url, shown_to, group_id) VALUES (?, ?, ?, ?, ?, ?)"
-		_, err := data.Create(db, query, post.ID, post.UserID, post.Content, post.ImageURL, post.ShownTo, post.GroupID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(post)
 
+		if imagePath != "" {
+			imagePath = path.Join("data/global/", imagePath)
+		}
+
+		_, err = data.Create(db, `INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+				"faild": "Status Internal Server Error",
+			})
+			return
+		}
+
+		utils.RespondWithJSON(w, http.StatusOK, map[string]string{
+			"valid": "post add succesfuly",
+		})
 	case http.MethodGet:
 		query := "SELECT * FROM posts WHERE user_id = ?"
 		rows, err := db.Query(query, userId)

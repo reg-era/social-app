@@ -1,4 +1,4 @@
-const CommentSection = () => {
+const CommentSection = ({postId}) => {
     return (
         <div className="post-comments">
             <div className="comment-item">
@@ -6,10 +6,6 @@ const CommentSection = () => {
                 <div className="comment-content">
                     <div className="comment-author">Jane Smith</div>
                     <div className="comment-text">This looks amazing! Great job!</div>
-                    <div className="comment-actions">
-                        <span className="comment-reply">Reply</span>
-                        <span className="comment-time">15 min</span>
-                    </div>
                 </div>
             </div>
             <div className="add-comment">

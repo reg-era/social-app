@@ -1,20 +1,14 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
-
 const Sidebar = () => {
     return (
         <div className="sidebar left-sidebar">
             <div className="sidebar-menu">
                 <div className="menu-item active">
-                    <FontAwesomeIcon icon={faHome} />
                     <span>Home</span>
                 </div>
                 <div className="menu-item">
-                    <FontAwesomeIcon icon={faUser} />
                     <span>Profile</span>
                 </div>
                 <div className="menu-item">
-                    <FontAwesomeIcon icon={faUsers} />
                     <span>Groups</span>
                 </div>
             </div>

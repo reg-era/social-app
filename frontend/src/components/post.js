@@ -1,7 +1,11 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisH, faComment } from '@fortawesome/free-solid-svg-icons';
+"use client"
 
-const PostCard = ({ authorName, postTime, postText, commentsCount }) => {
+import CommentSection from "./comment.js";
+import { useState } from "react";
+
+const PostCard = ({ PostId, authorName, postTime, postText, commentsCount }) => {
+    const [showComments, setShowComments] = useState(false);
+
     return (
         <div className="post-card">
             <div className="post-header">
@@ -9,9 +13,6 @@ const PostCard = ({ authorName, postTime, postText, commentsCount }) => {
                 <div className="post-info">
                     <div className="post-author-name">{authorName}</div>
                     <div className="post-time">{postTime}</div>
-                </div>
-                <div className="post-options">
-                    <FontAwesomeIcon icon={faEllipsisH} />
                 </div>
             </div>
             <div className="post-content">
@@ -21,11 +22,11 @@ const PostCard = ({ authorName, postTime, postText, commentsCount }) => {
                 <div className="comments">{commentsCount} comments</div>
             </div>
             <div className="post-actions">
-                <button className="comment-button">
-                    <FontAwesomeIcon icon={faComment} />
+                <button className="comment-button" onClick={() => setShowComments(!showComments)}>
                     <span>Comment</span>
                 </button>
             </div>
+            {showComments && <CommentSection PostId={PostId} />}
         </div>
     );
 };
