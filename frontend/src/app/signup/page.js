@@ -50,15 +50,15 @@ export default function Signup() {
 
         <label htmlFor="lastName">Last Name</label>
         <input type="text" name="lastName" id="lastname" required />
-
-        <label htmlFor="nickname">Nickname (Optional)</label>
-        <input type="text" name="nickname" id="nickname" />
-
+        
         <label htmlFor="email">Email</label>
         <input type="email" name="email" id="email" required />
 
         <label htmlFor="password">Password</label>
         <input type="password" name="password" id="password" required />
+
+        <label htmlFor="nickname">Nickname (Optional)</label>
+        <input type="text" name="nickname" id="nickname" />
 
         <label htmlFor="date">Date of Birth</label>
         <input type="date" name="date" id="date" required />

@@ -54,9 +54,17 @@ func Create(db *sql.DB, query string, args ...any) (int64, error) {
 }
 
 // use this function to reade from a db
-func Read(db *sql.DB, query string, args ...any) (*sql.Row, error) {
+func Read(db *sql.DB, query string, args ...any) (*sql.Row) {
 	row := db.QueryRow(query, args...)
-	return row, nil
+	return row
+}
+
+func ReadAll(db *sql.DB, query string, args ...any) (*sql.Rows, error) {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }
 
 // use this function to update in db

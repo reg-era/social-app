@@ -120,14 +120,10 @@ func AddUser(user *User, db *sql.DB) (int, error) {
 }
 
 func ReadUser(id int, db *sql.DB) (User, error) {
-	data, err := data.Read(db, `
+	data:= data.Read(db, `
 	SELECT email, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public
 	FROM users WHERE id = ? ;
 	`, id)
-	if err != nil {
-		log.Printf("reading user: %v\n", err)
-		return User{}, err
-	}
 
 	var user User
 	if err := data.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {

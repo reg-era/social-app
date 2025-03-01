@@ -2,22 +2,22 @@ package core
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
 	"path"
+	"strconv"
 
 	data "social/pkg/db"
 	"social/pkg/utils"
 )
 
 type Post struct {
-	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
-	Content   string `json:"content"`
-	ImageURL  string `json:"image_url"`
-	ShownTo   string `json:"shown_to"`
-	GroupID   string `json:"group_id"`
-	CreatedAt string `json:"created_at"`
+	ID       int    `json:"PostId"`
+	Username string `json:"authorName"`
+	Content  string `json:"postText"`
+	ImageURL string `json:"imagePostUrl"`
+	// ShownTo   string `json:"shown_to"`
+	// GroupID   string `json:"group_id"`
+	CreatedAt string `json:"postTime"`
 }
 
 func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
@@ -37,10 +37,10 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 		}
 
 		if imagePath != "" {
-			imagePath = path.Join("data/global/", imagePath)
+			imagePath = path.Join("api/global/", imagePath)
 		}
 
-		_, err = data.Create(db, `INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
+		postId, err := data.Create(db, `INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",
@@ -48,29 +48,102 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]string{
-			"valid": "post add succesfuly",
-		})
-	case http.MethodGet:
-		query := "SELECT * FROM posts WHERE user_id = ?"
-		rows, err := db.Query(query, userId)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		resPost := data.Read(db, `
+		SELECT users.first_name,users.last_name,posts.content,posts.image_url,posts.created_at FROM posts
+		JOIN users ON posts.user_id = users.id
+		WHERE posts.id = ?
+		`, postId)
+
+		var post Post
+		var first, last string
+		if err := resPost.Scan(&first, &last, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+				"faild": "Status Internal Server Error",
+			})
 			return
 		}
-		defer rows.Close()
-
-		var posts []Post
-		for rows.Next() {
-			var post Post
-			if err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.ImageURL, &post.ShownTo, &post.GroupID, &post.CreatedAt); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+		post.ID = int(postId)
+		post.Username = first + " " + last
+		utils.RespondWithJSON(w, http.StatusCreated, post)
+	case http.MethodGet:
+		response := struct {
+			Posts  []Post `json:"posts"`
+			NextId int    `json:"next_id"`
+		}{}
+		param := r.URL.Query().Get("post_id")
+		if param != "" {
+			offset, err := strconv.Atoi(param)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+					"error": "Status Bad Request",
+				})
 				return
 			}
-			posts = append(posts, post)
-		}
-		json.NewEncoder(w).Encode(posts)
+			data, err := data.ReadAll(db, `SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+					"error": "Status Internal Server Error",
+				})
+				return
+			}
+			defer data.Close()
+			var allPost []Post
+			for data.Next() {
+				var post Post
+				var first, last string
+				if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"faild": "Status Internal Server Error",
+					})
+					return
+				}
+				post.Username = first + " " + last
+				allPost = append(allPost, post)
+				response.NextId = post.ID - 1
+			}
+			if err := data.Err(); err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+					"faild": "Status Internal Server Error",
+				})
+				return
+			}
 
+			response.Posts = allPost
+			utils.RespondWithJSON(w, http.StatusCreated, response)
+		} else {
+			data, err := data.ReadAll(db, `SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+					"faild": "Status Internal Server Error",
+				})
+				return
+			}
+			defer data.Close()
+
+			var allPost []Post
+			for data.Next() {
+				var post Post
+				var first, last string
+				if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"faild": "Status Internal Server Error",
+					})
+					return
+				}
+				post.Username = first + " " + last
+				allPost = append(allPost, post)
+				response.NextId = post.ID - 1
+			}
+			if err := data.Err(); err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+					"faild": "Status Internal Server Error",
+				})
+				return
+			}
+
+			response.Posts = allPost
+			utils.RespondWithJSON(w, http.StatusCreated, response)
+		}
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}

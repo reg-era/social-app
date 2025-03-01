@@ -3,7 +3,7 @@
 import CommentSection from "./comment.js";
 import { useState } from "react";
 
-const PostCard = ({ PostId, authorName, postTime, postText, commentsCount }) => {
+const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl, commentsCount }) => {
     const [showComments, setShowComments] = useState(false);
 
     return (
@@ -17,6 +17,8 @@ const PostCard = ({ PostId, authorName, postTime, postText, commentsCount }) => 
             </div>
             <div className="post-content">
                 <p className="post-text">{postText}</p>
+                {console.log(imagePostUrl)}
+                {imagePostUrl !== '' && <div className="post-image" style={{ backgroundImage: `url(http://127.0.0.1:8080/${imagePostUrl})` }}></div>}
             </div>
             <div className="post-stats">
                 <div className="comments">{commentsCount} comments</div>

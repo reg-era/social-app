@@ -25,13 +25,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	infos, err := data.Read(db, `SELECT id, password_hash FROM users WHERE email = ? ;`, userForm.Email)
-	if err != nil {
-		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{
-			"error": "user not found",
-		})
-		return
-	}
+	infos := data.Read(db, `SELECT id, password_hash FROM users WHERE email = ? ;`, userForm.Email)
 
 	var userId int
 	var hash string
@@ -50,7 +44,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	token := uuid.NewString()
-	_, err = data.Create(db, `INSERT INTO sessions (session_id, user_id) VALUES (? , ?);`, token, userId)
+	_, err := data.Create(db, `INSERT INTO sessions (session_id, user_id) VALUES (? , ?);`, token, userId)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Status Internal Server Error",
@@ -66,10 +60,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func ValidateSession(session string, db *sql.DB) (int, error) {
-	info, err := data.Read(db, `SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
-	if err != nil {
-		return 0, err
-	}
+	info := data.Read(db, `SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
 
 	var userId int
 	if err := info.Scan(&userId); err != nil {

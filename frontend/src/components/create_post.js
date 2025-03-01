@@ -1,8 +1,11 @@
 "use client"
 import { useState } from "react";
 
-const CreatePostCard = () => {
+const CreatePostCard = ({ onCreatePost }) => {
+    const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
+    const [file, setFile] = useState('')
+
     const importFile = (e) => {
         e.preventDefault()
         document.getElementById('fileInputPost').click()
@@ -22,18 +25,21 @@ const CreatePostCard = () => {
             const res = await fetch('http://127.0.0.1:8080/api/post', {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length) ,
+                    'Authorization': document.cookie.slice('auth_session='.length),
                 },
                 body: form,
             })
 
             if (res.ok) {
+                const data = await res.json()
+                onCreatePost(data);
+                setNewPost('');
+                setFile('')
             } else {
-                console.log(await res.json());
                 throw new Error('faild to singup');
             }
         } catch (error) {
-            console.log(error);            
+            console.log(error);
             setError('Failed to submit the Post. Please try again.');
         }
     }
@@ -44,10 +50,10 @@ const CreatePostCard = () => {
                 <div className="input-actions-container">
                     <div className="input-with-photo">
                         <div className="post-input">
-                            <input name="post" type="text" placeholder="What's on your mind?" />
+                            <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="What's on your mind?" />
                         </div>
 
-                        <input id="fileInputPost" type="file" style={{ display: 'none' }} />
+                        <input id="fileInputPost" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
                         <button className="photo-action" onClick={importFile}>
                             <span>Photo</span>
                         </button>
