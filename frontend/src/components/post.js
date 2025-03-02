@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComment, faEllipsisH } from '@fortawesome/free-solid-svg-icons';
-import Comment from './Comment';
+import Comment from './comment.js';
 
 const PostCard = ({ author, time, content, comments }) => {
     const [commentText, setCommentText] = useState(''); // Initialize with an empty string
