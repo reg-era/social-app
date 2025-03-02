@@ -1,34 +1,50 @@
 "use client"
 
 import '../style/home.css'
+import { useEffect, useState } from 'react';
 
 import Navigation from '../components/navbar.js';
 import Sidebar from '../components/sidebar.js';
 import CreatePostCard from '../components/create_post.js';
-import { useState } from 'react';
-import PostCard from '@/components/post.js';
+import PostCard from '../components/post.js';
 
-
-let currentPostId
 const Home = () => {
-  const getPost = async (offset) => {
-    const res = await fetch('http://127.0.0.1:8080/api/post', {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [nextPostId, setNextPostId] = useState();
+
+  const getPosts = async () => {
+    setLoading(true);
+    const res = await fetch(`http://127.0.0.1:8080/api/post${nextPostId ? `?post_id=${nextPostId}` : ''}`, {
       headers: {
         'Authorization': document.cookie.slice('auth_session='.length),
       },
-    })
+    });
 
     if (res.ok) {
-      const data = await res.json()
-      currentPostId = data.next_id
-      return data.posts
+      const data = await res.json();
+      if (data.posts) {
+        setPosts((prevPosts) => [...prevPosts, ...data.posts]);
+        setNextPostId(data.next_id);
+      }
+    } else {
+      console.error('Failed to fetch posts');
     }
-    return []
-  }
+    setLoading(false);
+  };
 
-  let [posts, setPosts] = useState(getPost());
+  useEffect(() => {
+    getPosts();
+  }, []);
+
   const addPost = (newPost) => {
     setPosts((prevPosts) => [newPost, ...prevPosts]);
+  };
+
+  const loadMorePosts = () => {
+    if (nextPostId) {
+      getPosts(nextPostId);
+    }
   };
 
   return (
@@ -37,7 +53,8 @@ const Home = () => {
       <div className="main-container">
         <Sidebar />
         <div className="content-area">
-          {posts.map((post, _) => (
+          <CreatePostCard onCreatePost={addPost} />
+          {posts.map((post) => (
             <PostCard
               key={post.PostId}
               PostId={post.PostId}
@@ -47,8 +64,11 @@ const Home = () => {
               postTime={post.postTime}
             />
           ))}
+          {loading && <div>Loading more posts...</div>}
+          {!loading && nextPostId && (
+            <button onClick={loadMorePosts}>Load More</button>
+          )}
         </div>
-        <CreatePostCard onCreatePost={addPost} />
       </div>
     </div>
   );
