@@ -36,6 +36,7 @@ func main() {
 		"/api/post":    core.HandlePost,
 		"/api/comment": core.HandleComment,
 		"/api/group":   core.HandleGroup,
+		"/api/chat":    core.HandleChat,
 		"/api/ws":      core.HandleWS,
 	}
 
