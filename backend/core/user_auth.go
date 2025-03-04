@@ -4,17 +4,21 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"time"
 
-	data "social/pkg/db"
 	"social/pkg/utils"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+type API struct {
+	DB *sql.DB
+}
+
+func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var userForm struct {
-		Email    string `json:"email"`
+		Login    string `json:"login"`
 		Password string `json:"password"`
 	}
 
@@ -25,7 +29,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	infos := data.Read(db, `SELECT id, password_hash FROM users WHERE email = ? ;`, userForm.Email)
+	infos := a.Read(`SELECT id, password_hash FROM users WHERE email = ? OR nickname= ?;`, userForm.Login, userForm.Login)
 
 	var userId int
 	var hash string
@@ -44,14 +48,30 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	token := uuid.NewString()
-	_, err := data.Create(db, `INSERT INTO sessions (session_id, user_id) VALUES (? , ?);`, token, userId)
+	_ , err := a.DB.Exec(`delete from sessions where user_id = ?`, userId)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Status Internal Server Error",
 		})
 		return
 	}
-
+	expiery := time.Now().Add(time.Hour * 24)
+	_, err = a.Create(`INSERT INTO sessions (session_id, user_id, expires_at) VALUES (? , ?, ?);`, token, userId, expiery)
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "Status Internal Server Error",
+		})
+		return
+	}
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:     "session",
+			Value:    token,
+			Expires:  expiery,
+			Path:    "/",
+		},
+	)
 	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
 	w.Header().Set("Authorization", token)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
@@ -59,12 +79,38 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	})
 }
 
-func ValidateSession(session string, db *sql.DB) (int, error) {
-	info := data.Read(db, `SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
+func (a *API) ValidateSession(session string, db *sql.DB) (int, error) {
+	info := a.Read(`SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
 
 	var userId int
 	if err := info.Scan(&userId); err != nil {
 		return 0, err
 	}
 	return userId, nil
+}
+
+func (a *API) HandleLogout(w http.ResponseWriter, r *http.Request) {
+	// 1. Get cookie
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "session not found",
+		})
+	}
+
+	_, err = a.DB.Exec("DELETE FROM sessions WHERE session_id = ?", cookie.Value)
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed clean ",
+		})
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		MaxAge: -1,
+		Path:   "/",
+	})
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"valid": "Logged out"})
 }

@@ -1,11 +1,27 @@
 package core
 
 import (
-	"database/sql"
-	"fmt"
 	"net/http"
+	"social/pkg/utils"
 )
 
-func HandleGroup(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
-	fmt.Fprintf(w, "new group for user %d", userId)
+func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userID").(int)
+	switch r.Method {
+	case http.MethodGet:
+		group_name := r.PostFormValue("group_name")
+		_, err :=a.Create(`INSERT INTO groups (group_name, group_creator) VALUES (?)`, group_name, userId)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+				"failed": "Status Internal Server Error",
+			})
+			return
+		}else {
+			utils.RespondWithJSON(w, http.StatusCreated, map[string]string{
+				"valid": "Group Created",
+			})	
+		}
+
+
+	}
 }
