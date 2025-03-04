@@ -10,5 +10,6 @@ CREATE TABLE users (
     avatar_url VARCHAR(255),
     nickname VARCHAR(100),
     about_me TEXT,
+    Followers
     is_public INTEGER DEFAULT 0
 );

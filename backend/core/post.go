@@ -1,12 +1,10 @@
 package core
 
 import (
-	"database/sql"
 	"net/http"
 	"path"
 	"strconv"
 
-	data "social/pkg/db"
 	"social/pkg/utils"
 )
 
@@ -20,7 +18,9 @@ type Post struct {
 	CreatedAt string `json:"postTime"`
 }
 
-func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
+
+func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userID").(int)
 	switch r.Method {
 	case http.MethodPost:
 		content := r.FormValue("post")
@@ -40,7 +40,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 			imagePath = path.Join("api/global/", imagePath)
 		}
 
-		postId, err := data.Create(db, `INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
+		postId, err := a.Create(`INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",
@@ -48,7 +48,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 			return
 		}
 
-		resPost := data.Read(db, `
+		resPost := a.Read(`
 		SELECT users.first_name,users.last_name,posts.content,posts.image_url,posts.created_at FROM posts
 		JOIN users ON posts.user_id = users.id
 		WHERE posts.id = ?
@@ -70,7 +70,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 			Posts  []Post `json:"posts"`
 			NextId int    `json:"next_id"`
 		}{}
-		param := r.URL.Query().Get("post_id")
+		param := r.URL.Query().Get("postID")
 		if param != "" {
 			offset, err := strconv.Atoi(param)
 			if err != nil {
@@ -79,7 +79,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 				})
 				return
 			}
-			data, err := data.ReadAll(db, `SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
+			data, err := a.ReadAll(`SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Status Internal Server Error",
@@ -111,7 +111,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) 
 			response.Posts = allPost
 			utils.RespondWithJSON(w, http.StatusCreated, response)
 		} else {
-			data, err := data.ReadAll(db, `SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`)
+			data, err := a.ReadAll(`SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"faild": "Status Internal Server Error",

@@ -3,7 +3,7 @@ CREATE TABLE posts (
     user_id INTEGER REFERENCES users(id),
     content TEXT NOT NULL,
     image_url VARCHAR(255),
-    shown_to VARCHAR(20) NOT NULL DEFAULT 'all',
+    visibility VARCHAR(20) NOT NULL DEFAULT 'public',
     group_id INTEGER REFERENCES groups(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

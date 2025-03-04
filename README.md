@@ -174,7 +174,13 @@ CREATE TABLE event_responses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (event_id, user_id)
 );
+
+--- Comments 
+CREATE TABLE Comments (
+    
+)
 ```
+
 
 ## Features
 any feature is completly tested please mark it with X
