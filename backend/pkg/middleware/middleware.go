@@ -10,13 +10,12 @@ import (
 	"social/pkg/utils"
 )
 
-type Middleware struct {
+type API struct {
 	*core.API
 }
 
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		if r.Method == http.MethodOptions {
@@ -27,7 +26,7 @@ func CORS(next http.Handler) http.Handler {
 	})
 }
 
-func (m *Middleware) AuthMiddleware(next http.HandlerFunc) http.Handler {
+func (m *API) AuthMiddleware(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
 		if err != nil {
