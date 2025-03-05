@@ -23,7 +23,7 @@ func main() {
 	}
 
 	api := &core.API{DB: db}
-	mw := &middleware.Middleware{API: api}
+	mw := &middleware.API{API: api}
 
 	router := http.NewServeMux()
 
@@ -44,6 +44,8 @@ func main() {
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
+	router.Handle("/api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
+	router.Handle("/api/group" , mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 
 	handler := middleware.CORS(router)
 
