@@ -108,12 +108,12 @@ func (a *API) AddUser(user *User) (int, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)
-		return 500, fmt.Errorf("sssssstatus internal server error")
+		return 500, fmt.Errorf("status internal server error")
 	}
 
 	if _, err := a.Create(
 		`INSERT INTO users
-			(email, password_hash, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public)
+			(email, password, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public)
 		VALUES
 			(?, ?, ?, ?, ?, ?, ?, ?, ?) ;`,
 		user.Email, hash, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {

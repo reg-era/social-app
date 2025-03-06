@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 	"strconv"
@@ -79,8 +80,9 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			data, err := a.ReadAll(`SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
+			data, err := a.ReadAll(`SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
 			if err != nil {
+				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Status Internal Server Error",
 				})
@@ -92,6 +94,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 				var post Post
 				var first, last string
 				if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 						"faild": "Status Internal Server Error",
 					})
@@ -111,7 +114,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			response.Posts = allPost
 			utils.RespondWithJSON(w, http.StatusCreated, response)
 		} else {
-			data, err := a.ReadAll(`SELECT users.first_name, users.last_name, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`)
+			data, err := a.ReadAll(`SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"faild": "Status Internal Server Error",

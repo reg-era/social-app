@@ -4,7 +4,6 @@ install-migration-tool:
 	go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	export PATH=$PATH:$HOME/go/bin
 
-
 # use make create-migration name=migration_name
 create-migration:
 	@echo "Creating migration with name: $(name)"
@@ -17,4 +16,3 @@ run-backend:
 run-frontend:
 	@echo "Running frontend..."
 	@cd frontend && npm run dev
-	
