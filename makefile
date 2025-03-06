@@ -9,10 +9,14 @@ create-migration:
 	@echo "Creating migration with name: $(name)"
 	migrate create -ext .sql -dir backend/pkg/db/migrations -seq $(name)
 
-run-backend:
+backend:
 	@echo "Running backend..."
 	@cd backend && PORT=8080 go run cmd/main.go
 
-run-frontend:
+frontend:
+	@echo "Installing dependencies..."
+	@cd frontend && npm install
 	@echo "Running frontend..."
 	@cd frontend && npm run dev
+
+.PHONY: install-migration-tool create-migration backend frontend

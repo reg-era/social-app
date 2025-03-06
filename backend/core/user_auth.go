@@ -12,7 +12,8 @@ import (
 )
 
 type API struct {
-	DB *sql.DB
+	DB  *sql.DB
+	HUB *NetworkHub
 }
 
 func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -71,18 +72,20 @@ func (a *API) ValidateSession(session string, db *sql.DB) (int, error) {
 }
 
 func (a *API) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("auth_session")
-	if err != nil {
+	session := r.Header.Get("Authorization")
+	if session == "" {
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
 			"error": "session not found",
 		})
+		return
 	}
 
-	_, err = a.DB.Exec("DELETE FROM sessions WHERE session_hash = ?", cookie.Value)
+	_, err := a.DB.Exec("DELETE FROM sessions WHERE session_hash = ?", session)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed clean ",
 		})
+		return
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"valid": "Logged out"})

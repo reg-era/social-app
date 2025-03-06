@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"social/core"
@@ -28,26 +27,26 @@ func CORS(next http.Handler) http.Handler {
 }
 
 func (api *API) AuthMiddleware(next http.HandlerFunc) http.Handler {
-	if api.API == nil {
-		fmt.Println("7maaaaar")
-		return nil
-	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("auth_session")
-		fmt.Println(cookie.Value)
-		if err != nil {
+		session := r.Header.Get("Authorization")
+		if session == "" {
 			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 			return
 		}
 
 		var userID int
-		err = api.DB.QueryRow(`SELECT user_id FROM sessions WHERE session_hash = ?`, cookie.Value).Scan(&userID)
+		err := api.DB.QueryRow(`SELECT user_id FROM sessions WHERE session_hash = ?`, session).Scan(&userID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid session"})
 			} else {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Invalid operation"})
 			}
+			return
+		}
+
+		if r.URL.Path == "/api/check" {
+			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"succes": "valid user"})
 			return
 		}
 
