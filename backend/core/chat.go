@@ -7,7 +7,7 @@ import (
 	"social/pkg/utils"
 )
 
-type Message struct {
+type Msg struct {
 	Content  string `json:"content"`
 	Sender   int    `json:"sender"`
 	Receiver int    `json:"receiver"`
@@ -31,7 +31,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var conversation []Message
+	var conversation []Msg
 	data, err := api.ReadAll(`
 	SELECT sender_id, receiver_id, content FROM messages
 	WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
@@ -44,7 +44,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for data.Next() {
-		var msg Message
+		var msg Msg
 		if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",

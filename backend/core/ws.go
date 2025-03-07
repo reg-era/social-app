@@ -13,8 +13,8 @@ import (
 )
 
 type NetworkHub struct {
-	Message      chan *Message
-	Notification chan any
+	Message      chan *Msg
+	Notification chan *Note
 	Network      map[int][]*websocket.Conn
 	Mutex        sync.RWMutex
 }
@@ -26,8 +26,8 @@ type WSMessage struct {
 
 func NewWebSocketHub() *NetworkHub {
 	return &NetworkHub{
-		Message:      make(chan *Message),
-		Notification: make(chan any),
+		Message:      make(chan *Msg),
+		Notification: make(chan *Note),
 		Network:      make(map[int][]*websocket.Conn),
 	}
 }
@@ -115,7 +115,7 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 
 		switch upComingMsg.Type {
 		case "message":
-			var newMessage Message
+			var newMessage Msg
 			if err := json.Unmarshal(dataByte, &newMessage); err != nil {
 				fmt.Println("Error unmarshalling message:", err)
 				continue

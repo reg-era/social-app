@@ -28,7 +28,7 @@ type User struct {
 }
 
 func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
-	userId, ok  := r.Context().Value("userID").(int)
+	userId, ok := r.Context().Value("userID").(int)
 	if !ok {
 		switch r.Method {
 		case http.MethodPost:
@@ -39,9 +39,9 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-	
+
 			var user User
-	
+
 			user.Email = r.FormValue("email")
 			user.Password = r.FormValue("password")
 			user.FirstName = r.FormValue("firstName")
@@ -49,7 +49,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 			user.DateOfBirth = r.FormValue("dateOfBirth")
 			user.Nickname = r.FormValue("nickname")
 			user.AboutMe = r.FormValue("aboutMe")
-	
+
 			file, handler, err := r.FormFile("avatar")
 			if err == nil {
 				path, err := utils.UploadFileData(file, handler)
@@ -61,7 +61,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				}
 				user.AvatarUrl = filepath.Join("api/global/", path)
 			}
-	
+
 			if status, err := a.AddUser(&user); err != nil {
 				if user.AvatarUrl != "" {
 					_ = os.Remove(strings.ReplaceAll(user.AvatarUrl, "api/global/", "data/global/"))
@@ -71,27 +71,36 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-	
+
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{
 				"valid": "user add succesfuly",
 			})
 		case http.MethodGet:
-			userInfo, err := a.ReadUser(userId)
+			var userInfo User
+			var follower, following []User
+			err := a.ReadUser(userId, &userInfo, follower, following)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{
 					"error": "user not found",
 				})
 				return
 			}
-	
-			utils.RespondWithJSON(w, 200, userInfo)
+
+			utils.RespondWithJSON(w, 200, struct {
+				UserInfo  User   `json:"user_info"`
+				Following []User `json:"following"`
+				Follower  []User `json:"follower"`
+			}{
+				UserInfo:  userInfo,
+				Following: following,
+				Follower:  follower,
+			})
 		default:
 			utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
 				"error": "Status Method Not Allowed",
 			})
 		}
 	}
-
 }
 
 func (a *API) AddUser(user *User) (int, error) {
@@ -122,17 +131,56 @@ func (a *API) AddUser(user *User) (int, error) {
 	return 200, nil
 }
 
-func (a *API) ReadUser(id int) (User, error) {
-	data := a.Read(`
+func (a *API) ReadUser(id int, user *User, follower []User, following []User) error {
+	data_userInfo := a.Read(`
 	SELECT email, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public
 	FROM users WHERE id = ? ;
 	`, id)
 
-	var user User
-	if err := data.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {
+	if err := data_userInfo.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {
 		log.Printf("Scaning user: %v\n", err)
-		return User{}, err
+		return err
 	}
 
-	return user, nil
+	data_following, err := a.ReadAll(`
+	SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
+	FROM users
+	JOIN follows ON id = following_id
+	WHERE follower_id = ? ;
+	`, id)
+	if err != nil {
+		log.Printf("Scaning user: %v\n", err)
+		return err
+	}
+
+	for data_following.Next() {
+		var newFoll User
+		if err := data_following.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
+			log.Printf("Scaning user: %v\n", err)
+			return err
+		}
+		following = append(following, newFoll)
+	}
+
+	data_follower, err := a.ReadAll(`
+	SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
+	FROM users
+	JOIN follows ON id = follower_id
+	WHERE follower_id = ? ;
+	`, id)
+	if err != nil {
+		log.Printf("Scaning user: %v\n", err)
+		return err
+	}
+
+	for data_follower.Next() {
+		var newFoll User
+		if err := data_follower.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
+			log.Printf("Scaning user: %v\n", err)
+			return err
+		}
+		follower = append(follower, newFoll)
+	}
+
+	return nil
 }

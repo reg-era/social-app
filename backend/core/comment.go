@@ -2,8 +2,9 @@ package core
 
 import (
 	"net/http"
-	"social/pkg/utils"
 	"strconv"
+
+	"social/pkg/utils"
 )
 
 type Comment struct {
@@ -27,7 +28,12 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		}
 		content := r.FormValue("comment")
 
-		commentId, err := a.Create(`INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)`, postId, userId, content)
+		commentId, err := a.Create(
+			`INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)`,
+			postId,
+			userId,
+			content,
+		)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"failed": "Status Internal Server Error",
@@ -35,13 +41,17 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resComment := a.Read(`SELECT users.first_name, users.last_name, comments.content, comments.created_at FROM comments
+		resComment := a.Read(
+			`SELECT users.first_name, users.last_name, comments.content, comments.created_at FROM comments
         JOIN users ON comments.user_id = users.id
         WHERE comments.id = ?
-        `, commentId)
+        `,
+			commentId,
+		)
 
 		var comment Comment
 		var first, last string
+		var postCreator int
 		if err := resComment.Scan(&first, &last, &comment.Content, &comment.CreatedAt); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"failed": "Status Internal Server Error",
@@ -52,6 +62,12 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		comment.PostID = postId
 		comment.Username = first + " " + last
 		utils.RespondWithJSON(w, http.StatusCreated, comment)
+		a.HUB.Notification <- &Note{
+			Type:     "post_comment",
+			Sender:   userId,
+			Receiver: postCreator,
+			Content:  "",
+		}
 	case http.MethodGet:
 		param := r.URL.Query().Get("postID")
 		if param != "" {
