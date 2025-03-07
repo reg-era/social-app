@@ -39,7 +39,12 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			imagePath = path.Join("api/global/", imagePath)
 		}
 
-		postId, err := a.Create(`INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`, userId, content, imagePath)
+		postId, err := a.Create(
+			`INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`,
+			userId,
+			content,
+			imagePath,
+		)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",
@@ -78,7 +83,10 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			data, err := a.ReadAll(`SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`, offset)
+			data, err := a.ReadAll(
+				`SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id <= ? ORDER BY posts.created_at DESC LIMIT 5 OFFSET 0;`,
+				offset,
+			)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Status Internal Server Error",
@@ -144,6 +152,8 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusCreated, response)
 		}
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
+			"error": "Status Method Not Allowed",
+		})
 	}
 }
