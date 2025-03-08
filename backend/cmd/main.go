@@ -31,10 +31,10 @@ func main() {
 
 	// public
 	router.HandleFunc("/api/login", api.HandleLogin)
-	router.HandleFunc("/api/user", api.HandleUser)
 	router.Handle("/api/check", mw.AuthMiddleware(nil))
-
+	
 	// private
+	router.Handle("/api/user",mw.AuthMiddleware(http.HandlerFunc( api.HandleUser)))
 	router.Handle("/api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))

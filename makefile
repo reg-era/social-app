@@ -2,6 +2,7 @@ install-dependencies:
 	@echo "Installing dependencies... backend"
 	@cd backend && go mod download && go mod tidy
 	@cd backend && mkdir data || true && mkdir data/global ||true
+	@pip install faker
 	@echo "Installing dependencies... frontend"
 	@cd frontend && npm install
 
@@ -18,7 +19,7 @@ create-migration:
 
 inject-fake-data:
 	@echo "Injecting fake data..."
-	@cd backend && python3 scripts/inject_fake_data.py
+	@cd backend && python3 pkg/db/scripts/inject_fake_data.py
 
 backend:
 	@echo "Running backend..."
