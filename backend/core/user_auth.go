@@ -56,7 +56,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expiery := time.Now().Add(time.Hour * 24)
-	_, err = a.Create(`INSERT INTO sessions (session_hash, user_id, expired) VALUES (? , ?, ?);`, token, userId, expiery)
+	_, err = a.Create(`INSERT INTO sessions (session_hash, user_id, expires_at) VALUES (? , ?, ?);`, token, userId, expiery)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Status Internal Server Error",

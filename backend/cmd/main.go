@@ -52,6 +52,7 @@ func main() {
 	// this handler is for changing the user from public to private
 	router.Handle("/api/visibility", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
 
+
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 	// router.Handle("/api/group/join", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupJoin)))
 

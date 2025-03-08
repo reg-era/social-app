@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"social/pkg/utils"
 )
@@ -14,6 +15,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		if err := json.NewDecoder(r.Body).Decode(&follow); err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -30,6 +32,8 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		WHERE FOLLOWER_id =? AND following_id =?
 		)`, userId, follow.Following_id).Scan(&exists)
 		if err != nil {
+			fmt.Println(err)
+
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"error": "Database error",
 			})
@@ -39,6 +43,8 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			WHERE follower_id =? AND following_id =?`, userId, follow.Following_id)
 
 			if err != nil {
+			fmt.Println(err)
+
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Unfollow error",
 				})
@@ -60,6 +66,8 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		if public {
 			_, err = a.Create("INSERT INTO follows (follower_id, following_id) VALUES (?,?)", userId, follow.Following_id)
 			if err != nil {
+			fmt.Println(err)
+
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 				return
 			}
@@ -68,6 +76,8 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			_, err = a.Create(`INSERT INTO follow_requests (follower_id, following_id)
 		VALUES(?,?)`, userId, follow.Following_id)
 			if err != nil {
+			fmt.Println(err)
+
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Could not follow user",
 				})
@@ -156,7 +166,7 @@ func (a *API) HandleFollowRequest(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		// Get all pending follow requests for the user
+
 		rows, err := a.ReadAll(`
             SELECT fr.follower_id, u.username, u.avatar, fr.created_at 
             FROM follow_requests fr

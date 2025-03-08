@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -37,10 +38,11 @@ func (m *API) AuthMiddleware(next http.HandlerFunc) http.Handler {
 		var userID int
 		var expiresAt time.Time
 		err = m.DB.QueryRow(
-			"SELECT user_id, expires_at FROM sessions WHERE session_id = $1",
+			"SELECT user_id, expires_at FROM sessions WHERE session_hash = ?",
 			cookie.Value,
 		).Scan(&userID, &expiresAt)
 		if err != nil {
+			fmt.Println(err)
 			if err == sql.ErrNoRows {
 				utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid session"})
 			} else {
