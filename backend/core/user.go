@@ -76,25 +76,75 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				"valid": "user add succesfuly",
 			})
 		case http.MethodGet:
-			var userInfo User
-			var follower, following []User
-			err := a.ReadUser(userId, &userInfo, follower, following)
-			if err != nil {
-				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{
-					"error": "user not found",
-				})
-				return
-			}
+			target := r.URL.Query().Get("param")
+			switch target {
+			case "follower":
+				var follower []User
+				data_follower, err := a.ReadAll(`
+				SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
+				FROM users
+				JOIN follows ON id = follower_id
+				WHERE follower_id = ? ;
+				`, userId)
+				if err != nil {
+					log.Printf("Scaning userInfo: %v\n", err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "status internal server error",
+					})
+					return
+				}
 
-			utils.RespondWithJSON(w, 200, struct {
-				UserInfo  User   `json:"user_info"`
-				Following []User `json:"following"`
-				Follower  []User `json:"follower"`
-			}{
-				UserInfo:  userInfo,
-				Following: following,
-				Follower:  follower,
-			})
+				for data_follower.Next() {
+					var newFoll User
+					if err := data_follower.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
+						log.Printf("Scaning userInfo: %v\n", err)
+						utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+							"error": "status internal server error",
+						})
+						return
+					}
+					follower = append(follower, newFoll)
+				}
+				utils.RespondWithJSON(w, http.StatusOK, follower)
+			case "following":
+				var following []User
+				data_following, err := a.ReadAll(`
+				SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
+				FROM users
+				JOIN follows ON id = following_id
+				WHERE follower_id = ? ;
+				`, userId)
+				if err != nil {
+					log.Printf("Scaning userInfo: %v\n", err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "status internal server error",
+					})
+					return
+				}
+
+				for data_following.Next() {
+					var newFoll User
+					if err := data_following.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
+						log.Printf("Scaning userInfo: %v\n", err)
+						utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+							"error": "status internal server error",
+						})
+						return
+					}
+					following = append(following, newFoll)
+				}
+				utils.RespondWithJSON(w, http.StatusOK, following)
+			case "posts":
+			default:
+				var userInfo User
+				if err := a.ReadUser(userId, &userInfo); err != nil {
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "status internal server error",
+					})
+					return
+				}
+				utils.RespondWithJSON(w, http.StatusOK, userInfo)
+			}
 		default:
 			utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
 				"error": "Status Method Not Allowed",
@@ -131,56 +181,15 @@ func (a *API) AddUser(user *User) (int, error) {
 	return 200, nil
 }
 
-func (a *API) ReadUser(id int, user *User, follower []User, following []User) error {
+func (a *API) ReadUser(id int, user *User) error {
 	data_userInfo := a.Read(`
 	SELECT email, first_name, last_name, date_of_birth, avatar_url, nickname, about_me, is_public
 	FROM users WHERE id = ? ;
 	`, id)
 
-	if err := data_userInfo.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic); err != nil {
-		log.Printf("Scaning user: %v\n", err)
+	if err := data_userInfo.Scan(user.Email, user.FirstName, user.LastName, user.DateOfBirth, user.AvatarUrl, user.Nickname, user.AboutMe, user.IsPublic); err != nil {
+		log.Printf("Scaning userInfo: %v\n", err)
 		return err
 	}
-
-	data_following, err := a.ReadAll(`
-	SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
-	FROM users
-	JOIN follows ON id = following_id
-	WHERE follower_id = ? ;
-	`, id)
-	if err != nil {
-		log.Printf("Scaning user: %v\n", err)
-		return err
-	}
-
-	for data_following.Next() {
-		var newFoll User
-		if err := data_following.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
-			log.Printf("Scaning user: %v\n", err)
-			return err
-		}
-		following = append(following, newFoll)
-	}
-
-	data_follower, err := a.ReadAll(`
-	SELECT id, firstname, lastname, email, nickname, about, avatarUrl, birthdate, is_public
-	FROM users
-	JOIN follows ON id = follower_id
-	WHERE follower_id = ? ;
-	`, id)
-	if err != nil {
-		log.Printf("Scaning user: %v\n", err)
-		return err
-	}
-
-	for data_follower.Next() {
-		var newFoll User
-		if err := data_follower.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
-			log.Printf("Scaning user: %v\n", err)
-			return err
-		}
-		follower = append(follower, newFoll)
-	}
-
 	return nil
 }
