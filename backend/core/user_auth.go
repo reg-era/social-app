@@ -29,7 +29,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infos := a.Read(`SELECT id, password_hash FROM users WHERE email = ? OR nickname= ?;`, userForm.Login, userForm.Login)
+	infos := a.Read(`SELECT id, password FROM users WHERE email = ? OR nickname= ?;`, userForm.Login, userForm.Login)
 
 	var userId int
 	var hash string
@@ -56,7 +56,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expiery := time.Now().Add(time.Hour * 24)
-	_, err = a.Create(`INSERT INTO sessions (session_id, user_id, expires_at) VALUES (? , ?, ?);`, token, userId, expiery)
+	_, err = a.Create(`INSERT INTO sessions (session_hash, user_id, expired) VALUES (? , ?, ?);`, token, userId, expiery)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Status Internal Server Error",
@@ -80,7 +80,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) ValidateSession(session string, db *sql.DB) (int, error) {
-	info := a.Read(`SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
+	info := a.Read(`SELECT user_id FROM sessions WHERE session_hash = ? ;`, session)
 
 	var userId int
 	if err := info.Scan(&userId); err != nil {
@@ -98,7 +98,7 @@ func (a *API) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	_, err = a.DB.Exec("DELETE FROM sessions WHERE session_id = ?", cookie.Value)
+	_, err = a.DB.Exec("DELETE FROM sessions WHERE session_hash = ?", cookie.Value)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed clean ",

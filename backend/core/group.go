@@ -10,18 +10,37 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		group_name := r.PostFormValue("group_name")
-		_, err :=a.Create(`INSERT INTO groups (group_name, group_creator) VALUES (?)`, group_name, userId)
+		_, err := a.Create(`INSERT INTO groups (group_name, group_creator) VALUES (?)`, group_name, userId)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"failed": "Status Internal Server Error",
 			})
 			return
-		}else {
+		} else {
 			utils.RespondWithJSON(w, http.StatusCreated, map[string]string{
 				"valid": "Group Created",
-			})	
+			})
 		}
-
-
+	default :
+		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "bad request",
+		})
 	}
 }
+// TODO !!!!!!!!
+// func (a *API) HandleGroupJoin(w http.ResponseWriter, r *http.Request) {
+// 	userId := r.Context().Value("userID").(int)
+// 	r.URL.Query().Get("")
+// 	switch r.Method {
+// 	case http.MethodPost:
+
+
+// 	case http.MethodGet:
+// 	default:
+// 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+// 			"error": "Bad request",
+// 		})
+// 		return
+
+// 	}
+// }
