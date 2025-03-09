@@ -1,13 +1,15 @@
+import Link from "next/link";
+
 const Sidebar = () => {
     return (
         <div className="sidebar left-sidebar">
             <div className="sidebar-menu">
-                <div className="menu-item active">
+                <Link href="/" className="menu-item active">
                     <span>Home</span>
-                </div>
-                <div className="menu-item">
+                </Link>
+                <Link href="/profile" className="menu-item">
                     <span>Profile</span>
-                </div>
+                </Link>
                 <div className="menu-item">
                     <span>Groups</span>
                 </div>

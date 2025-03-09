@@ -1,0 +1,340 @@
+/* profile.css */
+.profile-container {
+    max-width: 900px;
+    margin: 70px auto 30px;
+    padding: 0 15px;
+}
+
+.profile-header {
+    background: var(--card-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-cover-photo {
+    height: 200px;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-hover));
+    position: relative;
+}
+
+.profile-header-content {
+    position: relative;
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--input-bg);
+    border: 5px solid var(--card-bg);
+    margin-top: -60px;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-info {
+    flex: 1;
+    padding: 0 1.5rem;
+    margin-top: 10px;
+}
+
+.profile-name-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.profile-name-container h1 {
+    font-size: 1.8rem;
+    margin-right: 10px;
+}
+
+.username {
+    color: #b8b8d4;
+    font-size: 1rem;
+}
+
+.privacy-indicator {
+    margin-left: 10px;
+    color: var(--primary-color);
+}
+
+.bio {
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.profile-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #b8b8d4;
+    font-size: 0.9rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.profile-actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    position: relative;
+}
+
+.edit-profile-btn,
+.follow-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit-profile-btn:hover,
+.follow-btn:hover {
+    background: var(--primary-hover);
+}
+
+.settings-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.follow-btn.following {
+    background: var(--input-bg);
+}
+
+.privacy-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
+    z-index: 10;
+}
+
+.privacy-option {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.privacy-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-stats {
+    display: flex;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stat-count {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #b8b8d4;
+    font-size: 0.9rem;
+}
+
+.profile-content {
+    background: var(--card-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-tab {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.profile-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-tab.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.profile-tab-content {
+    min-height: 300px;
+}
+
+.profile-posts {
+    padding: 1.5rem;
+}
+
+.profile-people-list {
+    padding: 1rem;
+}
+
+.people-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.people-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--input-bg);
+    margin-right: 15px;
+}
+
+.people-info {
+    flex: 1;
+}
+
+.people-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.people-username {
+    font-size: 0.9rem;
+    color: #b8b8d4;
+}
+
+.private-profile-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.private-profile-message h2 {
+    margin: 1rem 0 0.5rem;
+}
+
+.private-profile-message p {
+    color: #b8b8d4;
+    margin-bottom: 1.5rem;
+}
+
+.private-profile-message .follow-btn {
+    margin-top: 1rem;
+}
+
+.private-profile-message svg {
+    color: var(--primary-color);
+    opacity: 0.7;
+}
+
+.back-to-home {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.back-to-home:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        margin-top: -50px;
+    }
+
+    .profile-info {
+        padding: 0;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .profile-actions {
+        width: 100%;
+        margin-top: 1rem;
+        justify-content: flex-end;
+    }
+
+    .profile-name-container h1 {
+        font-size: 1.5rem;
+    }
+
+    .stat-count {
+        font-size: 1.2rem;
+    }
+}

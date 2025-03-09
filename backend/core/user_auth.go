@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"social/pkg/utils"
 
@@ -59,6 +62,52 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Authorization", token)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
 		"valid": "user login succesfully 🦓",
+	})
+}
+
+func (a *API) HandleSignin(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(100 << 20)
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "Status Bad Request",
+		})
+		return
+	}
+
+	var user User
+
+	user.Email = r.FormValue("email")
+	user.Password = r.FormValue("password")
+	user.FirstName = r.FormValue("firstName")
+	user.LastName = r.FormValue("lastName")
+	user.DateOfBirth = r.FormValue("dateOfBirth")
+	user.Nickname = r.FormValue("nickname")
+	user.AboutMe = r.FormValue("aboutMe")
+
+	file, handler, err := r.FormFile("avatar")
+	if err == nil {
+		path, err := utils.UploadFileData(file, handler)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+			return
+		}
+		user.AvatarUrl = filepath.Join("api/global/", path)
+	}
+
+	if status, err := a.AddUser(&user); err != nil {
+		if user.AvatarUrl != "" {
+			_ = os.Remove(strings.ReplaceAll(user.AvatarUrl, "api/global/", "data/global/"))
+		}
+		utils.RespondWithJSON(w, status, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
+		"valid": "user add succesfuly",
 	})
 }
 

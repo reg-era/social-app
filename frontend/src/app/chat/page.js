@@ -2,9 +2,11 @@
 
 import '@/style/chat.css';
 import '@/style/home.css';
-import Navigation from '@/components/navbar.js';
+
+import Navigation from '@/components/navbar';
+import BackHome from '@/components/back_home';
+
 import { useState } from 'react';
-import Link from 'next/link';
 
 const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -90,9 +92,7 @@ const ChatPage = () => {
                 </div>
             </div>
 
-            <Link href="/" className="back-to-home">
-                <span>Back to Home</span>
-            </Link>
+            <BackHome/>
         </div>
     );
 };

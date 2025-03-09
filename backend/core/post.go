@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 	"strconv"
@@ -23,6 +24,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		content := r.FormValue("post")
+		visibility := r.FormValue("visibility")
 		file, handler, err := r.FormFile("image")
 		var imagePath string
 		if err == nil {
@@ -39,13 +41,9 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			imagePath = path.Join("api/global/", imagePath)
 		}
 
-		postId, err := a.Create(
-			`INSERT INTO posts (user_id, content, image_url) VALUES (?, ?, ?)`,
-			userId,
-			content,
-			imagePath,
-		)
+		postId, err := a.Create(`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`, userId, content, imagePath, visibility)
 		if err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",
 			})
@@ -53,7 +51,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resPost := a.Read(`
-		SELECT users.first_name,users.last_name,posts.content,posts.image_url,posts.created_at FROM posts
+		SELECT users.firstname, users.lastname ,posts.content, posts.image_url, posts.created_at FROM posts
 		JOIN users ON posts.user_id = users.id
 		WHERE posts.id = ?
 		`, postId)
@@ -61,6 +59,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		var first, last string
 		if err := resPost.Scan(&first, &last, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"faild": "Status Internal Server Error",
 			})

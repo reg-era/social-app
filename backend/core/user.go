@@ -4,11 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"social/pkg/utils"
 
@@ -36,114 +33,97 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
+	target := r.URL.Query().Get("target")
+	if target == "following" || target == "follower" {
+		targetEmail := r.URL.Query().Get("user")
+		indexing := map[bool]struct {
+			key   string
+			value string
+		}{true: {key: "u2.email", value: targetEmail}, false: {key: "u2.id", value: strconv.Itoa(userId)}}[targetEmail != ""]
+		nich := map[bool]struct {
+			from string
+			to   string
+		}{true: {from: "f.following_id", to: "f.follower_id"}, false: {from: "f.following_id", to: "f.follower_id"}}[target == "following"]
+		fmt.Println(indexing)
+		fmt.Println(nich)
 
-	switch r.Method {
-	case http.MethodPost:
-		err := r.ParseMultipartForm(100 << 20)
+		response := []User{}
+		data, err := a.ReadAll(`
+		SELECT u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public
+		FROM users u
+		JOIN follows f ON u.id = `+nich.from+`
+		JOIN users u2 ON `+nich.to+` = u2.id
+		WHERE `+indexing.key+` = ? ;
+		`, indexing.value)
+		defer data.Close()
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
-				"error": "Status Bad Request",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
-		var user User
-
-		user.Email = r.FormValue("email")
-		user.Password = r.FormValue("password")
-		user.FirstName = r.FormValue("firstName")
-		user.LastName = r.FormValue("lastName")
-		user.DateOfBirth = r.FormValue("dateOfBirth")
-		user.Nickname = r.FormValue("nickname")
-		user.AboutMe = r.FormValue("aboutMe")
-
-		file, handler, err := r.FormFile("avatar")
-		if err == nil {
-			path, err := utils.UploadFileData(file, handler)
-			if err != nil {
-				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
-					"error": err.Error(),
-				})
+		for data.Next() {
+			var newFoll User
+			if err := data.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 				return
 			}
-			user.AvatarUrl = filepath.Join("api/global/", path)
+			response = append(response, newFoll)
 		}
+		utils.RespondWithJSON(w, http.StatusOK, response)
+	} else if target == "post" {
+		targetEmail := r.URL.Query().Get("user")
+		indexing := map[bool]struct {
+			key   string
+			value string
+		}{true: {key: "users.email", value: targetEmail}, false: {key: "users.id", value: strconv.Itoa(userId)}}[targetEmail != ""]
 
-		if status, err := a.AddUser(&user); err != nil {
-			if user.AvatarUrl != "" {
-				_ = os.Remove(strings.ReplaceAll(user.AvatarUrl, "api/global/", "data/global/"))
-			}
-			utils.RespondWithJSON(w, status, map[string]string{
-				"error": err.Error(),
-			})
+		response := []Post{}
+		data, err := a.ReadAll(`
+		SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
+		JOIN users ON posts.user_id = users.id 
+		WHERE `+indexing.key+` = ? ;`, indexing.value)
+		defer data.Close()
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]string{
-			"valid": "user add succesfuly",
-		})
-	case http.MethodGet:
-		target := r.URL.Query().Get("target")
-		if target == "following" || target == "follower" {
-			nich := map[bool]string{true: "following_id", false: "follower_id"}[target == "following"]
-			var response []User
-			data, err := a.ReadAll(`SELECT email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
-			FROM users JOIN follows ON id = ` + nich + ` WHERE follower_id = ` + strconv.Itoa(userId) + ` ;`)
-			defer data.Close()
-			if err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "status internal server error",
-				})
+		for data.Next() {
+			var post Post
+			var first, last string
+			if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 				return
 			}
-
-			for data.Next() {
-				var newFoll User
-				if err := data.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
-					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-						"error": "status internal server error",
-					})
-					return
-				}
-				response = append(response, newFoll)
-			}
-			utils.RespondWithJSON(w, http.StatusOK, response)
-		} else if target != "" {
-			var guest User
-			data_userInfo := a.Read(`
+			post.Username = first + " " + last
+			response = append(response, post)
+		}
+		utils.RespondWithJSON(w, http.StatusOK, response)
+	} else if target != "" {
+		var guest User
+		data_userInfo := a.Read(`
 			SELECT u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public,
 			(SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS followings,
 			(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS followers
 			FROM users u WHERE email = ?  AND is_public = 1 ;
 			`, target)
 
-			if err := data_userInfo.Scan(&guest.Email, &guest.FirstName, &guest.LastName, &guest.DateOfBirth, &guest.AvatarUrl, &guest.Nickname, &guest.AboutMe, &guest.IsPublic, &guest.Followings, &guest.Followers); err != nil {
-				if err == sql.ErrNoRows {
-					utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{
-						"error": "User Status Not Found",
-					})
-					return
-				}
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "status internal server error",
-				})
+		if err := data_userInfo.Scan(&guest.Email, &guest.FirstName, &guest.LastName, &guest.DateOfBirth, &guest.AvatarUrl, &guest.Nickname, &guest.AboutMe, &guest.IsPublic, &guest.Followings, &guest.Followers); err != nil {
+			if err == sql.ErrNoRows {
+				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User Status Not Found"})
 				return
 			}
-			utils.RespondWithJSON(w, http.StatusOK, guest)
-		} else {
-			var userInfo User
-			if err := a.ReadUser(userId, &userInfo); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "status internal server error",
-				})
-				return
-			}
-			utils.RespondWithJSON(w, http.StatusOK, userInfo)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
 		}
-	default:
-		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
-			"error": "Status Method Not Allowed",
-		})
+		utils.RespondWithJSON(w, http.StatusOK, guest)
+	} else {
+		var userInfo User
+		if err := a.ReadUser(userId, &userInfo); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
+		}
+		utils.RespondWithJSON(w, http.StatusOK, userInfo)
 	}
 }
 

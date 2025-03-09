@@ -21,6 +21,7 @@ const CreatePostCard = ({ onCreatePost }) => {
             const form = new FormData()
             form.append("post", post)
             form.append('image', e.target.fileInputPost.files[0])
+            form.append("visibility", 'public')
 
             const res = await fetch('http://127.0.0.1:8080/api/post', {
                 method: 'POST',
@@ -49,6 +50,7 @@ const CreatePostCard = ({ onCreatePost }) => {
             <div className="create-post-header">
                 <div className="input-actions-container">
                     <div className="input-with-photo">
+                        {/* add select cases for visibility from this values{ ('public', 'followers', 'private') } */}
                         <div className="post-input">
                             <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="What's on your mind?" />
                         </div>

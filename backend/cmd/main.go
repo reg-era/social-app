@@ -30,16 +30,17 @@ func main() {
 	router := http.NewServeMux()
 
 	// public
-	router.HandleFunc("/api/login", api.HandleLogin)
+	router.HandleFunc("POST /api/login", api.HandleLogin)
+	router.HandleFunc("POST /api/signin", api.HandleSignin)
 	router.Handle("/api/check", mw.AuthMiddleware(nil))
-	
+
 	// private
-	router.Handle("/api/user",mw.AuthMiddleware(http.HandlerFunc( api.HandleUser)))
-	router.Handle("/api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
+	router.Handle("GET /api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
+	router.Handle("GET /api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
-	router.Handle("/api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
+	router.Handle("POST /api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
 	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
 

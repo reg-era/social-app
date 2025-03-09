@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBell, faComment, faSignOut } from '@fortawesome/free-solid-svg-icons';
+
 const Navigation = () => {
     return (
         <nav className="main-nav">
@@ -9,15 +12,16 @@ const Navigation = () => {
             </div>
             <div className="nav-icons">
                 <div className="nav-icon notification-icon">
+                    <FontAwesomeIcon icon={faBell} />
                     <span className="notification-count">3</span>
                 </div>
-                <div className="nav-icon messages-icon">
-                    <Link href="/chat" className="nav-icon messages-icon">
-                        <span className="messages-count">4</span>
-                    </Link>
-                </div>
-                <div className="nav-icon profile-thumbnail">
-                </div>
+                <Link href="/chat" className="nav-icon messages-icon">
+                    <FontAwesomeIcon icon={faComment} />
+                    <span className="messages-count">5</span>
+                </Link>
+                <button className="nav-icon logout-btn">
+                    <FontAwesomeIcon icon={faSignOut} />
+                </button>
             </div>
         </nav>
     );
