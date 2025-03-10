@@ -6,6 +6,9 @@ import (
 )
 
 func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
+	/*
+	
+	*/
 	userId := r.Context().Value("userID").(int)
 	switch r.Method {
 	case http.MethodPost:

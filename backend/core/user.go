@@ -40,6 +40,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 			key   string
 			value string
 		}{true: {key: "u2.email", value: targetEmail}, false: {key: "u2.id", value: strconv.Itoa(userId)}}[targetEmail != ""]
+		
 		nich := map[bool]struct {
 			from string
 			to   string

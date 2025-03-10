@@ -57,11 +57,24 @@ def insert_fake_data_follower(num_records, users_count):
 
     conn.commit()
 
+def insert_fake_data_group(num_records, users_count):
+    for _ in range(num_records):
+        user_id = fake.random_int(min=1, max=users_count)
+        title = fake.last_name()
+        description = fake.text()
+
+        cursor.execute('''
+		INSERT INTO groups ( title, description, creator_id ) VALUES ( ?, ?, ? );
+        ''', (title,description,user_id))
+
+    conn.commit()
+
 
 # choose scripts that you want to run
-# insert_fake_data_user(20)
+insert_fake_data_user(20)
 insert_fake_data_session(5,20)
-# insert_fake_data_follower(200,20)
+insert_fake_data_follower(200,20)
+insert_fake_data_group(20,20)
 
 conn.close()
 
