@@ -8,6 +8,7 @@ import (
 	"social/core"
 	data "social/pkg/db"
 	"social/pkg/middleware"
+	"social/pkg/utils"
 )
 
 func main() {
@@ -29,6 +30,13 @@ func main() {
 
 	router := http.NewServeMux()
 
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		utils.RespondWithJSON(w, http.StatusOK, map[string]string{
+			"message": "Server is running. Welcome to the Social Network API.",
+			"status":  "OK",
+		})
+	})
+
 	// public
 	router.HandleFunc("POST /api/login", api.HandleLogin)
 	router.HandleFunc("POST /api/signin", api.HandleSignin)
@@ -37,12 +45,13 @@ func main() {
 	// private
 	router.Handle("GET /api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
 	router.Handle("GET /api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
+	router.Handle("GET /api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
+	router.Handle("POST /api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
-	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
-	router.Handle("POST /api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
-	router.Handle("/api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
+	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
+	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
 
 	// run hub channels listner

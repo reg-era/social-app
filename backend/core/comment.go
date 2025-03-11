@@ -2,17 +2,19 @@ package core
 
 import (
 	"net/http"
+	"path"
 	"strconv"
 
 	"social/pkg/utils"
 )
 
 type Comment struct {
-	ID        int    `json:"commentId"`
-	PostID    int    `json:"postId"`
-	Username  string `json:"authorName"`
+	ID        int    `json:"comment_id"`
+	PostID    int    `json:"post_id"`
+	Username  string `json:"author_name"`
 	Content   string `json:"content"`
-	CreatedAt string `json:"commentTime"`
+	ImageUrl  string `json:"image_url"`
+	CreatedAt string `json:"comment_time"`
 }
 
 func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
@@ -21,19 +23,27 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		postId, err := strconv.Atoi(r.FormValue("postID"))
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
-				"failed": "Invalid post_id",
-			})
+			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"failed": "Invalid post_id"})
 			return
 		}
-		content := r.FormValue("comment")
 
-		commentId, err := a.Create(
-			`INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)`,
-			postId,
-			userId,
-			content,
-		)
+		content := r.FormValue("comment")
+		file, handler, err := r.FormFile("image")
+		var imagePath string
+		if err == nil {
+			imagePath, err = utils.UploadFileData(file, handler)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+					"error": err.Error(),
+				})
+				return
+			}
+		}
+
+		if imagePath != "" {
+			imagePath = path.Join("api/global/", imagePath)
+		}
+		commentId, err := a.Create(`INSERT INTO comments (post_id, user_id, content, image_url) VALUES (?, ?, ?, ?)`, postId, userId, content, imagePath)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"failed": "Status Internal Server Error",
@@ -41,18 +51,14 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resComment := a.Read(
-			`SELECT users.first_name, users.last_name, comments.content, comments.created_at FROM comments
-        JOIN users ON comments.user_id = users.id
-        WHERE comments.id = ?
-        `,
-			commentId,
-		)
+		resComment := a.Read(`
+		SELECT users.first_name, users.last_name, comments.content, comments.created_at, image_url FROM comments
+        JOIN users ON comments.user_id = users.id WHERE comments.id = ?`, commentId)
 
 		var comment Comment
 		var first, last string
 		var postCreator int
-		if err := resComment.Scan(&first, &last, &comment.Content, &comment.CreatedAt); err != nil {
+		if err := resComment.Scan(&first, &last, &comment.Content, &comment.CreatedAt, &comment.ImageUrl); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"failed": "Status Internal Server Error",
 			})
@@ -79,7 +85,7 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			offset := r.URL.Query().Get("offset")
-			query := `SELECT users.first_name, users.last_name, comments.id, comments.post_id, comments.content, comments.created_at FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = ? ORDER BY comments.created_at DESC LIMIT 5`
+			query := `SELECT users.first_name, users.last_name, comments.id, comments.post_id, comments.content, comments.created_at, comments.image_url FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = ? ORDER BY comments.created_at DESC LIMIT 5`
 			args := []interface{}{postId}
 			if offset != "" {
 				query += " OFFSET ?"
@@ -104,7 +110,7 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			for dataRows.Next() {
 				var comment Comment
 				var first, last string
-				if err := dataRows.Scan(&first, &last, &comment.ID, &comment.PostID, &comment.Content, &comment.CreatedAt); err != nil {
+				if err := dataRows.Scan(&first, &last, &comment.ID, &comment.PostID, &comment.Content, &comment.CreatedAt, &comment.ImageUrl); err != nil {
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 						"failed": "Status Internal Server Error",
 					})

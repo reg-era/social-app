@@ -8,6 +8,13 @@ fake = Faker()
 conn = sqlite3.connect('data/data.db')
 cursor = conn.cursor()
 
+def generate_random_image():
+    image_url = "" if random.random() < 0.5 else random.choice(os.listdir('./data/global'))
+    if image_url != "":
+        image_url = os.path.join('/api/global', image_url)
+
+    return image_url
+
 def insert_fake_data_user(num_records):
     for _ in range(num_records):
         email = fake.email()
@@ -15,7 +22,7 @@ def insert_fake_data_user(num_records):
         firstname = fake.first_name()
         lastname = fake.last_name()
         birthdate = fake.date_of_birth()
-        avatarUrl = fake.image_url()
+        avatarUrl = generate_random_image()
         nickname = fake.user_name()
         about = fake.text()
         is_public = fake.boolean()
@@ -72,18 +79,11 @@ def insert_fake_data_group(num_records, users_count):
     conn.commit()
 
 def insert_fake_data_posts(num_records, users_count):
-    visibility_options = ['public', 'followers', 'private']
-
     for _ in range(num_records):
         user_id = fake.random_int(min=1, max=users_count)
         content = fake.text()
-
-        image_url = None if random.random() < 0.5 else random.choice(os.path.expanduser('~/Desktop/social-app/backend/data/global'))
-
-        if image_url:
-            image_url = os.path.join('/api/global', image_url)
-
-        visibility = random.choice(visibility_options)
+        visibility = random.choice(['public', 'followers', 'private'])
+        image_url = generate_random_image()
 
         cursor.execute('''
             INSERT INTO posts (user_id, content, image_url, visibility) 
