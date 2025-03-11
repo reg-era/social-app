@@ -42,6 +42,7 @@ func main() {
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 	router.Handle("POST /api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
+	router.Handle("/api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
 	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
 
 	// run hub channels listner

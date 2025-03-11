@@ -1,3 +1,5 @@
+import os
+import random
 import sqlite3
 from faker import Faker
 
@@ -69,12 +71,35 @@ def insert_fake_data_group(num_records, users_count):
 
     conn.commit()
 
+def insert_fake_data_posts(num_records, users_count):
+    visibility_options = ['public', 'followers', 'private']
+
+    for _ in range(num_records):
+        user_id = fake.random_int(min=1, max=users_count)
+        content = fake.text()
+
+        image_url = None if random.random() < 0.5 else random.choice(os.path.expanduser('~/Desktop/social-app/backend/data/global'))
+
+        if image_url:
+            image_url = os.path.join('/api/global', image_url)
+
+        visibility = random.choice(visibility_options)
+
+        cursor.execute('''
+            INSERT INTO posts (user_id, content, image_url, visibility) 
+            VALUES (?, ?, ?, ?);
+        ''', (user_id, content, image_url, visibility))
+
+    conn.commit()
+
+
 
 # choose scripts that you want to run
 insert_fake_data_user(20)
 insert_fake_data_session(5,20)
 insert_fake_data_follower(200,20)
 insert_fake_data_group(20,20)
+insert_fake_data_posts(100,20)
 
 conn.close()
 
