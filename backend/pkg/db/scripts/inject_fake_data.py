@@ -98,7 +98,7 @@ def insert_fake_data_posts(num_records, users_count):
 insert_fake_data_user(20)
 insert_fake_data_session(5,20)
 insert_fake_data_follower(200,20)
-insert_fake_data_group(20,20)
+# insert_fake_data_group(20,20)
 insert_fake_data_posts(100,20)
 
 conn.close()
