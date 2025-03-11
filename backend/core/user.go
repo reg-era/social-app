@@ -40,7 +40,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 			key   string
 			value string
 		}{true: {key: "u2.email", value: targetEmail}, false: {key: "u2.id", value: strconv.Itoa(userId)}}[targetEmail != ""]
-		
+
 		nich := map[bool]struct {
 			from string
 			to   string
@@ -58,14 +58,22 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		`, indexing.value)
 		defer data.Close()
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "status internal server error"},
+			)
 			return
 		}
 
 		for data.Next() {
 			var newFoll User
 			if err := data.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"error": "status internal server error"},
+				)
 				return
 			}
 			response = append(response, newFoll)
@@ -168,3 +176,35 @@ func (a *API) ReadUser(id int, user *User) error {
 	}
 	return nil
 }
+
+// SELECT p.* FROM posts p
+// WHERE
+// -- Public posts are visible to everyone
+// (p.visibility = 'public')
+//
+// OR
+//
+// -- Posts with "followers" visibility where the viewer follows the creator
+// (p.visibility = 'followers' AND EXISTS (
+// SELECT 1 FROM follows
+// WHERE follower_id = ? AND following_id = p.user_id
+// ))
+//
+// OR
+//
+// -- Private posts where the viewer is explicitly allowed
+// (p.visibility = 'private' AND EXISTS (
+// SELECT 1 FROM post_viewers
+// WHERE post_id = p.id AND user_id = ?
+// ))
+//
+// -- Include the user's own posts
+// OR p.user_id = ?
+//
+// -- Also include posts from groups the user is a member of
+// OR (p.group_id IN (
+// SELECT group_id FROM group_members
+// WHERE user_id = ? AND status = 'accepted'
+// ))
+//
+// ORDER BY p.created_at DESC
