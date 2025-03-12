@@ -176,35 +176,3 @@ func (a *API) ReadUser(id int, user *User) error {
 	}
 	return nil
 }
-
-// SELECT p.* FROM posts p
-// WHERE
-// -- Public posts are visible to everyone
-// (p.visibility = 'public')
-//
-// OR
-//
-// -- Posts with "followers" visibility where the viewer follows the creator
-// (p.visibility = 'followers' AND EXISTS (
-// SELECT 1 FROM follows
-// WHERE follower_id = ? AND following_id = p.user_id
-// ))
-//
-// OR
-//
-// -- Private posts where the viewer is explicitly allowed
-// (p.visibility = 'private' AND EXISTS (
-// SELECT 1 FROM post_viewers
-// WHERE post_id = p.id AND user_id = ?
-// ))
-//
-// -- Include the user's own posts
-// OR p.user_id = ?
-//
-// -- Also include posts from groups the user is a member of
-// OR (p.group_id IN (
-// SELECT group_id FROM group_members
-// WHERE user_id = ? AND status = 'accepted'
-// ))
-//
-// ORDER BY p.created_at DESC

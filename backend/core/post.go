@@ -10,11 +10,11 @@ import (
 )
 
 type Post struct {
-	ID       int    `json:"PostId"`
-	Username string `json:"authorName"`
-	Content  string `json:"postText"`
-	ImageURL string `json:"imagePostUrl"`
-	// ShownTo   string `json:"shown_to"`
+	ID         int    `json:"PostId"`
+	Username   string `json:"authorName"`
+	Content    string `json:"postText"`
+	ImageURL   string `json:"imagePostUrl"`
+	Visibility string `json:"visibility"`
 	// GroupID   string `json:"group_id"`
 	CreatedAt string `json:"postTime"`
 }
@@ -30,9 +30,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			imagePath, err = utils.UploadFileData(file, handler)
 			if err != nil {
-				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
-					"error": err.Error(),
-				})
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 				return
 			}
 		}
@@ -44,9 +42,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		postId, err := a.Create(`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`, userId, content, imagePath, visibility)
 		if err != nil {
 			fmt.Println(err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"faild": "Status Internal Server Error",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 			return
 		}
 
@@ -60,91 +56,70 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		var first, last string
 		if err := resPost.Scan(&first, &last, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
 			fmt.Println(err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"faild": "Status Internal Server Error",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 			return
 		}
 		post.ID = int(postId)
 		post.Username = first + " " + last
+
 		utils.RespondWithJSON(w, http.StatusCreated, post)
 	case http.MethodGet:
-
-		param := r.URL.Query().Get("postID")
-		var query string
-		var queryParams []interface{}
+		param := r.URL.Query().Get("page")
+		page := 0
 		if param != "" {
-			offset, err := strconv.Atoi(param)
-			if err != nil {
+			var err error
+			if page, err = strconv.Atoi(param); err != nil {
 				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Status Bad Request"})
 				return
 			}
-
-			query = `
-			SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at
-			FROM posts
-			JOIN users ON posts.user_id = users.id
-			JOIN post_viewers ON posts.id = post_viewers.post_id
-			WHERE (
-				visibility = 'public' OR 
-				((visibility = 'private' OR visibility = 'followers' ) AND post_viewers.user_id = ?)
-			) AND posts.id > ?
-			ORDER BY posts.created_at DESC LIMIT 5;`
-			queryParams = append(queryParams, userId, offset)
-
-		} else {
-			query = `
-			SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at
-			FROM posts
-			JOIN users ON posts.user_id = users.id
-			JOIN post_viewers ON posts.id = post_viewers.post_id
-			WHERE visibility = 'public'
-			OR ((visibility = 'private' OR visibility = 'followers' ) AND post_viewers.user_id = ?)
-			ORDER BY posts.created_at DESC LIMIT 5;`
-			queryParams = append(queryParams, userId)
 		}
 
-		data, err := a.ReadAll(query, queryParams...)
+		data, err := a.ReadAll(`
+		SELECT users.firstname, users.lastname, p.id, p.visibility, p.content, p.image_url, p.created_at 
+		FROM posts p
+		JOIN users ON p.user_id = users.id
+		WHERE (
+			(p.visibility = 'public')
+			OR
+			(p.visibility = 'followers' AND EXISTS (
+				SELECT 1 FROM follows
+				WHERE follower_id = $1 AND following_id = p.user_id
+			))
+			OR
+			(p.visibility = 'private' AND EXISTS (
+				SELECT 1 FROM post_viewers
+				WHERE post_id = p.id AND user_id = $1
+			))
+			OR p.user_id = $1 
+		) 
+		ORDER BY p.created_at DESC 
+		LIMIT 5 OFFSET (5 * $2);
+		`, userId, page)
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Status Internal Server Error",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 			return
 		}
 		defer data.Close()
 
-		response := struct {
-			Posts  []Post `json:"posts"`
-			NextId int    `json:"next_id"`
-		}{}
-
-		var allPost []Post
+		allPost := []Post{}
 		for data.Next() {
 			var post Post
 			var first, last string
-			if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Status Internal Server Error",
-				})
+			if err := data.Scan(&first, &last, &post.ID, &post.Visibility, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
 			}
 			post.Username = first + " " + last
 			allPost = append(allPost, post)
-			response.NextId = post.ID
 		}
 
 		if err := data.Err(); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Status Internal Server Error",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 			return
 		}
 
-		response.Posts = allPost
-		utils.RespondWithJSON(w, http.StatusOK, response)
+		utils.RespondWithJSON(w, http.StatusOK, allPost)
 	default:
-		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
-			"error": "Status Method Not Allowed",
-		})
+		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 	}
 }

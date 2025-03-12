@@ -8,8 +8,8 @@ fake = Faker()
 conn = sqlite3.connect('data/data.db')
 cursor = conn.cursor()
 
-def generate_random_image():
-    image_url = "" if random.random() < 0.5 else random.choice(os.listdir('./data/global'))
+def generate_random_image(chance=0.5):
+    image_url = "" if random.random() < chance else random.choice(os.listdir('./data/global'))
     if image_url != "":
         image_url = os.path.join('/api/global', image_url)
 
@@ -83,7 +83,7 @@ def insert_fake_data_posts(num_records, users_count):
         user_id = fake.random_int(min=1, max=users_count)
         content = fake.text()
         visibility = random.choice(['public', 'followers', 'private'])
-        image_url = generate_random_image()
+        image_url = generate_random_image(0.65)
 
         cursor.execute('''
             INSERT INTO posts (user_id, content, image_url, visibility) 
@@ -92,14 +92,27 @@ def insert_fake_data_posts(num_records, users_count):
 
     conn.commit()
 
+def insert_fake_data_comment(num_records, users_count, posts_count):
+    for _ in range(num_records):
+        post_id = fake.random_int(min=1, max=posts_count)
+        user_id = fake.random_int(min=1, max=users_count)
+        content = fake.text()
+        image_url = generate_random_image()
 
+        cursor.execute('''
+            INSERT INTO comments (post_id, user_id, content, image_url)
+            VALUES (?, ?, ?, ?)
+        ''', (post_id, user_id, content, image_url))
+
+    conn.commit()
 
 # choose scripts that you want to run
 insert_fake_data_user(20)
 insert_fake_data_session(5,20)
 insert_fake_data_follower(200,20)
-# insert_fake_data_group(20,20)
+insert_fake_data_group(20,20)
 insert_fake_data_posts(100,20)
+insert_fake_data_comment(300,20,100)
 
 conn.close()
 
