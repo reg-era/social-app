@@ -22,12 +22,11 @@ const Home = () => {
     });
 
     if (res.ok) {
-      
       const data = await res.json();
       console.log(data);
       if (data) {
         setPosts((prevPosts) => [...prevPosts, ...data]);
-        setPage(page+1);
+        setPage((prevPage) => prevPage + 1);
       }
     } else {
       console.error('Failed to fetch posts');
