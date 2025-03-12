@@ -20,7 +20,12 @@ type Post struct {
 }
 
 func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("userID").(int)
+	userId, ok := r.Context().Value("userID").(int)
+	if !ok {
+		utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
 	switch r.Method {
 	case http.MethodPost:
 		content := r.FormValue("post")
