@@ -32,7 +32,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infos := a.Read(`SELECT id, password FROM users WHERE email = ? OR nickname = ?;`, userForm.Email, userForm.Email)
+	infos := a.Read(`SELECT id, password FROM users WHERE email = ? ;`, userForm.Email)
 	var userId int
 	var hash string
 	if err := infos.Scan(&userId, &hash); err != nil {
