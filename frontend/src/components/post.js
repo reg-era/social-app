@@ -2,13 +2,12 @@
 
 import CreateCommentCard from "./comment.js";
 import { useEffect, useState } from "react";
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComment } from '@fortawesome/free-solid-svg-icons';
+import { CommentIcon } from '@/components/icons';
 
 const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
     const [showComments, setShowComments] = useState(false);
-    const [newImageURL, setImageURL] = useState('')
+    const [newImageURL, setImageURL] = useState('');
+
     const getDownloadImage = async () => {
         try {
             if (imagePostUrl !== '') {
@@ -17,18 +16,19 @@ const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
                         'Authorization': document.cookie.slice('auth_session='.length),
                     },
                 });
-                const image = await res.blob()
+                const image = await res.blob();
                 const imgUrl = URL.createObjectURL(image);
-                setImageURL(imgUrl)
+                setImageURL(imgUrl);
             }
         } catch (err) {
             console.error("fetching image: ", err);
         }
-    }
+    };
 
     useEffect(() => {
-        getDownloadImage()
-    }, [])
+        getDownloadImage();
+    }, []);
+
     return (
         <div className="post-card">
             <div className="post-header">
@@ -40,15 +40,18 @@ const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
             </div>
             <div className="post-content">
                 <p className="post-text">{postText}</p>
-                {imagePostUrl !== '' && <div className="post-image"
-                    style={{
-                        backgroundImage: `url(${newImageURL})`,
-                        backgroundSize: 'cover'
-                    }}></div>}
+                {imagePostUrl !== '' && (
+                    <div className="post-image"
+                        style={{
+                            backgroundImage: `url(${newImageURL})`,
+                            backgroundSize: 'cover'
+                        }}>
+                    </div>
+                )}
             </div>
             <div className="post-actions">
                 <button className="comment-button" onClick={() => setShowComments(!showComments)}>
-                    <FontAwesomeIcon icon={faComment} />
+                    <CommentIcon />
                     <span>Comment</span>
                 </button>
             </div>

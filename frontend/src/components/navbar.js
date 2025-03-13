@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BellIcon, CommentIcon, UserIcon } from './icons.js';
+import { BellIcon, CommentIcon, UserIcon } from '@/components/icons';
 
 const Navigation = () => {
     return (

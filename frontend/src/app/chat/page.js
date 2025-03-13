@@ -7,6 +7,7 @@ import Navigation from '@/components/navbar';
 import BackHome from '@/components/back_home';
 
 import { useState } from 'react';
+import { SendIcon } from '@/components/icons';
 
 const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -80,7 +81,9 @@ const ChatPage = () => {
                             </div>
                             <div className="message-input-container">
                                 <input type="text" placeholder="Type a message..." />
-                                <button className="send-button">send</button>
+                                <button className="send-button">
+                                    <SendIcon />
+                                </button>
                             </div>
                         </>
                     ) : (
