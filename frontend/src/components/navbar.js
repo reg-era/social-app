@@ -1,7 +1,11 @@
 import Link from 'next/link';
-import { BellIcon, CommentIcon, UserIcon } from '@/components/icons';
+
+import { BellIcon } from '@/components/icons';
+import { useState } from 'react';
+import Notif from './notification';
 
 const Navigation = () => {
+    const [show, setDisplay] = useState(false)
     return (
         <nav className="main-nav">
             <div className="logo">SocialNet</div>
@@ -9,17 +13,20 @@ const Navigation = () => {
                 <input type="text" placeholder="Search..." />
             </div>
             <div className="nav-icons">
-                <div className="nav-icon notification-icon">
+                <div className="nav-icon notification-icon" onClick={() => {
+                    setDisplay(!show)
+                }}>
                     <BellIcon />
                     <span className="notification-count">3</span>
                 </div>
-                <Link href="/chat" className="nav-icon messages-icon">
-                    <CommentIcon />
-                    <span className="messages-count">5</span>
-                </Link>
-                <button className="nav-icon logout-btn">
-                    <UserIcon />
-                </button>
+                {show && <Notif />}
+                <div className="nav-icon messages-icon">
+                    <Link href="/chat" className="nav-icon messages-icon">
+                        <span className="messages-count">4</span>
+                    </Link>
+                </div>
+                <div className="nav-icon profile-thumbnail">
+                </div>
             </div>
         </nav>
     );
