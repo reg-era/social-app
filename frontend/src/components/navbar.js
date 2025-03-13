@@ -1,7 +1,5 @@
 import Link from 'next/link';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faComment, faSignOut } from '@fortawesome/free-solid-svg-icons';
+import { BellIcon, CommentIcon, UserIcon } from './icons.js';
 
 const Navigation = () => {
     return (
@@ -12,15 +10,15 @@ const Navigation = () => {
             </div>
             <div className="nav-icons">
                 <div className="nav-icon notification-icon">
-                    <FontAwesomeIcon icon={faBell} />
+                    <BellIcon />
                     <span className="notification-count">3</span>
                 </div>
                 <Link href="/chat" className="nav-icon messages-icon">
-                    <FontAwesomeIcon icon={faComment} />
+                    <CommentIcon />
                     <span className="messages-count">5</span>
                 </Link>
                 <button className="nav-icon logout-btn">
-                    <FontAwesomeIcon icon={faSignOut} />
+                    <UserIcon />
                 </button>
             </div>
         </nav>
