@@ -1,6 +1,6 @@
 "use client"
 
-import CommentSection from "./comment.js";
+import CreateCommentCard from "./comment.js";
 import { useEffect, useState } from "react";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -52,7 +52,7 @@ const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
                     <span>Comment</span>
                 </button>
             </div>
-            {showComments && <CommentSection PostId={PostId} />}
+            {showComments && <CreateCommentCard postId={PostId} />}
         </div>
     );
 };

@@ -40,7 +40,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 			key   string
 			value string
 		}{true: {key: "u2.email", value: targetEmail}, false: {key: "u2.id", value: strconv.Itoa(userId)}}[targetEmail != ""]
-		
+
 		nich := map[bool]struct {
 			from string
 			to   string
@@ -58,14 +58,22 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		`, indexing.value)
 		defer data.Close()
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "status internal server error"},
+			)
 			return
 		}
 
 		for data.Next() {
 			var newFoll User
 			if err := data.Scan(&newFoll.Email, &newFoll.FirstName, &newFoll.LastName, &newFoll.DateOfBirth, &newFoll.AvatarUrl, &newFoll.Nickname, &newFoll.AboutMe, &newFoll.IsPublic); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"error": "status internal server error"},
+				)
 				return
 			}
 			response = append(response, newFoll)
