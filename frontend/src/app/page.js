@@ -3,10 +3,10 @@
 import '../style/home.css'
 import { useEffect, useState } from 'react';
 
-import Navigation from '../components/navbar.js';
-import Sidebar from '../components/sidebar.js';
-import CreatePostCard from '../components/create_post.js';
-import PostCard from '../components/post.js';
+import Navigation from '@/components/navbar.js';
+import Sidebar from '@/components/sidebar.js';
+import CreatePostCard from '@/components/create_post.js';
+import PostCard from '@/components/post.js';
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
@@ -39,13 +39,7 @@ const Home = () => {
   }, []);
 
   const addPost = (newPost) => {
-    setPosts((prevPosts) => [newPost, ...prevPosts]);
-  };
-
-  const loadMorePosts = () => {
-    if (page) {
-      getPosts(page);
-    }
+    setPosts((prevPosts) => [...prevPosts, newPost]);
   };
 
   return (
@@ -67,7 +61,7 @@ const Home = () => {
           ))}
           {loading && <div>Loading more posts...</div>}
           {!loading && page && (
-            <button onClick={loadMorePosts}>Load More</button>
+            <button onClick={getPosts}>Load More</button>
           )}
         </div>
       </div>
