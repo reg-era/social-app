@@ -116,3 +116,4 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 		return
   }
+}
