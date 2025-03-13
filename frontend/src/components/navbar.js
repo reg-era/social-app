@@ -10,6 +10,7 @@ const Navigation = () => {
         "Your post got a like",
         "Someone commented on your post",
     ];
+    //we can change this notification format yo what ever is easier to get from the backend this is just an example as u asked me for 
 
     return (
         <nav className="main-nav">
