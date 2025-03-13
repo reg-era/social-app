@@ -121,11 +121,11 @@ def insert_fake_data_messages(num_records, users_count):
 # choose scripts that you want to run
 insert_fake_data_user(20)
 insert_fake_data_session(5,20)
-insert_fake_data_follower(200,20)
+# insert_fake_data_follower(200,20)
 # insert_fake_data_group(20,20)
-insert_fake_data_posts(100,20)
-insert_fake_data_comment(300,20,100)
-insert_fake_data_messages(300,20)
+# insert_fake_data_posts(100,20)
+# insert_fake_data_comment(300,20,100)
+# insert_fake_data_messages(300,20)
 
 conn.close()
 

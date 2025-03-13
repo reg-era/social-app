@@ -1,14 +1,12 @@
 'use client';
 import '@/style/profile.css';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faGlobe, faCog, faUserPlus, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/components/icons';
 
 import { useState } from 'react';
 
 import Navigation from '@/components/navbar';
 import PostCard from '@/components/post';
-import BackHome from '@/components/back_home'
+import BackHome from '@/components/back_home';
 
 const ProfilePage = () => {
     const [user, setUser] = useState({
@@ -18,16 +16,14 @@ const ProfilePage = () => {
         email: 'chiwa7ed@example.com',
         bio: 'Software developer | Photography enthusiast | Coffee lover',
         isPrivate: false,
-        isOwnProfile: true, // Set to true if viewing own profile, false if viewing someone else's
-        isFollowing: false, // Only relevant if viewing someone else's profile
+        isOwnProfile: true,
+        isFollowing: false,
         followers: 245,
         following: 173,
     });
 
-    // Sample posts
     const posts = [
         {
-            PostId: 1,
             PostId: 1,
             authorName: 'profile',
             imagePostUrl: '/sdf/sdfsf',
@@ -37,31 +33,26 @@ const ProfilePage = () => {
         },
         {
             PostId: 2,
-            PostId: 2,
             authorName: 'profile',
             imagePostUrl: '',
             postText: 'Just finished working on a new project! #coding #webdev',
             postTime: '2 days ago',
             comments: 12,
         },
-    ]
+    ];
 
-    // Sample followers/following
-    const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'followers', 'following'
+    const [activeTab, setActiveTab] = useState('posts');
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
-    // Toggle profile privacy
     const togglePrivacy = () => {
         setUser({ ...user, isPrivate: !user.isPrivate });
         setShowPrivacySettings(false);
     };
 
-    // Follow/unfollow user
     const toggleFollow = () => {
         setUser({ ...user, isFollowing: !user.isFollowing });
     };
 
-    // Sample people lists for followers/following tabs
     const people = [
         { id: 1, username: 'jane_smith', fullName: 'Jane Smith', isFollowing: true },
         { id: 2, username: 'john_doe', fullName: 'John Doe', isFollowing: false },
@@ -71,7 +62,6 @@ const ProfilePage = () => {
         { id: 6, username: 'emily_travel', fullName: 'Emily Davis', isFollowing: false },
     ];
 
-    // Check if profile should be visible (own profile or public or following a private profile)
     const isProfileVisible = user.isOwnProfile || !user.isPrivate || (user.isPrivate && user.isFollowing);
 
     return (
@@ -88,15 +78,11 @@ const ProfilePage = () => {
                                 <span className="username">@{user.username}</span>
                                 {user.isPrivate && (
                                     <span className="privacy-indicator">
-                                        <FontAwesomeIcon icon={faLock} />
+                                        <LockIcon />
                                     </span>
                                 )}
                             </div>
                             <p className="bio">{user.bio}</p>
-                            <div className="profile-details">
-                                <span className="detail-item">
-                                </span>
-                            </div>
                         </div>
                         <div className="profile-actions">
                             {user.isOwnProfile ? (
@@ -105,12 +91,12 @@ const ProfilePage = () => {
                                         className="settings-btn"
                                         onClick={() => setShowPrivacySettings(!showPrivacySettings)}
                                     >
-                                        <FontAwesomeIcon icon={faCog} />
+                                        <CogIcon />
                                     </button>
                                     {showPrivacySettings && (
                                         <div className="privacy-dropdown">
                                             <div className="privacy-option" onClick={togglePrivacy}>
-                                                <FontAwesomeIcon icon={user.isPrivate ? faGlobe : faLock} />
+                                                <span>{user.isPrivate ? <GlobeIcon /> : <LockIcon />}</span>
                                                 <span>{user.isPrivate ? 'Make Profile Public' : 'Make Profile Private'}</span>
                                             </div>
                                         </div>
@@ -123,11 +109,11 @@ const ProfilePage = () => {
                                 >
                                     {user.isFollowing ? (
                                         <>
-                                            <FontAwesomeIcon icon={faCheck} /> Following
+                                            <CheckIcon /> Following
                                         </>
                                     ) : (
                                         <>
-                                            <FontAwesomeIcon icon={faUserPlus} /> Follow
+                                            <UserPlusIcon /> Follow
                                         </>
                                     )}
                                 </button>
@@ -203,11 +189,11 @@ const ProfilePage = () => {
                                                 <button className={`follow-btn ${person.isFollowing ? 'following' : ''}`}>
                                                     {person.isFollowing ? (
                                                         <>
-                                                            <FontAwesomeIcon icon={faCheck} /> Following
+                                                            <CheckIcon /> Following
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <FontAwesomeIcon icon={faUserPlus} /> Follow
+                                                            <UserPlusIcon /> Follow
                                                         </>
                                                     )}
                                                 </button>
@@ -227,7 +213,7 @@ const ProfilePage = () => {
                                                 <div className="people-username">@{person.username}</div>
                                             </div>
                                             <button className={`follow-btn ${true ? 'following' : ''}`}>
-                                                <FontAwesomeIcon icon={faCheck} /> Following
+                                                <CheckIcon /> Following
                                             </button>
                                         </div>
                                     ))}
@@ -236,11 +222,11 @@ const ProfilePage = () => {
                         </div>
                     ) : (
                         <div className="private-profile-message">
-                            <FontAwesomeIcon icon={faLock} size="3x" />
+                            <LockIcon size="3x" />
                             <h2>This Profile is Private</h2>
                             <p>Follow this user to see their posts and other information.</p>
                             <button className="follow-btn" onClick={toggleFollow}>
-                                <FontAwesomeIcon icon={faUserPlus} /> Follow
+                                <UserPlusIcon /> Follow
                             </button>
                         </div>
                     )}

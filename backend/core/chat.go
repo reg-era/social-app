@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,7 +15,17 @@ type Msg struct {
 	Receiver      int    `json:"receiver"`
 	EmailSender   string `json:"email_sender"`
 	EmailReceiver string `json:"email_receiver"`
+	CreateAt      string `json:"create_at"`
 }
+
+// GET localhost:8080/api/chat to get all conversation bar mad by the user
+// GET localhost:8080/api/chat?target=lopezrichard@example.net&page=0 to get all messages
+// mad by the user and another user !!! use page for pagination
+// POST localhost:8080/api/chat to send a message in this forme
+// {
+// "content": "hada test postman",
+// "email_receiver": "lopezrichard@example.net"
+// }
 
 func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("userID").(int)
@@ -35,18 +46,17 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if target == "conv" {
-			subTarget := r.URL.Query().Get("user")
+		if target != "" {
 			conversation := []Msg{}
 			data, err := api.ReadAll(`
-				SELECT  m.sender_id,  m.receiver_id, m.content, u1.email AS sender_email,  u2.email AS receiver_email
+				SELECT  m.sender_id,  m.receiver_id, m.content, m.created_at, u1.email AS sender_email,  u2.email AS receiver_email
 				FROM messages m
 				JOIN users u1 ON m.sender_id = u1.id
 				JOIN users u2 ON m.receiver_id = u2.id
 				WHERE (m.sender_id = $1 AND u2.email = $2 )
 				OR (u1.email = $2 AND m.receiver_id = $1 )
 				ORDER BY m.created_at DESC
-				LIMIT 5 OFFSET (5 * $3);`, userId, subTarget, page)
+				LIMIT 5 OFFSET (5 * $3);`, userId, target, page)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
@@ -55,7 +65,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 
 			for data.Next() {
 				var msg Msg
-				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.EmailSender, &msg.EmailReceiver); err != nil {
+				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreateAt, &msg.EmailSender, &msg.EmailReceiver); err != nil {
 					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
@@ -66,7 +76,16 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusOK, conversation)
 		} else {
 			contact := []User{}
-			data, err := api.ReadAll(``, userId)
+			data, err := api.ReadAll(`
+			SELECT DISTINCT sender_id AS user_id, u.nickname, u.email, u.avatarUrl FROM messages
+			JOIN users u on u.id = user_id
+			WHERE sender_id = $1 OR receiver_id = $1
+			UNION
+			SELECT DISTINCT receiver_id AS user_id, u.nickname, u.email, u.avatarUrl FROM messages
+			JOIN users u on u.id = user_id
+			WHERE sender_id = $1 OR receiver_id = $1
+			ORDER BY user_id DESC ;
+			`, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
@@ -75,7 +94,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 
 			for data.Next() {
 				var user User
-				if err := data.Scan(); err != nil {
+				if err := data.Scan(&user.Id, &user.Nickname, &user.Email, &user.AvatarUrl); err != nil {
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
 				}
@@ -85,7 +104,23 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusOK, contact)
 		}
 	case http.MethodPost:
-		
+		var msg Msg
+		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
+		}
+
+		_, err := api.Create(`
+		INSERT INTO messages (sender_id,receiver_id,content)
+		VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`, userId, msg.EmailReceiver, msg.Content)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
+		}
+
+		// implemente websocket
+
+		utils.RespondWithJSON(w, http.StatusCreated, nil)
 	default:
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 	}
