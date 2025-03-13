@@ -29,7 +29,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		exists := false
 		err := a.Read(`SELECT EXISTS(
 		SELECT 1 FROM follows
-		WHERE FOLLOWER_id =? AND following_id =?
+		WHERE following_id =? AND following_id =?
 		)`, userId, follow.Following_id).Scan(&exists)
 		if err != nil {
 			fmt.Println(err)
