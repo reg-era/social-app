@@ -4,21 +4,22 @@ import CreateCommentCard from "./comment.js";
 import { useEffect, useState } from "react";
 import { CommentIcon } from '@/components/icons';
 
-const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
+const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl }) => {
     const [showComments, setShowComments] = useState(false);
     const [newImageURL, setImageURL] = useState('');
+    const [profileImage, setProfileImage] = useState('');
 
-    const getDownloadImage = async () => {
+    const getDownloadImage = async (link, isPost) => {
         try {
-            if (imagePostUrl !== '') {
-                const res = await fetch(`http://127.0.0.1:8080/${imagePostUrl}`, {
+            if (link !== '') {
+                const res = await fetch(link, {
                     headers: {
                         'Authorization': document.cookie.slice('auth_session='.length),
                     },
                 });
                 const image = await res.blob();
-                const imgUrl = URL.createObjectURL(image);
-                setImageURL(imgUrl);
+                const newUrl = URL.createObjectURL(image);
+                isPost ? setImageURL(newUrl) : setProfileImage(newUrl)
             }
         } catch (err) {
             console.error("fetching image: ", err);
@@ -26,13 +27,17 @@ const PostCard = ({ PostId, authorName, postTime, postText, imagePostUrl }) => {
     };
 
     useEffect(() => {
-        getDownloadImage();
+        getDownloadImage(`http://127.0.0.1:8080/${imagePostUrl}`, true);
+        getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
     }, []);
 
     return (
         <div className="post-card">
             <div className="post-header">
-                <div className="post-author-avatar"></div>
+                <div className="post-author-avatar" style={{
+                    backgroundImage: `url(${profileImage})`,
+                    backgroundSize: 'cover'
+                }}></div>
                 <div className="post-info">
                     <div className="post-author-name">{authorName}</div>
                     <div className="post-time">{postTime}</div>

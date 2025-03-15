@@ -10,8 +10,9 @@ import (
 )
 
 type Post struct {
-	ID         int    `json:"PostId"`
-	Username   string `json:"authorName"`
+	ID   int  `json:"PostId"`
+	User User `json:"user"`
+	// Username   string `json:"authorName"`
 	Content    string `json:"postText"`
 	ImageURL   string `json:"imagePostUrl"`
 	Visibility string `json:"visibility"`
@@ -52,20 +53,17 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resPost := a.Read(`
-		SELECT users.firstname, users.lastname ,posts.content, posts.image_url, posts.created_at FROM posts
+		SELECT users.firstname, users.lastname,users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts
 		JOIN users ON posts.user_id = users.id
 		WHERE posts.id = ?
 		`, postId)
 
 		var post Post
-		var first, last string
-		if err := resPost.Scan(&first, &last, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+		if err := resPost.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
 			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 			return
 		}
-		post.ID = int(postId)
-		post.Username = first + " " + last
 
 		utils.RespondWithJSON(w, http.StatusCreated, post)
 	case http.MethodGet:
@@ -80,7 +78,7 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		data, err := a.ReadAll(`
-		SELECT users.firstname, users.lastname, p.id, p.visibility, p.content, p.image_url, p.created_at 
+		SELECT users.firstname, users.lastname,users.email, users.avatarUrl, p.id, p.visibility, p.content, p.image_url, p.created_at 
 		FROM posts p
 		JOIN users ON p.user_id = users.id
 		WHERE (
@@ -109,12 +107,10 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		allPost := []Post{}
 		for data.Next() {
 			var post Post
-			var first, last string
-			if err := data.Scan(&first, &last, &post.ID, &post.Visibility, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+			if err := data.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Visibility, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
 			}
-			post.Username = first + " " + last
 			allPost = append(allPost, post)
 		}
 

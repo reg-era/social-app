@@ -200,6 +200,8 @@ body {
 }
 
 .menu-item {
+    text-decoration: none;
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 15px;

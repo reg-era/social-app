@@ -13,10 +13,10 @@ const Sidebar = () => {
                     <UsersIcon />
                     <span>Profile</span>
                 </Link>
-                <div className="menu-item">
+                <Link href="/group" className="menu-item">
                     <GlobeIcon />
                     <span>Groups</span>
-                </div>
+                </Link>
             </div>
             <div className="sidebar-section">
                 <h3>Your Groups</h3>

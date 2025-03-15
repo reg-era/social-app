@@ -88,7 +88,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 
 		response := []Post{}
 		data, err := a.ReadAll(`
-		SELECT users.firstname, users.lastname, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
+		SELECT users.firstname, users.lastname,users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
 		JOIN users ON posts.user_id = users.id 
 		WHERE `+indexing.key+` = ? ;`, indexing.value)
 		defer data.Close()
@@ -99,12 +99,10 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 
 		for data.Next() {
 			var post Post
-			var first, last string
-			if err := data.Scan(&first, &last, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
+			if err := data.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 				return
 			}
-			post.Username = first + " " + last
 			response = append(response, post)
 		}
 		utils.RespondWithJSON(w, http.StatusOK, response)
