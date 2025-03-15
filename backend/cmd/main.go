@@ -53,6 +53,7 @@ func main() {
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
+	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
 
 	// run hub channels listner
 	go api.HUB.RunHubListner()
