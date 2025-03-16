@@ -167,6 +167,8 @@ body {
 
 /* Search items */
 .search-item {
+    overflow-x: hidden;
+    text-decoration: none;
     display: flex;
     align-items: center;
     padding: 10px;

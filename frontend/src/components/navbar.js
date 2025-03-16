@@ -56,19 +56,12 @@ const Navigation = () => {
         <nav className="main-nav">
             <div className="logo">SocialNet</div>
             <div className="nav-search" ref={searchRef}>
-                <input type="text" value={keyWord} onChange={handleSearch} placeholder="Search..." onFocus={() => setDisplayResult(true)}/>
+                <input type="text" value={keyWord} onChange={handleSearch} placeholder="Search..." onFocus={() => setDisplayResult(true)} />
                 {result && (
                     <div className="search-dropdown">
                         {searchResults.length > 0 ? (
                             searchResults.map((user, index) => (
-                                <div key={index} className="search-item">
-                                    <img src={user.avatarUrl || '/default-avatar.png'} alt={user.firstName} className="search-avatar" />
-                                    {/* <a key={index} href={`/profile/${user.id}`} className="search-item"></a> */}
-                                    <div className="search-info">
-                                        <p>{user.firstName} {user.lastName}</p>
-                                        <span>{user.email}</span>
-                                    </div>
-                                </div>
+                                <ResultCard key={index} email={user.email} firstName={user.firstName} lastName={user.lastName} avatar={user.avatarUrl} />
                             ))
                         ) : (
                             <p className="no-results">No results found</p>
@@ -95,5 +88,41 @@ const Navigation = () => {
         </nav>
     );
 };
+
+const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
+    const [image, setImage] = useState('/default-avatar.jpg')
+
+    const getImage = async () => {
+        if (avatar === '') return
+        try {
+            const res = await fetch(`http://127.0.0.1:8080/${avatar}`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            })
+            if (res.ok) {
+                const image = await res.blob();
+                const newUrl = URL.createObjectURL(image);
+                setImage(newUrl)
+            }
+        } catch (err) {
+            console.error("geting img: ", err);
+        }
+    }
+
+    useEffect(() => {
+        getImage()
+    }, [])
+
+    return (
+        <Link href={`/profile/${email}`} className="search-item">
+            <img src={image} alt={firstName} className="search-avatar" />
+            <div className="search-info">
+                <span>{nickname}</span>
+                <p>{firstName} {lastName}</p>
+            </div>
+        </Link>
+    )
+}
 
 export default Navigation;
