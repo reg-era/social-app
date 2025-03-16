@@ -63,6 +63,7 @@ const Navigation = () => {
                             searchResults.map((user, index) => (
                                 <div key={index} className="search-item">
                                     <img src={user.avatarUrl || '/default-avatar.png'} alt={user.firstName} className="search-avatar" />
+                                    {/* <a key={index} href={`/profile/${user.id}`} className="search-item"></a> */}
                                     <div className="search-info">
                                         <p>{user.firstName} {user.lastName}</p>
                                         <span>{user.email}</span>
