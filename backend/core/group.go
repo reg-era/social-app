@@ -219,6 +219,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 		}
 
 	default:
+		
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
 	}
 }
