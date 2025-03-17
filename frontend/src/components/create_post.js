@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react";
+import { FileUploadIcon } from "@/components/icons";
 
 const CreatePostCard = ({ onCreatePost }) => {
     const [newPost, setNewPost] = useState('');
@@ -56,9 +57,12 @@ const CreatePostCard = ({ onCreatePost }) => {
                         </div>
 
                         <input id="fileInputPost" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
-                        <button className="photo-action" onClick={importFile}>
-                            <span>Photo</span>
-                        </button>
+                        <div className="fileUploadIcon">
+                        <label htmlFor="file">
+                            <FileUploadIcon />
+                        </label>
+                        <input type="file" id="file" name="file" />
+                    </div>
                     </div>
 
                     {error && <p className="error-message">{error}</p>}

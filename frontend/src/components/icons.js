@@ -71,3 +71,11 @@ export const SendIcon = () => (
     <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
   </svg>
 );
+export const FileUploadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
+    <circle strokeWidth="2" stroke="#6c6c6c" fill="none" r="10" cy="12" cx="12"></circle>
+    <path strokeLinecap="round" strokeWidth="2" stroke="#6c6c6c" d="M12 6v12"></path>
+    <path strokeLinecap="round" strokeWidth="2" stroke="#6c6c6c" d="M6 12h12"></path>
+  </svg>
+);
+
