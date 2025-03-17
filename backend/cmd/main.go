@@ -41,6 +41,7 @@ func main() {
 	router.HandleFunc("POST /api/login", api.HandleLogin)
 	router.HandleFunc("POST /api/signin", api.HandleSignin)
 	router.Handle("/api/check", mw.AuthMiddleware(nil))
+	router.HandleFunc("/api/ws", http.HandlerFunc(api.WebSocketConnect))
 
 	// private
 	router.Handle("GET /api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
@@ -52,7 +53,6 @@ func main() {
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
-	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
 
 	// run hub channels listner

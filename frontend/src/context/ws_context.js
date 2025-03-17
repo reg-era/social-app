@@ -5,51 +5,37 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
-    const [worker, setWorker] = useState(null);
-    const [message, setMessage] = useState(null);
-    const [status, setStatus] = useState('disconnected');
+    const [websocket, setWebSocket] = useState(null);
+    const [connected, setConnected] = useState(false);
 
     useEffect(() => {
-        const newWorker = new SharedWorker('/worker/web_worker.js');
-        setWorker(newWorker);
+        const url = new URL('ws://localhost:8080/api/ws')
+        url.searchParams.append('auth', document.cookie.slice('auth_session='.length));
 
-        newWorker.port.onmessage = (event) => {
-            console.log(event);
-            
-            const { type, data } = event.data;
-            switch (type) {
-                case 'connected':
-                    setStatus('connected');
-                    break;
-                case 'disconnected':
-                    setStatus('disconnected');
-                    break;
-                case 'message':
-                    setMessage(data);
-                    break;
-                case 'error':
-                    console.error('WebSocket Error:', data);
-                    break;
-                default:
-                    break;
-            }
+        const ws = new WebSocket(url.toString());
+        setWebSocket(ws);
+
+        ws.onopen = () => {
+            console.log('WebSocket Connected');
+            setConnected(true);
         };
 
-        newWorker.port.start();
+        ws.onmessage = (event) => {
+            console.log('Message received:', JSON.parse(event.data));
+        };
+
+        ws.onclose = (event) => {
+            console.log('WebSocket Closed', event.code);
+            setConnected(false);
+        };
 
         return () => {
-            newWorker.port.close();
+            ws.close()
         };
     }, []);
 
-    const sendMessage = (msg) => {
-        if (worker) {
-            worker.port.postMessage(msg);
-        }
-    };
-
     return (
-        <WebSocketContext.Provider value={{ status, message, sendMessage }}>
+        <WebSocketContext.Provider value={{ websocket, connected }}>
             {children}
         </WebSocketContext.Provider>
     );

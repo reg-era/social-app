@@ -1,9 +1,17 @@
 import { SendIcon } from '@/components/icons';
+import { useWebSocket } from '@/context/ws_context';
 import { useState, useEffect } from 'react';
 
 const Conversation = ({ email, username }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+
+    const { websocket, connected } = useWebSocket();
+    if (websocket && connected) {
+        websocket.onmessage = (event) => {
+            setMessages((prevMessages) => [...prevMessages, JSON.parse(event.data)]);
+        };
+    }
 
     const getMessages = async () => {
         try {
@@ -38,7 +46,7 @@ const Conversation = ({ email, username }) => {
             });
             if (res.ok) {
                 setNewMessage('')
-                setMessages([...messages, msg])
+                setMessages((prevMsg) => [...prevMsg, msg])
             }
         } catch (err) {
             console.error("getting conversation: ", err);

@@ -77,10 +77,15 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		} else {
 			contact := []User{}
 			data, err := api.ReadAll(`
-			SELECT DISTINCT follower_id AS user_id, u.nickname, u.firstname, u.lastname, u.email, u.avatarUrl FROM follows
+			SELECT DISTINCT
+			follower_id , u.nickname, u.firstname, u.lastname, u.email, u.avatarUrl FROM follows
 			JOIN users u on u.id = follower_id
-			WHERE follower_id = $1 OR following_id = $1
-			ORDER BY user_id DESC ;
+			WHERE following_id = $1 AND follower_id != $1
+			UNION
+			SELECT DISTINCT
+			following_id , u.nickname, u.firstname, u.lastname, u.email, u.avatarUrl FROM follows
+			JOIN users u on u.id = following_id
+			WHERE follower_id = $1 AND following_id != $1
 			`, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
@@ -106,7 +111,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err := api.Create(`
+		msgID, err := api.Create(`
 		INSERT INTO messages (sender_id,receiver_id,content)
 		VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`, userId, msg.EmailReceiver, msg.Content)
 		if err != nil {
@@ -114,7 +119,20 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		data := api.Read(`
+			SELECT  m.sender_id,  m.receiver_id, m.content, m.created_at, u1.email AS sender_email,  u2.email AS receiver_email
+			FROM messages m
+			JOIN users u1 ON m.sender_id = u1.id
+			JOIN users u2 ON m.receiver_id = u2.id
+			WHERE m.id = ? ;`, msgID)
 		// implemente websocket
+
+		var brodMessage Msg
+		if err := data.Scan(&brodMessage.Sender, &brodMessage.Receiver, &brodMessage.Content, &brodMessage.CreateAt, &brodMessage.EmailSender, &brodMessage.EmailReceiver); err != nil {
+			fmt.Println("error on marshling", err)
+		}
+		fmt.Println("from post message: ", brodMessage)
+		api.HUB.Message <- &brodMessage
 
 		utils.RespondWithJSON(w, http.StatusCreated, nil)
 	default:
