@@ -1,90 +1,127 @@
 package core
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"sync"
+	"strconv"
 
-	"github.com/gorilla/websocket"
+	"social/pkg/utils"
 )
 
-type ChatHub struct {
-	connections map[int][]*websocket.Conn
-	mu          sync.RWMutex
+type Msg struct {
+	Content       string `json:"content"`
+	Sender        int    `json:"sender"`
+	Receiver      int    `json:"receiver"`
+	EmailSender   string `json:"email_sender"`
+	EmailReceiver string `json:"email_receiver"`
+	CreateAt      string `json:"create_at"`
 }
 
-func NewChatHub() *ChatHub {
-	return &ChatHub{
-		connections: make(map[int][]*websocket.Conn),
-	}
-}
+// GET localhost:8080/api/chat to get all conversation bar mad by the user
+// GET localhost:8080/api/chat?target=lopezrichard@example.net&page=0 to get all messages
+// mad by the user and another user !!! use page for pagination
+// POST localhost:8080/api/chat to send a message in this forme
+// {
+// "content": "hada test postman",
+// "email_receiver": "lopezrichard@example.net"
+// }
 
-var ch = NewChatHub()
-
-func HandleChat(w http.ResponseWriter, r *http.Request, db *sql.DB, userId int) {
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Error upgrading connection:", err)
+func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(int)
+	if !ok {
+		utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
-	defer conn.Close()
 
-	ch.mu.Lock()
-	if connections, ok := ch.connections[userId]; ok {
-		ch.connections[userId] = append(connections, conn)
-	} else {
-		ch.connections[userId] = []*websocket.Conn{conn}
-	}
-	ch.mu.Unlock()
-
-	for {
-		fmt.Println("user in hub: ", len(ch.connections))
-		fmt.Println("user connections: ", len(ch.connections[userId]))
-		var message struct {
-			Content  string `json:"content"`
-			Receiver int    `json:"receiver"`
-		}
-
-		if err := conn.ReadJSON(&message); err != nil {
-			ch.mu.Lock()
-			fmt.Printf("user disconnect:%d message: %v\n", userId, err)
-
-			if len(ch.connections[userId]) <= 1 {
-				delete(ch.connections, userId)
-			} else {
-				for i, c := range ch.connections[userId] {
-					if c == conn {
-						ch.connections[userId] = append(ch.connections[userId][:i], ch.connections[userId][i+1:]...)
-						break
-					}
-				}
+	switch r.Method {
+	case http.MethodGet:
+		target := r.URL.Query().Get("target")
+		param := r.URL.Query().Get("page")
+		page := 0
+		if param != "" {
+			var err error
+			if page, err = strconv.Atoi(param); err != nil {
+				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Status Bad Request"})
+				return
 			}
-			ch.mu.Unlock()
+		}
+		if target != "" {
+			conversation := []Msg{}
+			data, err := api.ReadAll(`
+				SELECT  m.sender_id,  m.receiver_id, m.content, m.created_at, u1.email AS sender_email,  u2.email AS receiver_email
+				FROM messages m
+				JOIN users u1 ON m.sender_id = u1.id
+				JOIN users u2 ON m.receiver_id = u2.id
+				WHERE (m.sender_id = $1 AND u2.email = $2 )
+				OR (u1.email = $2 AND m.receiver_id = $1 )
+				ORDER BY m.created_at DESC
+				LIMIT 5 OFFSET (5 * $3);`, userId, target, page)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+				return
+			}
+			defer data.Close()
+
+			for data.Next() {
+				var msg Msg
+				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreateAt, &msg.EmailSender, &msg.EmailReceiver); err != nil {
+					fmt.Println(err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
+					return
+				}
+				conversation = append(conversation, msg)
+			}
+
+			utils.RespondWithJSON(w, http.StatusOK, conversation)
+		} else {
+			contact := []User{}
+			data, err := api.ReadAll(`
+			SELECT DISTINCT sender_id AS user_id, u.nickname, u.email, u.avatarUrl FROM messages
+			JOIN users u on u.id = user_id
+			WHERE sender_id = $1 OR receiver_id = $1
+			UNION
+			SELECT DISTINCT receiver_id AS user_id, u.nickname, u.email, u.avatarUrl FROM messages
+			JOIN users u on u.id = user_id
+			WHERE sender_id = $1 OR receiver_id = $1
+			ORDER BY user_id DESC ;
+			`, userId)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+				return
+			}
+			defer data.Close()
+
+			for data.Next() {
+				var user User
+				if err := data.Scan(&user.Id, &user.Nickname, &user.Email, &user.AvatarUrl); err != nil {
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
+					return
+				}
+				contact = append(contact, user)
+			}
+
+			utils.RespondWithJSON(w, http.StatusOK, contact)
+		}
+	case http.MethodPost:
+		var msg Msg
+		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
-		fmt.Println("Received message:", message)
-
-		ch.mu.RLock()
-		if connections, ok := ch.connections[message.Receiver]; ok {
-			for _, window := range connections {
-				if err := window.WriteJSON(struct {
-					Content string `json:"content"`
-					Sender  int    `json:"sender"`
-				}{Content: message.Content, Sender: userId}); err != nil {
-					fmt.Println("Error sending message:", err)
-				}
-			}
-		} else {
-			fmt.Println("Receiver user not found:", message.Receiver)
+		_, err := api.Create(`
+		INSERT INTO messages (sender_id,receiver_id,content)
+		VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`, userId, msg.EmailReceiver, msg.Content)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
 		}
-		ch.mu.RUnlock()
+
+		// implemente websocket
+
+		utils.RespondWithJSON(w, http.StatusCreated, nil)
+	default:
+		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 	}
 }

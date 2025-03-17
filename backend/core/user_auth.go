@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"time"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"social/pkg/utils"
 
@@ -13,12 +15,13 @@ import (
 )
 
 type API struct {
-	DB *sql.DB
+	DB  *sql.DB
+	HUB *NetworkHub
 }
 
 func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var userForm struct {
-		Login    string `json:"login"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -29,8 +32,7 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infos := a.Read(`SELECT id, password_hash FROM users WHERE email = ? OR nickname= ?;`, userForm.Login, userForm.Login)
-
+	infos := a.Read(`SELECT id, password FROM users WHERE email = ? ;`, userForm.Email)
 	var userId int
 	var hash string
 	if err := infos.Scan(&userId, &hash); err != nil {
@@ -48,40 +50,69 @@ func (a *API) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := uuid.NewString()
-	_ , err := a.DB.Exec(`delete from sessions where user_id = ?`, userId)
+	_, err := a.Create(`INSERT INTO sessions (session_hash, user_id) VALUES (? , ?);`, token, userId)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Status Internal Server Error",
 		})
 		return
 	}
-	expiery := time.Now().Add(time.Hour * 24)
-	_, err = a.Create(`INSERT INTO sessions (session_id, user_id, expires_at) VALUES (? , ?, ?);`, token, userId, expiery)
-	if err != nil {
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "Status Internal Server Error",
-		})
-		return
-	}
-	http.SetCookie(
-		w,
-		&http.Cookie{
-			Name:     "session",
-			Value:    token,
-			Expires:  expiery,
-			Path:    "/",
-		},
-	)
+
 	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
 	w.Header().Set("Authorization", token)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
-		"valid": "user login succesfully ",
+		"valid": "user login succesfully 🦓",
+	})
+}
+
+func (a *API) HandleSignin(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(100 << 20)
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "Status Bad Request",
+		})
+		return
+	}
+
+	var user User
+
+	user.Email = r.FormValue("email")
+	user.Password = r.FormValue("password")
+	user.FirstName = r.FormValue("firstName")
+	user.LastName = r.FormValue("lastName")
+	user.DateOfBirth = r.FormValue("dateOfBirth")
+	user.Nickname = r.FormValue("nickname")
+	user.AboutMe = r.FormValue("aboutMe")
+
+	file, handler, err := r.FormFile("avatar")
+	if err == nil {
+		path, err := utils.UploadFileData(file, handler)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+			return
+		}
+		user.AvatarUrl = filepath.Join("api/global/", path)
+	}
+
+	if status, err := a.AddUser(&user); err != nil {
+		if user.AvatarUrl != "" {
+			_ = os.Remove(strings.ReplaceAll(user.AvatarUrl, "api/global/", "data/global/"))
+		}
+		utils.RespondWithJSON(w, status, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{
+		"valid": "user add succesfuly",
 	})
 }
 
 func (a *API) ValidateSession(session string, db *sql.DB) (int, error) {
-	info := a.Read(`SELECT user_id FROM sessions WHERE session_id = ? ;`, session)
-
+	info := a.Read(`SELECT user_id FROM sessions WHERE session_hash = ? ;`, session)
 	var userId int
 	if err := info.Scan(&userId); err != nil {
 		return 0, err
@@ -90,27 +121,21 @@ func (a *API) ValidateSession(session string, db *sql.DB) (int, error) {
 }
 
 func (a *API) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// 1. Get cookie
-	cookie, err := r.Cookie("session")
-	if err != nil {
+	session := r.Header.Get("Authorization")
+	if session == "" {
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
 			"error": "session not found",
 		})
+		return
 	}
 
-	_, err = a.DB.Exec("DELETE FROM sessions WHERE session_id = ?", cookie.Value)
+	_, err := a.DB.Exec("DELETE FROM sessions WHERE session_hash = ?", session)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed clean ",
 		})
+		return
 	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:   "session",
-		Value:  "",
-		MaxAge: -1,
-		Path:   "/",
-	})
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"valid": "Logged out"})
 }

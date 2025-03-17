@@ -2,9 +2,12 @@
 
 import '@/style/chat.css';
 import '@/style/home.css';
-import Navigation from '@/components/navbar.js';
+
+import Navigation from '@/components/navbar';
+import BackHome from '@/components/back_home';
+
 import { useState } from 'react';
-import Link from 'next/link';
+import { SendIcon } from '@/components/icons';
 
 const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -78,7 +81,9 @@ const ChatPage = () => {
                             </div>
                             <div className="message-input-container">
                                 <input type="text" placeholder="Type a message..." />
-                                <button className="send-button">send</button>
+                                <button className="send-button">
+                                    <SendIcon />
+                                </button>
                             </div>
                         </>
                     ) : (
@@ -90,9 +95,7 @@ const ChatPage = () => {
                 </div>
             </div>
 
-            <Link href="/" className="back-to-home">
-                <span>Back to Home</span>
-            </Link>
+            <BackHome/>
         </div>
     );
 };

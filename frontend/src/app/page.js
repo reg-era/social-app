@@ -3,19 +3,18 @@
 import '../style/home.css'
 import { useEffect, useState } from 'react';
 
-import Navigation from '../components/navbar.js';
-import Sidebar from '../components/sidebar.js';
-import CreatePostCard from '../components/create_post.js';
-import PostCard from '../components/post.js';
+import Navigation from '@/components/navbar.js';
+import Sidebar from '@/components/sidebar.js';
+import CreatePostCard from '@/components/create_post.js';
+import PostCard from '@/components/post.js';
 
 const Home = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [nextPostId, setNextPostId] = useState();
+  const [posts, setPosts] = useState(new Map());
+  const [page, setPage] = useState(0);
+  const [isThrottling, setIsThrottling] = useState(false);
 
   const getPosts = async () => {
-    setLoading(true);
-    const res = await fetch(`http://127.0.0.1:8080/api/post${nextPostId ? `?post_id=${nextPostId}` : ''}`, {
+    const res = await fetch(`http://127.0.0.1:8080/api/post${`?page=${page}`}`, {
       headers: {
         'Authorization': document.cookie.slice('auth_session='.length),
       },
@@ -23,29 +22,46 @@ const Home = () => {
 
     if (res.ok) {
       const data = await res.json();
-      if (data.posts) {
-        setPosts((prevPosts) => [...prevPosts, ...data.posts]);
-        setNextPostId(data.next_id);
-      }
+      setPosts(prevPosts => {
+        const newPosts = new Map(prevPosts);
+        data.forEach(newPost => {
+          if (!newPosts.has(newPost.PostId)) {
+            newPosts.set(newPost.PostId, newPost);
+          }
+        });
+        return newPosts;
+      });
+      setPage((prevPage) => prevPage + 1);
     } else {
       console.error('Failed to fetch posts');
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     getPosts();
   }, []);
 
-  const addPost = (newPost) => {
-    setPosts((prevPosts) => [newPost, ...prevPosts]);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isThrottling) return;
 
-  const loadMorePosts = () => {
-    if (nextPostId) {
-      getPosts(nextPostId);
-    }
-  };
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollPosition = window.innerHeight + window.scrollY;
+
+      if (scrollHeight - scrollPosition <= scrollHeight * 0.25) {
+        setIsThrottling(true);
+        setTimeout(() => {
+          getPosts()
+          setIsThrottling(false);
+        }, 500);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isThrottling]);
 
   return (
     <div>
@@ -53,21 +69,27 @@ const Home = () => {
       <div className="main-container">
         <Sidebar />
         <div className="content-area">
-          <CreatePostCard onCreatePost={addPost} />
-          {posts.map((post) => (
+          <CreatePostCard onCreatePost={(data) =>{
+            const newMap = new Map()
+            newMap.set(data.PostId,data)
+            posts.forEach((elem)=>{
+              newMap.set(elem.PostId,elem)
+            })
+            setPosts(newMap)
+          }}/>
+          {[...posts.values()].map(post => (
+            console.log(post)
+            ||
             <PostCard
               key={post.PostId}
               PostId={post.PostId}
-              authorName={post.authorName}
+              authorName={post.user.firstName+post.user.lastName}
+              imageProfileUrl={post.user.avatarUrl}
               imagePostUrl={post.imagePostUrl}
               postText={post.postText}
               postTime={post.postTime}
             />
           ))}
-          {loading && <div>Loading more posts...</div>}
-          {!loading && nextPostId && (
-            <button onClick={loadMorePosts}>Load More</button>
-          )}
         </div>
       </div>
     </div>

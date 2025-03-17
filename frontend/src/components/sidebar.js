@@ -1,16 +1,22 @@
+import Link from "next/link";
+import { HomeIcon, UsersIcon, GlobeIcon } from '@/components/icons'; // Importing the icons
+
 const Sidebar = () => {
     return (
         <div className="sidebar left-sidebar">
             <div className="sidebar-menu">
-                <div className="menu-item active">
+                <Link href="/" className="menu-item active">
+                    <HomeIcon />
                     <span>Home</span>
-                </div>
-                <div className="menu-item">
+                </Link>
+                <Link href="/profile" className="menu-item">
+                    <UsersIcon />
                     <span>Profile</span>
-                </div>
-                <div className="menu-item">
+                </Link>
+                <Link href="/group" className="menu-item">
+                    <GlobeIcon />
                     <span>Groups</span>
-                </div>
+                </Link>
             </div>
             <div className="sidebar-section">
                 <h3>Your Groups</h3>

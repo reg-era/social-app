@@ -25,7 +25,7 @@ export default function Signup() {
       // return;
       // }
 
-      const res = await fetch('http://127.0.0.1:8080/api/user', {
+      const res = await fetch('http://127.0.0.1:8080/api/signin', {
         method: 'POST',
         body: formData
       })
