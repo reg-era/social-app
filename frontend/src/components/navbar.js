@@ -2,8 +2,11 @@ import Link from 'next/link';
 import { BellIcon, CommentIcon, UserIcon } from '@/components/icons';
 import { useState, useRef, useEffect } from 'react';
 import Notif from './notification';
+import { useRouter } from 'next/navigation';
 
 const Navigation = () => {
+    const router = useRouter();
+
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -38,6 +41,22 @@ const Navigation = () => {
             }
         }, 300);
     };
+
+    const handleLogout = async (e) => {
+        try {
+            const res = await fetch(`http://127.0.0.1:8080/api/logout`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            });
+            if (res.ok) {
+                document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                router.push('/login')
+            }
+        } catch (err) {
+            console.error("Error: ", err);
+        }
+    }
 
     const handleClickOutside = (event) => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -81,7 +100,7 @@ const Navigation = () => {
                     <span className="messages-count">5</span>
                 </Link>
 
-                <button className="nav-icon logout-btn">
+                <button className="nav-icon logout-btn" onClick={() => handleLogout()}>
                     <UserIcon />
                 </button>
             </div>
@@ -90,7 +109,7 @@ const Navigation = () => {
 };
 
 const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
-    const [image, setImage] = useState('/default-avatar.jpg')
+    const [image, setImage] = useState('/default_profile.jpg')
 
     const getImage = async () => {
         if (avatar === '') return

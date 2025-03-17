@@ -7,7 +7,7 @@ import { CommentIcon } from '@/components/icons';
 const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl }) => {
     const [showComments, setShowComments] = useState(false);
     const [newImageURL, setImageURL] = useState('');
-    const [profileImage, setProfileImage] = useState('');
+    const [profileImage, setProfileImage] = useState('/default_profile.jpg');
 
     const getDownloadImage = async (link, isPost) => {
         try {
@@ -27,8 +27,8 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
     };
 
     useEffect(() => {
-        getDownloadImage(`http://127.0.0.1:8080/${imagePostUrl}`, true);
-        getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
+        imagePostUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imagePostUrl}`, true);
+        imageProfileUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
     }, []);
 
     return (

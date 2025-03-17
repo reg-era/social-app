@@ -32,6 +32,8 @@ Thumbs.db
 *.jpeg
 *.gif
 
+!default_profile.jpg
+
 *.db
 *.sqlite
 

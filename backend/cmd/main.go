@@ -45,6 +45,7 @@ func main() {
 
 	// private
 	router.Handle("GET /api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
+	router.Handle("GET /api/logout", mw.AuthMiddleware(http.HandlerFunc(api.HandleLogout)))
 	router.Handle("GET /api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
 	router.Handle("GET /api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
 	router.Handle("/api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
