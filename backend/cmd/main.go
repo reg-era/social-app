@@ -50,7 +50,14 @@ func main() {
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
+	
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
+	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
+	router.Handle("/api/group/invitations", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
+	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
+	router.Handle("/api/group/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
+
+
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("/api/ws", mw.AuthMiddleware(http.HandlerFunc(api.WebSocketConnect)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))

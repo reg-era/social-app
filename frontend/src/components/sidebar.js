@@ -1,7 +1,31 @@
 import Link from "next/link";
 import { HomeIcon, UsersIcon, GlobeIcon } from '@/components/icons'; // Importing the icons
+import { useState, useEffect } from 'react';
 
 const Sidebar = () => {
+    const [groups, setGroups] = useState([]);
+
+    // Fetch groups on mount
+    const fetchGroups = async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:8080/api/group', {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+                method: "GET"
+            });
+            const data = await response.json();
+            setGroups(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error fetching groups:', error);
+            setGroups([]);
+        }
+    };
+
+    useEffect(() => {
+        fetchGroups();
+    }, []);
+
     return (
         <div className="sidebar left-sidebar">
             <div className="sidebar-menu">
@@ -20,21 +44,15 @@ const Sidebar = () => {
             </div>
             <div className="sidebar-section">
                 <h3>Your Groups</h3>
-                <div className="sidebar-item">
-                    <div className="sidebar-icon group-icon"></div>
-                    <span>Web Development</span>
-                </div>
-                <div className="sidebar-item">
-                    <div className="sidebar-icon group-icon"></div>
-                    <span>UI/UX Design</span>
-                </div>
-                <div className="sidebar-item">
-                    <div className="sidebar-icon group-icon"></div>
-                    <span>Photography Club</span>
-                </div>
-                <div className="sidebar-item view-more">
+                {groups.slice(0, 3).map((group) => (
+                    <Link href={`/group/${group.id}`} key={group.id} className="sidebar-item">
+                        <div className="sidebar-icon group-icon"></div>
+                        <span>{group.title}</span>
+                    </Link>
+                ))}
+                <Link href="/group" className="sidebar-item view-more">
                     <span>See All Groups</span>
-                </div>
+                </Link>
             </div>
         </div>
     );

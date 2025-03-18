@@ -1,17 +1,34 @@
 package core
 
 import (
+	"fmt"
 	"net/http"
 	"social/pkg/utils"
 )
 
-type GroupInfo struct {
+type GroupsInfo struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
 	CreatorEmail string `json:"creator_email"`
 	CreatedAt    string `json:"created_at"`
 	MemberCount  int    `json:"member_count"`
+}
+
+type Group struct {
+	ID          int      `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	CreatorID   int      `json:"creatorId"`
+	CreatorName string   `json:"creatorName"`
+	CreatedAt   string   `json:"createdAt"`
+	Members     []Member `json:"members"`
+}
+
+type Member struct {
+	UserID   int    `json:"userId"`
+	UserName string `json:"userName"`
+	Status   string `json:"status"`
 }
 
 func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
@@ -35,15 +52,16 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 
 		rows, err := a.ReadAll(query)
 		if err != nil {
+			fmt.Println("failed to get groups")
 			utils.RespondWithJSON(w, http.StatusInternalServerError,
 				map[string]string{"error": "Failed to retrieve groups"})
 			return
 		}
 		defer rows.Close()
 
-		var groups []GroupInfo
+		var groups []GroupsInfo
 		for rows.Next() {
-			var group GroupInfo
+			var group GroupsInfo
 			err := rows.Scan(
 				&group.ID,
 				&group.Title,
@@ -53,6 +71,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				&group.MemberCount,
 			)
 			if err != nil {
+				fmt.Println("error processing groups")
+
 				utils.RespondWithJSON(w, http.StatusInternalServerError,
 					map[string]string{"error": "Error processing groups"})
 				return
@@ -61,6 +81,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err = rows.Err(); err != nil {
+			fmt.Println("error finalizing group list")
+
 			utils.RespondWithJSON(w, http.StatusInternalServerError,
 				map[string]string{"error": "Error finalizing group list"})
 			return
@@ -89,13 +111,15 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		groupId := r.PostFormValue("group_id")
 		action := r.PostFormValue("action")
-
 		switch action {
 		case "invite":
 			targetUserEmail := r.PostFormValue("user_id")
+			fmt.Println("invite", groupId, action, targetUserEmail)
+
 			var targetUserID int
 			err := a.Read(`SELECT id FROM users WHERE email = ?`, targetUserEmail).Scan(&targetUserID)
 			if err != nil {
+				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 				return
 			}
@@ -103,6 +127,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			var inviterStatus string
 			err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).Scan(&inviterStatus)
 			if err != nil || inviterStatus != "accepted" {
+				fmt.Println(err)
+
 				utils.RespondWithJSON(w, http.StatusForbidden, map[string]string{"error": "Not authorized to invite"})
 				return
 			}
@@ -128,6 +154,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err != nil {
+				fmt.Println(err)
+
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to send invitation"})
 				return
 			}
@@ -164,6 +192,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			var targetUserID int
 			err := a.Read(`SELECT id FROM users WHERE email = ?`, targetUserEmail).Scan(&targetUserID)
 			if err != nil {
+				fmt.Println("err selecting user",err)
+
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 				return
 			}
@@ -173,11 +203,13 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			err = a.Read(`SELECT invitation_type, status FROM group_members 
 						WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).Scan(&invitationType, &status)
 			if err != nil {
+				fmt.Println("invite status",err)
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No invitation found"})
 				return
 			}
 
 			if status != "pending" {
+				
 				utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
 				return
 			}
@@ -192,6 +224,8 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				var creatorId int
 				err := a.Read(`SELECT creator_id FROM groups WHERE id = ?`, groupId).Scan(&creatorId)
 				if err != nil || creatorId != userId {
+					fmt.Println(err)
+
 					utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not group creator"})
 					return
 				}
@@ -219,7 +253,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 		}
 
 	default:
-		
+
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
 	}
 }

@@ -1,10 +1,11 @@
 "use client"
 
 import CreateCommentCard from "./comment.js";
+import CreateCommentCardGroup from "./create_comment_card_group.js";
 import { useEffect, useState } from "react";
 import { CommentIcon } from '@/components/icons';
 
-const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl }) => {
+const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl, groupId, isGroupPost }) => {
     const [showComments, setShowComments] = useState(false);
     const [newImageURL, setImageURL] = useState('');
     const [profileImage, setProfileImage] = useState('');
@@ -60,7 +61,13 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
                     <span>Comment</span>
                 </button>
             </div>
-            {showComments && <CreateCommentCard postId={PostId} />}
+            {showComments && (
+                isGroupPost ? (
+                    <CreateCommentCardGroup postId={PostId} groupID={groupId} />
+                ) : (
+                    <CreateCommentCard postId={PostId} />
+                )
+            )}
         </div>
     );
 };
