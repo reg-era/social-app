@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 
-const CreatePostCard = ({ onCreatePost }) => {
+const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
@@ -21,9 +21,9 @@ const CreatePostCard = ({ onCreatePost }) => {
             const form = new FormData()
             form.append("post", post)
             form.append('image', e.target.fileInputPost.files[0])
-            form.append("visibility", 'public')
+            form.append("group_id", groupId)
 
-            const res = await fetch('http://127.0.0.1:8080/api/post', {
+            const res = await fetch('http://127.0.0.1:8080/api/group/post', {
                 method: 'POST',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
@@ -37,7 +37,7 @@ const CreatePostCard = ({ onCreatePost }) => {
                 setNewPost('');
                 setFile('')
             } else {
-                throw new Error('faild to singup');
+                throw new Error('Failed to create group post');
             }
         } catch (error) {
             console.log(error);
@@ -50,9 +50,8 @@ const CreatePostCard = ({ onCreatePost }) => {
             <div className="create-post-header">
                 <div className="input-actions-container">
                     <div className="input-with-photo">
-                        {/* add select cases for visibility from this values{ ('public', 'followers', 'private') } */}
                         <div className="post-input">
-                            <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="What's on your mind?" />
+                            <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="Write something to the group..." />
                         </div>
 
                         <input id="fileInputPost" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
@@ -69,6 +68,4 @@ const CreatePostCard = ({ onCreatePost }) => {
     );
 };
 
-export default CreatePostCard;
-
-
+export default CreatePostCardGroup;

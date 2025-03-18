@@ -26,7 +26,6 @@ const CreateCommentCard = ({ postId }) => {
                             (newComment) => !prevComments.some((existingComment) => existingComment.commentId === newComment.commentId)
                         );
                         const res = [...prevComments, ...newComments]
-                        console.log(res);
 
                         return res
                     });
