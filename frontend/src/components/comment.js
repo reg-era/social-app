@@ -55,7 +55,52 @@ const CreateCommentCard = ({ postId }) => {
             ))}
             <div className="add-comment">
                 <div className="comment-avatar"></div>
-                <input type="text" placeholder="Write a comment..." />
+                <div className="input-actions-container">
+                    <div className="input-with-photo">
+                        <div className="comment-input">
+                            <input 
+                                name="comment" 
+                                type="text" 
+                                value={newComment} 
+                                onChange={(e) => setNewComment(e.target.value)} 
+                                placeholder="Write a comment..." 
+                            />
+                        </div>
+                        
+                        <input 
+                            id="fileInputComment" 
+                            type="file" 
+                            value={file} 
+                            onChange={(e) => setFile(e.target.value)} 
+                            style={{ display: 'none' }} 
+                        />
+                        <button type="button" className="photo-action" onClick={importFile}>
+                            <FontAwesomeIcon icon={faImage} />
+                        </button>
+                        
+                        <button type="button" className="emoji-action" onClick={toggleEmojiPicker}>
+                            <FontAwesomeIcon icon={faSmile} />
+                        </button>
+                    </div>
+                    
+                    {showEmojiPicker && (
+                        <div className="emoji-picker-container" ref={emojiPickerRef}>
+                            <div className="emoji-list">
+                                {EMOJI_CATEGORIES.smileys.map((emoji, index) => (
+                                    <span 
+                                        key={index} 
+                                        className="emoji-item" 
+                                        onClick={() => insertEmoji(emoji)}
+                                    >
+                                        {emoji}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {error && <p className="error-message">{error}</p>}
+                </div>
             </div>
         </div>
     );

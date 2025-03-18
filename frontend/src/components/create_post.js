@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile } from '@fortawesome/free-solid-svg-icons';
+import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { EMOJI_CATEGORIES } from './emojiMaps';
 
 const CreatePostCard = ({ onCreatePost }) => {
@@ -14,15 +14,20 @@ const CreatePostCard = ({ onCreatePost }) => {
     const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
     const [showTagFriends, setShowTagFriends] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [friendSearchTerm, setFriendSearchTerm] = useState('');
     
     // Ref for the emoji picker container
     const emojiPickerRef = useRef(null);
+    const friendsDropdownRef = useRef(null);
 
-    // Close emoji picker when clicking outside
+    // Close emoji picker and friends dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
                 setShowEmojiPicker(false);
+            }
+            if (friendsDropdownRef.current && !friendsDropdownRef.current.contains(event.target)) {
+                setShowTagFriends(false);
             }
         }
         
@@ -44,14 +49,23 @@ const CreatePostCard = ({ onCreatePost }) => {
     const handlePrivacyChange = (privacy) => {
         setPostPrivacy(privacy);
         setShowPrivacyOptions(false);
+        
+        // Clear tagged friends when changing from private to other privacy settings
+        if (privacy !== 'private') {
+            setTaggedFriends([]);
+        }
     };
 
     const toggleTagFriends = () => {
         setShowTagFriends(!showTagFriends);
+        setFriendSearchTerm('');
     };
 
     const handleAddTag = (friend) => {
-        setTaggedFriends([...taggedFriends, friend]);
+        // Check if friend is already tagged
+        if (!taggedFriends.some(taggedFriend => taggedFriend.id === friend.id)) {
+            setTaggedFriends([...taggedFriends, friend]);
+        }
     };
 
     const removeTag = (friendId) => {
@@ -65,6 +79,11 @@ const CreatePostCard = ({ onCreatePost }) => {
     const insertEmoji = (emoji) => {
         setNewPost(newPost + emoji);
     };
+
+    // Search functionality for friends
+    const filteredFriends = friendsList.filter(friend => 
+        friend.name.toLowerCase().includes(friendSearchTerm.toLowerCase())
+    );
 
     const handlePostSubmit = async (e) => {
         e.preventDefault();
@@ -84,6 +103,11 @@ const CreatePostCard = ({ onCreatePost }) => {
             }
             
             formData.append("visibility", postPrivacy);
+            
+            // If there are tagged friends, add them to the formData
+            if (taggedFriends.length > 0) {
+                formData.append("taggedFriends", JSON.stringify(taggedFriends.map(friend => friend.id)));
+            }
 
             const res = await fetch('http://127.0.0.1:8080/api/post', {
                 method: 'POST',
@@ -107,6 +131,9 @@ const CreatePostCard = ({ onCreatePost }) => {
             setError('Failed to submit the Post. Please try again.');
         }
     };
+
+    // Only allow tagging friends in private posts
+    const canTagFriends = postPrivacy === 'private';
 
     return (
         <form className="create-post-form" onSubmit={handlePostSubmit}>
@@ -144,11 +171,6 @@ const CreatePostCard = ({ onCreatePost }) => {
                         
                         {showEmojiPicker && (
                             <div className="emoji-picker-container" ref={emojiPickerRef}>
-                                <div className="emoji-categories">
-                                    <div className="emoji-category active">
-                                        <span>😊</span>
-                                    </div>
-                                </div>
                                 <div className="emoji-list">
                                     {EMOJI_CATEGORIES.smileys.map((emoji, index) => (
                                         <span 
@@ -219,8 +241,8 @@ const CreatePostCard = ({ onCreatePost }) => {
                         )}
                     </div>
                     
-                    {/* Tag Friends option only appears when Friends privacy is selected */}
-                    {postPrivacy === 'friends' && (
+                    {/* Tag Friends option now appears ONLY when Private privacy is selected */}
+                    {canTagFriends && (
                         <div className="tag-friends">
                             <button 
                                 type="button" 
@@ -232,16 +254,33 @@ const CreatePostCard = ({ onCreatePost }) => {
                             </button>
                             
                             {showTagFriends && (
-                                <div className="friends-dropdown">
-                                    {friendsList.map(friend => (
-                                        <div 
-                                            key={friend.id} 
-                                            className="friend-option" 
-                                            onClick={() => handleAddTag(friend)}
-                                        >
-                                            <span>{friend.name}</span>
-                                        </div>
-                                    ))}
+                                <div className="friends-dropdown" ref={friendsDropdownRef}>
+                                    <div className="friend-search">
+                                        <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search friends..." 
+                                            value={friendSearchTerm}
+                                            onChange={(e) => setFriendSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="friends-list">
+                                        {filteredFriends.length > 0 ? (
+                                            filteredFriends.map(friend => (
+                                                <div 
+                                                    key={friend.id} 
+                                                    className="friend-option" 
+                                                    onClick={() => handleAddTag(friend)}
+                                                >
+                                                    <span>{friend.name}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="no-friends-found">
+                                                <span>No friends found</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
