@@ -1,6 +1,7 @@
 'use client';
+
 import '@/style/profile.css';
-import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/components/icons';
+import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/utils/icons';
 
 import { useState } from 'react';
 

@@ -1,15 +1,33 @@
 "use client"
-import { useState } from "react";
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSmile } from '@fortawesome/free-solid-svg-icons';
+
+
+import { EMOJI_CATEGORIES } from "@/utils/emoji";
+import { useState, useRef } from "react";
 
 const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
 
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const emojiPickerRef = useRef(null);
+
     const importFile = (e) => {
         e.preventDefault()
         document.getElementById('fileInputPost').click()
     };
+
+    const toggleEmojiPicker = () => {
+        setShowEmojiPicker(!showEmojiPicker);
+    };
+
+    const insertEmoji = (emoji) => {
+        setNewPost(newPost + emoji);
+    };
+
 
     const handlePost = async (e) => {
         e.preventDefault();
@@ -58,7 +76,28 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                         <button className="photo-action" onClick={importFile}>
                             <span>Photo</span>
                         </button>
+
+                        <button type="button" className="emoji-action" onClick={toggleEmojiPicker}>
+                            <FontAwesomeIcon icon={faSmile} />
+                            <span>Emoji</span>
+                        </button>
                     </div>
+
+                    {showEmojiPicker && (
+                        <div className="emoji-picker-container" ref={emojiPickerRef}>
+                            <div className="emoji-list">
+                                {EMOJI_CATEGORIES.smileys.map((emoji, index) => (
+                                    <span
+                                        key={index}
+                                        className="emoji-item"
+                                        onClick={() => insertEmoji(emoji)}
+                                    >
+                                        {emoji}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="submit-button">Post</button>

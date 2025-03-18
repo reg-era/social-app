@@ -1,27 +1,19 @@
 'use client';
 
-import './home.css';
-import './groupname.css';
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import '@/style/home.css';
+import '@/style/groupname.css';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUsers, faLock, faGlobe, faUserPlus, faCog, faCalendarPlus, faMapMarkerAlt, faClock, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import Navigation from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
 import PostCard from '@/components/post';
 import CreatePostCardGroup from '@/components/create_post_group';
 import GroupInvitations from '@/components/group_invitations';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faUsers,
-    faLock,
-    faGlobe,
-    faUserPlus,
-    faCog,
-    faCalendarPlus,
-    faMapMarkerAlt,
-    faClock,
-    faTimes
-} from '@fortawesome/free-solid-svg-icons';
+
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 const GroupDetailPage = () => {
     const [activeTab, setActiveTab] = useState('discussion');
@@ -33,47 +25,47 @@ const GroupDetailPage = () => {
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [pendingInvitations, setPendingInvitations] = useState([]);
-    
+
     const params = useParams();
     const groupId = params.id;
-    
-    
+
+
     const fetchGroupData = async () => {
-            try {
-                setIsLoading(true);
-                const response = await fetch(`http://127.0.0.1:8080/api/group/info?group_id=${groupId}`, {
-                    headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
-                    },
-                    method: "GET"
-                });
-    
-                if (!response.ok) {
-                    throw new Error('Failed to fetch group data');
-                }
-    
-                const data = await response.json();
-                console.log("these are the group members", data.members)
-                setGroupData(data);
-    
-                const postsResponse = await fetch(`http://127.0.0.1:8080/api/group/post?group_id=${groupId}`, {
-                    headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
-                    },
-                    method: "GET"
-                });
-    
-                if (postsResponse.ok) {
-                    const postsData = await postsResponse.json();
-                    setPosts(Array.isArray(postsData) ? postsData : []);
-                }
-    
-                setIsLoading(false);
-            } catch (error) {
-                console.error('Error fetching group data:', error);
-                setIsLoading(false);
+        try {
+            setIsLoading(true);
+            const response = await fetch(`http://127.0.0.1:8080/api/group/info?group_id=${groupId}`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+                method: "GET"
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch group data');
             }
-        };
+
+            const data = await response.json();
+            console.log("these are the group members", data.members)
+            setGroupData(data);
+
+            const postsResponse = await fetch(`http://127.0.0.1:8080/api/group/post?group_id=${groupId}`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+                method: "GET"
+            });
+
+            if (postsResponse.ok) {
+                const postsData = await postsResponse.json();
+                setPosts(Array.isArray(postsData) ? postsData : []);
+            }
+
+            setIsLoading(false);
+        } catch (error) {
+            console.error('Error fetching group data:', error);
+            setIsLoading(false);
+        }
+    };
 
     const fetchPendingInvitations = async () => {
         try {
@@ -170,10 +162,10 @@ const GroupDetailPage = () => {
             <Navigation />
             <div className="main-container">
                 <Sidebar />
-                
+
                 <div className="content-area">
                     <GroupInvitations />
-                    
+
                     <div className="group-detail-container">
                         {/* Group Header */}
                         <div>
@@ -209,19 +201,19 @@ const GroupDetailPage = () => {
                         </div>
 
                         <div className="group-content-nav">
-                            <div 
+                            <div
                                 className={`nav-tab ${activeTab === 'discussion' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('discussion')}
                             >
                                 Discussion
                             </div>
-                            <div 
+                            <div
                                 className={`nav-tab ${activeTab === 'members' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('members')}
                             >
                                 Members
                             </div>
-                            <div 
+                            <div
                                 className={`nav-tab ${activeTab === 'events' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('events')}
                             >
@@ -232,7 +224,7 @@ const GroupDetailPage = () => {
                         {activeTab === 'discussion' && (
                             <div className="tab-content">
                                 <div className="main-content">
-                                    <CreatePostCardGroup 
+                                    <CreatePostCardGroup
                                         onCreatePost={(data) => {
                                             setPosts([data, ...posts]);
                                         }}
@@ -276,7 +268,7 @@ const GroupDetailPage = () => {
                                                 <div className="member-card-avatar"></div>
                                                 <div className="member-card-name">{member.userName}</div>
                                                 <div className="member-card-role">{member.status}</div>
-                                                <button 
+                                                <button
                                                     className="member-card-action"
                                                     onClick={() => handleFollowRequest(member.email)}
                                                 >
@@ -322,7 +314,7 @@ const GroupDetailPage = () => {
                                                         <span>{event.location}</span>
                                                     </div>
                                                 </div>
-                                                <button  className={`event-attend-btn ${attendingStatus[event.id] ? 'attending' : ''}`}
+                                                <button className={`event-attend-btn ${attendingStatus[event.id] ? 'attending' : ''}`}
                                                     onClick={() => toggleAttending(event.id)}
                                                 >
                                                     {attendingStatus[event.id] ? 'Attending' : 'Attend'}

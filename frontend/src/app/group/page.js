@@ -1,12 +1,14 @@
 'use client';
-// import './home.css';
-import './group.css';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+
+import '@/style/home.css';
+import '@/style/group.css';
+
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBell, faComment, faUser, faHome, faUsers, faSignOut, faPlus, faTimes
-} from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 // Import existing components
 import Navigation from '@/components/navbar';
@@ -62,7 +64,7 @@ const GroupsPage = () => {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Send invitations
         for (const email of inviteList) {
           const inviteFormData = new FormData();
@@ -171,27 +173,27 @@ const GroupsPage = () => {
             <form onSubmit={handleCreateGroup}>
               <div className="form-group">
                 <label>Group Title</label>
-                <input 
-                  type="text" 
-                  value={newGroupTitle} 
+                <input
+                  type="text"
+                  value={newGroupTitle}
                   onChange={(e) => setNewGroupTitle(e.target.value)}
-                  placeholder="Enter group title" 
+                  placeholder="Enter group title"
                   required
                 />
               </div>
               <div className="form-group">
                 <label>Group Description</label>
-                <textarea 
-                  value={newGroupDescription} 
+                <textarea
+                  value={newGroupDescription}
                   onChange={(e) => setNewGroupDescription(e.target.value)}
-                  placeholder="Enter group description" 
+                  placeholder="Enter group description"
                   required
                 />
               </div>
               <div className="form-group">
                 <label>Group Type</label>
-                <select 
-                  value={newGroupType} 
+                <select
+                  value={newGroupType}
                   onChange={(e) => setNewGroupType(e.target.value)}
                 >
                   <option value="public">Public Group</option>
@@ -201,11 +203,11 @@ const GroupsPage = () => {
               <div className="form-group">
                 <label>Invite Users</label>
                 <div className="invite-input-container">
-                  <input 
-                    type="email" 
-                    value={inviteEmail} 
+                  <input
+                    type="email"
+                    value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email address" 
+                    placeholder="Enter email address"
                   />
                   <button className="add-invite-btn" onClick={addInvite}>
                     <FontAwesomeIcon icon={faPlus} />
@@ -216,9 +218,9 @@ const GroupsPage = () => {
                     {inviteList.map((email, index) => (
                       <div key={index} className="invite-item">
                         <span>{email}</span>
-                        <button 
-                          type="button" 
-                          className="remove-invite" 
+                        <button
+                          type="button"
+                          className="remove-invite"
                           onClick={() => removeInvite(email)}
                         >
                           <FontAwesomeIcon icon={faTimes} />

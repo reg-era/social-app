@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { HomeIcon, UsersIcon, GlobeIcon } from '@/components/icons'; // Importing the icons
-import { useState, useEffect } from 'react';
+import { HomeIcon, UsersIcon, GlobeIcon } from '@/utils/icons'; // Importing the icons
+import { useState,useEffect } from "react";
 
 const Sidebar = () => {
     const [groups, setGroups] = useState([]);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeIcon } from "@/components/icons"; 
+import { HomeIcon } from "@/utils/icons"; 
 
 const BackHome = () => {
     return (

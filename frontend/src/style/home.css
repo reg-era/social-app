@@ -70,79 +70,6 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
-/* Notification Dropdown Styles */
-.notification-dropdown {
-    position: absolute;
-    top: 60px;  /* Adjust depending on the nav bar height */
-    right: 20px; /* Adjust position as needed */
-    background-color: var(--card-bg);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    width: 250px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 10;
-    padding: 10px;
-    transition: all 0.3s ease;
-}
-
-/* Header for the dropdown */
-.notification-header {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-color);
-    margin-bottom: 10px;
-}
-
-/* Notifications list */
-.notification-list {
-    max-height: 250px;
-    overflow-y: auto;
-}
-
-.notification {
-    padding: 10px;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.1);
-    margin-bottom: 8px;
-    transition: all 0.2s ease;
-}
-
-.notification:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.notification p {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text-color);
-}
-
-/* Unread notification style */
-.notification.unread {
-    background: rgba(108, 92, 231, 0.1);  /* Highlight unread notifications */
-}
-
-/* Add styles for notification icon with count */
-.notification-icon {
-    position: relative;
-}
-
-.notification-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 50%;
-    font-size: 0.7rem;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 
 .logo {
     font-weight: 700;
@@ -283,7 +210,6 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    width: 90vh;
 }
 
 .user-avatar,
@@ -738,4 +664,407 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 15px;
+}
+
+
+/* Post Component Styles */
+.create-post-form {
+    margin-bottom: 20px;
+}
+
+.create-post-container {
+    background: var(--card-bg, white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+}
+
+.create-post-header {
+    margin-bottom: 15px;
+}
+
+.input-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-with-photo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-input {
+    flex: 1;
+    border-radius: 20px;
+    background: var(--input-bg, #f5f5f5);
+    padding: 4px 15px;
+}
+
+.post-input input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 8px 0;
+    outline: none;
+}
+
+.photo-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-light, #f0f2f5);
+    border: none;
+    border-radius: 18px;
+    padding: 8px 12px;
+    color: var(--primary-color, #1877f2);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.photo-action:hover {
+    background: var(--primary-lighter, #e4e6eb);
+}
+
+.error-message {
+    color: #e41e3f;
+    font-size: 13px;
+    margin: 0;
+}
+
+.post-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.privacy-selector,
+.tag-friends {
+    position: relative;
+}
+
+.privacy-toggle,
+.tag-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-light, #f0f2f5);
+    border: none;
+    border-radius: 18px;
+    padding: 8px 12px;
+    color: var(--primary-text, #050505);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.privacy-toggle:hover,
+.tag-toggle:hover {
+    background: var(--primary-lighter, #e4e6eb);
+}
+
+.privacy-dropdown,
+.friends-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 200px;
+    background: var(--card-bg, white);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 5px;
+    z-index: 10;
+}
+
+.privacy-option,
+.friend-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.privacy-option:hover,
+.friend-option:hover {
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.submit-button {
+    background: var(--primary-color, #1877f2);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+    background: var(--primary-hover, #166fe5);
+}
+
+.tagged-friends {
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color, #e4e6eb);
+    padding-top: 12px;
+}
+
+.tagged-friends p {
+    font-size: 13px;
+    color: var(--secondary-text, #65676b);
+    margin: 0 0 8px 0;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.friend-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--tag-bg, #e4e6eb);
+    border-radius: 16px;
+    padding: 4px 10px;
+    font-size: 13px;
+}
+
+.remove-tag {
+    background: transparent;
+    border: none;
+    color: var(--secondary-text, #65676b);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.remove-tag:hover {
+    color: var(--primary-text, #050505);
+}
+
+/* Make components responsive */
+@media (max-width: 576px) {
+    .post-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .privacy-selector,
+    .tag-friends {
+        width: 100%;
+    }
+
+    .privacy-toggle,
+    .tag-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .submit-button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+
+/* Emoji Picker Styles */
+.emoji-action {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--input-bg);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.emoji-action:hover {
+    background: var(--input-border);
+}
+
+.emoji-picker-container {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    max-width: 100%;
+    padding: 10px;
+    z-index: 100;
+}
+
+.emoji-categories {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.emoji-category {
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.emoji-category.active {
+    background: var(--primary-color);
+}
+
+.emoji-list {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.emoji-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.emoji-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar for emoji list */
+.emoji-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.emoji-list::-webkit-scrollbar-track {
+    background: var(--input-bg);
+    border-radius: 3px;
+}
+
+.emoji-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 3px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .input-with-photo {
+        flex-wrap: wrap;
+    }
+
+    .photo-action,
+    .emoji-action {
+        margin-top: 10px;
+    }
+
+    .emoji-list {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+
+/* Friend Search Styles - Add these to your home.css file */
+.friend-search {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg);
+    border-radius: 20px;
+    padding: 5px 10px;
+    margin: 10px;
+}
+
+.search-icon {
+    color: var(--text-color);
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+.friend-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    width: 100%;
+    font-size: 14px;
+}
+
+.friend-search input::placeholder {
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.friends-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.friends-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.friends-list::-webkit-scrollbar-track {
+    background: var(--input-bg);
+    border-radius: 3px;
+}
+
+.friends-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 3px;
+}
+
+.friend-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.friend-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.no-friends-found {
+    padding: 15px;
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+/* Friends dropdown positioning */
+.friends-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 220px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-top: 5px;
+    z-index: 50;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .friends-dropdown {
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
 }

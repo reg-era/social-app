@@ -78,8 +78,6 @@ const Home = () => {
             setPosts(newMap)
           }}/>
           {[...posts.values()].map(post => (
-            console.log(post)
-            ||
             <PostCard
               key={post.PostId}
               PostId={post.PostId}

@@ -6,18 +6,34 @@ import '@/style/home.css';
 import Navigation from '@/components/navbar';
 import BackHome from '@/components/back_home';
 
-import { useState } from 'react';
-import { SendIcon } from '@/components/icons';
+import { useEffect, useState } from 'react';
+import Conversation from '@/components/conversation';
 
 const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
+    const [users, setUsers] = useState([])
 
-    const users = [
-        { id: 1, name: 'TIKCHBILA', status: 'online', time: '10:30 AM', unread: 2 },
-        { id: 2, name: 'TIWLIWLA', status: 'offline', time: 'Yesterday', unread: 0 },
-        { id: 3, name: 'L33VVAK', status: 'online', time: '09:15 AM', unread: 1 },
-        { id: 4, name: 'CHIWA7ED', status: 'online', time: '11:45 AM', unread: 3 },
-    ];
+    const getConversations = async () => {
+        try {
+            const res = await fetch(`http://127.0.0.1:8080/api/chat`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // console.log(data);
+                setUsers(data)
+            }
+        } catch (err) {
+            console.error("getting conversation: ", err);
+        }
+    }
+
+
+    useEffect(() => {
+        getConversations()
+    }, [])
 
     return (
         <div>
@@ -26,11 +42,11 @@ const ChatPage = () => {
                 <div className="chat-sidebar">
                     <div className="chat-users-list">
                         {users.map(user => (
-                            <div key={user.id} className={`chat-user-item`} onClick={() => setSelectedUser(user.id)}>
+                            <div key={user.id} className={`chat-user-item`} onClick={() => setSelectedUser(user)}>
                                 <div className="user-avatar"></div>
                                 <div className="chat-user-info">
                                     <div className="chat-user-top">
-                                        <div className="chat-user-name">{user.name}</div>
+                                        <div className="chat-user-name">{`${user.firstName} ${user.lastName}`}</div>
                                         <div className="chat-message-time">{user.time}</div>
                                     </div>
                                     <div className="chat-user-bottom">
@@ -44,60 +60,20 @@ const ChatPage = () => {
                         ))}
                     </div>
                 </div>
-
-                <div className="chat-content">
-                    {selectedUser ? (
-                        <>
-                            <div className="chat-header">
-                                <div className="chat-user-details">
-                                    <div className="user-avatar"></div>
-                                    <div className="chat-user-name">
-                                        {users.find(u => u.id === selectedUser)?.name}
-                                    </div>
-                                </div>
-                                <div className="chat-options">
-                                </div>
-                            </div>
-                            <div className="messages-container">
-                                <div className="message-date-separator">Today</div>
-                                <div className="message received">
-                                    <div className="message-content">
-                                        <p>Hey there! How's it going?</p>
-                                        <span className="message-time">10:30 AM</span>
-                                    </div>
-                                </div>
-                                <div className="message sent">
-                                    <div className="message-content">
-                                        <p>I'm doing great, thanks for asking! How about you?</p>
-                                        <span className="message-time">10:32 AM</span>
-                                    </div>
-                                </div>
-                                <div className="message received">
-                                    <div className="message-content">
-                                        <p>Pretty good! I was wondering if you'd like to meet up this weekend?</p>
-                                        <span className="message-time">10:34 AM</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="message-input-container">
-                                <input type="text" placeholder="Type a message..." />
-                                <button className="send-button">
-                                    <SendIcon />
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="no-conversation-selected">
-                            <h3>Select a conversation</h3>
-                            <p>Choose from your existing conversations or start a new one</p>
-                        </div>
-                    )}
-                </div>
+                {!selectedUser && <div className="chat-content">
+                    <div className="no-conversation-selected">
+                        <h3>Select a conversation</h3>
+                        <p>Choose from your existing conversations or start a new one</p>
+                    </div>
+                </div>}
+                {/* {console.log(selectedUser)} */}
+                {selectedUser && <Conversation email={selectedUser.email} username={`${selectedUser.firstName} ${selectedUser.lastName}`} />}
             </div>
 
-            <BackHome/>
+            <BackHome />
         </div>
     );
 };
 
 export default ChatPage;
+
