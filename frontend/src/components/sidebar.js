@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeIcon, UsersIcon, GlobeIcon } from '@/components/icons'; // Importing the icons
+import { HomeIcon, UsersIcon, GlobeIcon } from '@/utils/icons'; // Importing the icons
 
 const Sidebar = () => {
     return (

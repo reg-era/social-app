@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BellIcon, CommentIcon, UserIcon } from '@/components/icons';
+import { BellIcon, CommentIcon, UserIcon } from '@/utils/icons';
 import { useState, useRef, useEffect } from 'react';
 import Notif from './notification';
 import { useRouter } from 'next/navigation';

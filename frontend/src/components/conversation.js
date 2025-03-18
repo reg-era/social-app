@@ -1,4 +1,4 @@
-import { SendIcon } from '@/components/icons';
+import { SendIcon } from '@/utils/icons';
 import { useWebSocket } from '@/context/ws_context';
 import { useState, useEffect } from 'react';
 

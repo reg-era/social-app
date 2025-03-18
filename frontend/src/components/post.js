@@ -2,7 +2,7 @@
 
 import CreateCommentCard from "./comment.js";
 import { useEffect, useState } from "react";
-import { CommentIcon } from '@/components/icons';
+import { CommentIcon } from '@/utils/icons.js';
 
 const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl }) => {
     const [showComments, setShowComments] = useState(false);
