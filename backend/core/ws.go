@@ -91,7 +91,6 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("upcoming connection: ", userID)
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,

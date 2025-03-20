@@ -25,10 +25,10 @@ const GroupDetailPage = () => {
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [pendingInvitations, setPendingInvitations] = useState([]);
+    const [currentUserID, setCurrentUserID] = useState('');
 
     const params = useParams();
     const groupId = params.id;
-
 
     const fetchGroupData = async () => {
         try {
@@ -45,7 +45,6 @@ const GroupDetailPage = () => {
             }
 
             const data = await response.json();
-            console.log("these are the group members", data.members)
             setGroupData(data);
 
             const postsResponse = await fetch(`http://127.0.0.1:8080/api/group/post?group_id=${groupId}`, {
@@ -90,6 +89,27 @@ const GroupDetailPage = () => {
         fetchPendingInvitations();
     }, [groupId]);
 
+// this is temporary need to be changed 
+    useEffect(() => {
+        const fetchCurrentID = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/user', {
+                    headers: {
+                        'Authorization': document.cookie.slice('auth_session='.length),
+                    },
+                });
+                if (response.ok) {
+                    const userData = await response.json();
+                    setCurrentUserID(userData.id);
+                }
+            } catch (error) {
+                console.error('Error fetching current user id:', error);
+            }
+        };
+
+        fetchCurrentID();
+    }, []);
+
     const toggleAttending = (eventId) => {
         setAttendingStatus({
             ...attendingStatus,
@@ -97,33 +117,8 @@ const GroupDetailPage = () => {
         });
     };
 
-    // const handleFollowRequest = async (userEmail) => {
-    //     try {
-    //         const response = await fetch('http://127.0.0.1:8080/api/follow', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': document.cookie.slice('auth_session='.length),
-    //             },
-    //             body: JSON.stringify({
-    //                 email: userEmail
-    //             })
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error('Failed to send follow request');
-    //         }
-
-    //         alert('Follow request sent!');
-    //     } catch (error) {
-    //         console.error('Error sending follow request:', error);
-    //         alert('Failed to send follow request');
-    //     }
-    // };
-
     const handleInvite = async (e) => {
         e.preventDefault();
-        console.log("handle invite  ")
         try {
             const formData = new FormData();
             formData.append('group_id', groupId);
@@ -151,7 +146,8 @@ const GroupDetailPage = () => {
         }
     };
 
-
+    const isGroupCreator = groupData && groupData.creatorId === currentUserID;
+    console.log("compare", groupData?.creatorId, currentUserID, isGroupCreator)
 
     if (isLoading) {
         return <div className="loading">Loading group data...</div>;
@@ -262,8 +258,7 @@ const GroupDetailPage = () => {
                         {activeTab === 'members' && (
                             <div className="members-list">
                                 <div className="members-header">
-                                    <h3>Group Members ({groupData?.members?.filter(member => member.status === "accepted").length || 0})</h3>
-                                    <input type="text" placeholder="Search members..." className="search-members" />
+                                    <h3>Group Members  ({groupData?.members?.filter(member => member.status === "accepted").length || 0})</h3>
                                 </div>
                                 <div className="members-grid">
                                     {groupData?.members?.length > 0 ? (
@@ -272,13 +267,24 @@ const GroupDetailPage = () => {
                                                 <div className="member-card-avatar"></div>
                                                 <div className="member-card-name">{member.userName}</div>
                                                 <div className="member-card-role">{member.status}</div>
-                                                <button
-                                                    className="member-card-action"
-                                                    onClick={() => handleFollowRequest(member.email)}
-                                                >
-                                                    <FontAwesomeIcon icon={faUserPlus} />
-                                                    <span>Connect</span>
-                                                </button>
+                                                {isGroupCreator ? (
+                                                    <>
+                                                        <button className="member-card-action" onClick={() => handleAccept(member.userId)}>
+                                                            Accept
+                                                        </button>
+                                                        <button className="member-card-action" onClick={() => handleDeny(member.userId)}>
+                                                            Deny
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="member-card-action"
+                                                        onClick={() => handleFollowRequest(member.email)}
+                                                    >
+                                                        <FontAwesomeIcon icon={faUserPlus} />
+                                                        <span>Follow</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         ))
                                     ) : (

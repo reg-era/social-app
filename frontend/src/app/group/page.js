@@ -108,6 +108,30 @@ const GroupsPage = () => {
     setInviteList(inviteList.filter(item => item !== email));
   };
 
+  const handleJoinRequest = async (groupId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8080/api/group`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': document.cookie.slice('auth_session='.length),
+        },
+        body: new URLSearchParams({
+          group_id: groupId,
+          action: 'request',
+        }),
+      });
+
+      if (response.ok) {
+        fetchGroups()
+        console.log('Join request sent successfully');
+      } else {
+        console.error('Failed to send join request');
+      }
+    } catch (error) {
+      console.error('Error sending join request:', error);
+    }
+  };
+
   return (
     <div>
       <Navigation />

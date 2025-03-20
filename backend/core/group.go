@@ -13,7 +13,7 @@ type GroupsInfo struct {
 	CreatorEmail string `json:"creator_email"`
 	CreatedAt    string `json:"created_at"`
 	MemberCount  int    `json:"member_count"`
-	UserStatus    string `json:"status"`
+	UserStatus   string `json:"status"`
 }
 
 type Group struct {
@@ -114,6 +114,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		groupId := r.PostFormValue("group_id")
 		action := r.PostFormValue("action")
+		fmt.Println(action, groupId)
 		switch action {
 		case "invite":
 			targetUserEmail := r.PostFormValue("user_id")
@@ -165,6 +166,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation sent"})
 
 		case "request":
+
 			var existingStatus string
 			err := a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).Scan(&existingStatus)
 			if err == nil {
@@ -180,6 +182,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 						WHERE group_id = ? AND user_id = ?`, groupId, userId)
 				}
 			} else {
+				fmt.Println("request created for userid", userId)
 				_, err = a.Create(`INSERT INTO group_members 
 					(group_id, user_id, invitation_type, status) 
 					VALUES (?, ?, 'request', 'pending')`, groupId, userId)
