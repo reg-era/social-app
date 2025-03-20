@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"social/pkg/utils"
+	"strconv"
 )
 
 type GroupsInfo struct {
@@ -114,7 +115,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		groupId := r.PostFormValue("group_id")
 		action := r.PostFormValue("action")
-		fmt.Println(action, groupId)
+		fmt.Println("action and group id", action, groupId)
 		switch action {
 		case "invite":
 			targetUserEmail := r.PostFormValue("user_id")
@@ -182,7 +183,6 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 						WHERE group_id = ? AND user_id = ?`, groupId, userId)
 				}
 			} else {
-				fmt.Println("request created for userid", userId)
 				_, err = a.Create(`INSERT INTO group_members 
 					(group_id, user_id, invitation_type, status) 
 					VALUES (?, ?, 'request', 'pending')`, groupId, userId)
@@ -194,35 +194,29 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			}
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Join request sent"})
 		case "accept", "reject":
-			targetUserEmail := r.PostFormValue("user_id")
-			var targetUserID int
-			err := a.Read(`SELECT id FROM users WHERE email = ?`, targetUserEmail).Scan(&targetUserID)
-			if err != nil {
-				fmt.Println("err selecting user", err)
-
-				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
-				return
-			}
+			targetUserID := r.PostFormValue("user_id")
 
 			var invitationType string
 			var status string
-			err = a.Read(`SELECT invitation_type, status FROM group_members 
+			err := a.Read(`SELECT invitation_type, status FROM group_members 
 						WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).Scan(&invitationType, &status)
 			if err != nil {
-				fmt.Println("invite status", err)
+				fmt.Println("no invite found")
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No invitation found"})
 				return
 			}
 
 			if status != "pending" {
-
+				fmt.Println("invitaion not pending")
 				utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
 				return
 			}
 
 			switch invitationType {
 			case "invite":
-				if userId != targetUserID {
+				tarUserID,_ := strconv.Atoi(targetUserID)
+				if userId != tarUserID {
+					fmt.Println("not allowed to accept or reject join requests", userId, tarUserID)
 					utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not authorized to respond"})
 					return
 				}
@@ -236,6 +230,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			default:
+				fmt.Println("eeror invite type")
 				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid invitation type"})
 				return
 			}
@@ -248,9 +243,11 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			_, err = a.Update(`UPDATE group_members SET status = ? 
 						WHERE group_id = ? AND user_id = ?`, newStatus, groupId, targetUserID)
 			if err != nil {
+				fmt.Println("update failed")
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to update status"})
 				return
 			}
+			fmt.Println("group members updated", newStatus, groupId, targetUserID)
 
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation " + newStatus})
 
