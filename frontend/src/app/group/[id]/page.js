@@ -183,7 +183,11 @@ const GroupDetailPage = () => {
                                     </div>
                                     <div className="group-members-count">
                                         <FontAwesomeIcon icon={faUsers} />
-                                        <span>{groupData && groupData.members ? `${groupData.members.length} members` : '0 members'}</span>
+                                        <span>
+                                            {groupData && groupData.members 
+                                                ? `${groupData.members.filter(member => member.status === "accepted").length} members` 
+                                                : '0 members'}
+                                        </span>
                                     </div>
                                 </div>
                                 <p className="group-description">{groupData ? groupData.description : ''}</p>
@@ -258,7 +262,7 @@ const GroupDetailPage = () => {
                         {activeTab === 'members' && (
                             <div className="members-list">
                                 <div className="members-header">
-                                    <h3>Group Members ({groupData?.Members?.length || 0})</h3>
+                                    <h3>Group Members ({groupData?.members?.filter(member => member.status === "accepted").length || 0})</h3>
                                     <input type="text" placeholder="Search members..." className="search-members" />
                                 </div>
                                 <div className="members-grid">

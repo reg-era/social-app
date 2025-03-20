@@ -13,6 +13,7 @@ type GroupsInfo struct {
 	CreatorEmail string `json:"creator_email"`
 	CreatedAt    string `json:"created_at"`
 	MemberCount  int    `json:"member_count"`
+	UserStatus    string `json:"status"`
 }
 
 type Group struct {
@@ -42,15 +43,17 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
                 g.description, 
                 u.email AS creator_email,
                 g.created_at,
-                COUNT(gm.user_id) AS member_count
+                COUNT(gm.user_id) AS member_count,
+                COALESCE(um.status, 'none') AS user_status
             FROM groups g
             JOIN users u ON g.creator_id = u.id
             LEFT JOIN group_members gm ON g.id = gm.group_id AND gm.status = 'accepted'
+            LEFT JOIN group_members um ON g.id = um.group_id AND um.user_id = ?
             GROUP BY g.id
             ORDER BY g.created_at DESC
         `
 
-		rows, err := a.ReadAll(query)
+		rows, err := a.ReadAll(query, userId)
 		if err != nil {
 			fmt.Println("failed to get groups")
 			utils.RespondWithJSON(w, http.StatusInternalServerError,
@@ -69,6 +72,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				&group.CreatorEmail,
 				&group.CreatedAt,
 				&group.MemberCount,
+				&group.UserStatus,
 			)
 			if err != nil {
 				fmt.Println("error processing groups")
@@ -87,7 +91,6 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				map[string]string{"error": "Error finalizing group list"})
 			return
 		}
-
 		utils.RespondWithJSON(w, http.StatusOK, groups)
 
 	case http.MethodPost:
@@ -192,7 +195,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			var targetUserID int
 			err := a.Read(`SELECT id FROM users WHERE email = ?`, targetUserEmail).Scan(&targetUserID)
 			if err != nil {
-				fmt.Println("err selecting user",err)
+				fmt.Println("err selecting user", err)
 
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 				return
@@ -203,13 +206,13 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			err = a.Read(`SELECT invitation_type, status FROM group_members 
 						WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).Scan(&invitationType, &status)
 			if err != nil {
-				fmt.Println("invite status",err)
+				fmt.Println("invite status", err)
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No invitation found"})
 				return
 			}
 
 			if status != "pending" {
-				
+
 				utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
 				return
 			}

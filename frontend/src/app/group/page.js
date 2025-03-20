@@ -35,6 +35,7 @@ const GroupsPage = () => {
       });
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
+      console.log(data)
     } catch (error) {
       console.error('Error fetching groups:', error);
       setGroups([]);
@@ -65,7 +66,6 @@ const GroupsPage = () => {
       if (response.ok) {
         const result = await response.json();
 
-        // Send invitations
         for (const email of inviteList) {
           const inviteFormData = new FormData();
           inviteFormData.append('group_id', result.group_id);
@@ -146,9 +146,19 @@ const GroupsPage = () => {
                         <span>•</span>
                         <span>Created by: {group.creator_email}</span>
                       </div>
-                      <Link href={`/group/${group.id}`}>
-                        <button className="open-btn">OPEN</button>
-                      </Link>
+                      {group.status === 'accepted' ? (
+                        <Link href={`/group/${group.id}`}>
+                          <button className="open-btn">Open</button>
+                        </Link>
+                      ) : group.status === 'pending' ? (
+                        <button className="pending-btn" disabled>
+                          Pending
+                        </button>
+                      ) : (
+                        <button className="join-btn" onClick={() => handleJoinRequest(group.id)}>
+                          Join
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
