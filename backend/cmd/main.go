@@ -37,33 +37,32 @@ func main() {
 		})
 	})
 
-	// public
 	router.HandleFunc("POST /api/login", api.HandleLogin)
 	router.HandleFunc("POST /api/signin", api.HandleSignin)
 	router.Handle("/api/check", mw.AuthMiddleware(nil))
 	router.HandleFunc("/api/ws", http.HandlerFunc(api.WebSocketConnect))
 
-	// private
-	router.Handle("GET /api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
-	router.Handle("GET /api/logout", mw.AuthMiddleware(http.HandlerFunc(api.HandleLogout)))
-	router.Handle("GET /api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
-	router.Handle("GET /api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
+	router.Handle("/api/user", mw.AuthMiddleware(http.HandlerFunc(api.HandleUser)))
+	router.Handle("/api/logout", mw.AuthMiddleware(http.HandlerFunc(api.HandleLogout)))
+	router.Handle("/api/global/", mw.AuthMiddleware(http.HandlerFunc(api.UploadeImages)))
+	router.Handle("/api/search", mw.AuthMiddleware(http.HandlerFunc(api.HandleSearch)))
 	router.Handle("/api/follow", mw.AuthMiddleware(http.HandlerFunc(api.HandleFollow)))
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
-	
-	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
-	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
-	router.Handle("/api/group/invitations", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
-	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
-	router.Handle("/api/group/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
 
+	router.Handle("/api/group/all", mw.AuthMiddleware(http.HandlerFunc(api.HandleGetGroups)))   
+	router.Handle("/api/group/create", mw.AuthMiddleware(http.HandlerFunc(api.HandleCreateGroup)))
+	router.Handle("/api/group/invitation", mw.AuthMiddleware(http.HandlerFunc(api.HandlePutGroup)))    
+
+	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
+	router.Handle("/api/group/invitations/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
+	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
+	router.Handle("GET /api/group/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
 
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
 
-	// run hub channels listner
 	go api.HUB.RunHubListner()
 
 	log.Printf("Server running on http://127.0.0.1:%s\n", port)

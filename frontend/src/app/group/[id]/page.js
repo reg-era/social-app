@@ -66,27 +66,9 @@ const GroupDetailPage = () => {
         }
     };
 
-    const fetchPendingInvitations = async () => {
-        try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitations', {
-                headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
-                },
-                method: "GET"
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setPendingInvitations(data);
-            }
-        } catch (error) {
-            console.error('Error fetching invitations:', error);
-        }
-    };
 
     useEffect(() => {
         fetchGroupData();
-        fetchPendingInvitations();
     }, [groupId]);
 
 // this is temporary need to be changed 
@@ -125,7 +107,7 @@ const GroupDetailPage = () => {
             formData.append('action', 'invite');
             formData.append('user_id', inviteEmail);
 
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
@@ -148,7 +130,7 @@ const GroupDetailPage = () => {
 
     const handleAccept = async (userId) => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
@@ -171,7 +153,7 @@ const GroupDetailPage = () => {
 
     const handleDeny = async (userId) => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
