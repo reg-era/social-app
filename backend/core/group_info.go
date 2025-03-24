@@ -8,6 +8,8 @@ import (
 )
 
 func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("userID").(int)
+
 	switch r.Method {
 	case http.MethodGet:
 
@@ -19,6 +21,16 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid group ID"})
 			return
 		}
+		var memberStatus string
+		err = a.Read(`SELECT status FROM group_members 
+			WHERE group_id = ? AND user_id = ?`,
+			groupID, userId).Scan(&memberStatus)
+		if err != nil || memberStatus != "accepted" {
+			utils.RespondWithJSON(w, http.StatusForbidden,
+				map[string]string{"error": "Not a group member"})
+			return
+		}
+
 
 		var group Group
 
@@ -34,7 +46,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch group detail"})
 			return
 		}
-		// Fetch group members
 		membersData, err := a.ReadAll(`
 			SELECT u.id, u.firstname,  gm.status
 			FROM group_members gm
@@ -68,7 +79,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Add this new function to handle fetching pending invitations
 func (a *API) HandleGroupInvitations(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("userID").(int)
 

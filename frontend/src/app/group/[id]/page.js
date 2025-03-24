@@ -11,6 +11,9 @@ import Sidebar from '@/components/sidebar';
 import PostCard from '@/components/post';
 import CreatePostCardGroup from '@/components/create_post_group';
 import GroupInvitations from '@/components/group_invitations';
+import CreateEventCard from '@/components/create_event';
+import EventList from '@/components/event_list';
+import MembersList from '@/components/MembersList';
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -66,12 +69,30 @@ const GroupDetailPage = () => {
         }
     };
 
+    const fetchEvents = async () => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8080/api/events?group_id=${groupId}`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            });
+            if (response.ok) {
+                const eventsData = await response.json();
+                setEvents(eventsData);
+            }
+        } catch (error) {
+            console.error('Error fetching events:', error);
+        }
+    };
 
     useEffect(() => {
         fetchGroupData();
     }, [groupId]);
 
-// this is temporary need to be changed 
+    useEffect(() => {
+        fetchEvents();
+    }, [groupId]);
+
     useEffect(() => {
         const fetchCurrentID = async () => {
             try {
@@ -128,54 +149,12 @@ const GroupDetailPage = () => {
         }
     };
 
-    const handleAccept = async (userId) => {
-        try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
-                },
-                body: new URLSearchParams({
-                    group_id: groupId,
-                    action: 'accept',
-                    user_id: userId,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to accept join request');
-            }
-            fetchGroupData()
-        } catch (error) {
-            console.error('Error accepting join request:', error);
-        }
-    };
-
-    const handleDeny = async (userId) => {
-        try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
-                },
-                body: new URLSearchParams({
-                    group_id: groupId,
-                    action: 'reject',
-                    user_id: userId,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to deny join request');
-            }
-            fetchGroupData();
-        } catch (error) {
-            console.error('Error denying join request:', error);
-        }
-    };
-
     const isGroupCreator = groupData && groupData.creatorId === currentUserID;
     console.log("compare", groupData?.creatorId, currentUserID, isGroupCreator)
+
+    const handleCreateEvent = async () => {
+        await fetchEvents();
+    };
 
     if (isLoading) {
         return <div className="loading">Loading group data...</div>;
@@ -208,8 +187,8 @@ const GroupDetailPage = () => {
                                     <div className="group-members-count">
                                         <FontAwesomeIcon icon={faUsers} />
                                         <span>
-                                            {groupData && groupData.members 
-                                                ? `${groupData.members.filter(member => member.status === "accepted").length} members` 
+                                            {groupData && groupData.members
+                                                ? `${groupData.members.filter(member => member.status === "accepted").length} members`
                                                 : '0 members'}
                                         </span>
                                     </div>
@@ -229,24 +208,24 @@ const GroupDetailPage = () => {
                         </div>
 
                         <div className="group-content-nav">
-                            <div
+                            <button
                                 className={`nav-tab ${activeTab === 'discussion' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('discussion')}
                             >
                                 Discussion
-                            </div>
-                            <div
+                            </button>
+                            <button
                                 className={`nav-tab ${activeTab === 'members' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('members')}
                             >
                                 Members
-                            </div>
-                            <div
+                            </button>
+                            <button
                                 className={`nav-tab ${activeTab === 'events' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('events')}
                             >
                                 Events
-                            </div>
+                            </button>
                         </div>
 
                         {activeTab === 'discussion' && (
@@ -284,75 +263,20 @@ const GroupDetailPage = () => {
                         )}
 
                         {activeTab === 'members' && (
-                            <div className="members-list">
-                                <div className="members-header">
-                                    <h3>Group Members  ({groupData?.members?.filter(member => member.status === "accepted").length || 0})</h3>
-                                </div>
-                                <div className="members-grid">
-                                    {groupData?.members?.length > 0 ? (
-                                        groupData.members.map(member => (
-                                            <div className="member-card" key={member.userId}>
-                                                <div className="member-card-avatar"></div>
-                                                <div className="member-card-name">{member.userName}</div>
-                                                <div className="member-card-role">{member.status}</div>
-                                                {member.status === "pending" && isGroupCreator ? (
-                                                    <>
-                                                        <button className="member-card-action" onClick={() => handleAccept(member.userId)}>
-                                                            Accept
-                                                        </button>
-                                                        <button className="member-card-action" onClick={() => handleDeny(member.userId)}>
-                                                            Deny
-                                                        </button>
-                                                    </>
-                                                ) : null}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="no-members">
-                                            <p>No members in this group yet.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <MembersList 
+                                groupId={groupId}
+                                isGroupCreator={isGroupCreator}
+                            />
                         )}
 
                         {activeTab === 'events' && (
-                            <div className="events-list">
-                                <div className="events-header">
-                                    <h3>Upcoming Events</h3>
-                                    <button className="create-event-btn">
-                                        <FontAwesomeIcon icon={faCalendarPlus} />
-                                        <span>Create Event</span>
-                                    </button>
-                                </div>
-                                <div className="events-container">
-                                    {events.map(event => (
-                                        <div className="event-card" key={event.id}>
-                                            <div className="event-date">
-                                                <div className="event-month">{event.date.month}</div>
-                                                <div className="event-day">{event.date.day}</div>
-                                            </div>
-                                            <div className="event-details">
-                                                <div className="event-title">{event.title}</div>
-                                                <div className="event-meta">
-                                                    <div className="event-time">
-                                                        <FontAwesomeIcon icon={faClock} />
-                                                        <span>{event.time}</span>
-                                                    </div>
-                                                    <div className="event-location">
-                                                        <FontAwesomeIcon icon={faMapMarkerAlt} />
-                                                        <span>{event.location}</span>
-                                                    </div>
-                                                </div>
-                                                <button className={`event-attend-btn ${attendingStatus[event.id] ? 'attending' : ''}`}
-                                                    onClick={() => toggleAttending(event.id)}
-                                                >
-                                                    {attendingStatus[event.id] ? 'Attending' : 'Attend'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="events-header">
+                                <h3>Upcoming Events</h3>
+                                <CreateEventCard
+                                    onCreateEvent={handleCreateEvent}
+                                    groupId={groupId}
+                                />
+                                <EventList events={events} />
                             </div>
                         )}
                     </div>

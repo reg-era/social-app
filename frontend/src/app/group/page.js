@@ -234,36 +234,6 @@ const GroupsPage = () => {
                   <option value="closed">Closed Group</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Invite Users</label>
-                <div className="invite-input-container">
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email address"
-                  />
-                  <button className="add-invite-btn" onClick={addInvite}>
-                    <FontAwesomeIcon icon={faPlus} />
-                  </button>
-                </div>
-                {inviteList.length > 0 && (
-                  <div className="invite-list">
-                    {inviteList.map((email, index) => (
-                      <div key={index} className="invite-item">
-                        <span>{email}</span>
-                        <button
-                          type="button"
-                          className="remove-invite"
-                          onClick={() => removeInvite(email)}
-                        >
-                          <FontAwesomeIcon icon={faTimes} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowCreateModal(false)}>
                   Cancel

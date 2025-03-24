@@ -51,14 +51,19 @@ func main() {
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
 
-	router.Handle("/api/group/all", mw.AuthMiddleware(http.HandlerFunc(api.HandleGetGroups)))   
+	router.Handle("/api/group/all", mw.AuthMiddleware(http.HandlerFunc(api.HandleGetGroups)))
 	router.Handle("/api/group/create", mw.AuthMiddleware(http.HandlerFunc(api.HandleCreateGroup)))
-	router.Handle("/api/group/invitation", mw.AuthMiddleware(http.HandlerFunc(api.HandlePutGroup)))    
+	router.Handle("/api/group/invitation", mw.AuthMiddleware(http.HandlerFunc(api.HandlePutGroup)))
 
 	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
 	router.Handle("/api/group/invitations/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
 	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
 	router.Handle("GET /api/group/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
+
+	router.Handle("/api/event/create", mw.AuthMiddleware(http.HandlerFunc(api.HandleCreateEvent)))
+	router.Handle("/api/events", mw.AuthMiddleware(http.HandlerFunc(api.HandleGetEvents)))
+	router.Handle("/api/event/details", mw.AuthMiddleware(http.HandlerFunc(api.HandleGetEventDetails)))
+	router.Handle("/api/event/respond", mw.AuthMiddleware(http.HandlerFunc(api.HandleRespondToEvent)))
 
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
