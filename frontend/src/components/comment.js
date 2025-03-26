@@ -17,7 +17,7 @@ const CreateCommentCard = ({ postId }) => {
 
     const importFile = (e) => {
         e.preventDefault()
-        document.getElementById('fileInputPost').click()
+        document.getElementById('fileInputComment').click()
     };
 
     const toggleEmojiPicker = () => {
@@ -85,8 +85,8 @@ const CreateCommentCard = ({ postId }) => {
                 body: form,
             })
 
+            const data = await res.json()
             if (res.ok) {
-                const data = await res.json()
                 setComments(prevComm => {
                     const newComments = new Map(prevComm);
                     if (!newComments.has(data.comment_id)) {
@@ -97,11 +97,10 @@ const CreateCommentCard = ({ postId }) => {
                 setNewComment('');
                 setFile('');
             } else {
-                throw new Error('Failed to create group post');
+                throw new Error(data.error);
             }
         } catch (error) {
-            console.log(error);
-            setError('Failed to submit the Post. Please try again.');
+            setError(`${error}. Please try again.`);
         }
     }
 
@@ -111,6 +110,7 @@ const CreateCommentCard = ({ postId }) => {
 
     return (
         <div className="post-comments">
+            <button onClick={(e)=>  getComments()}>show more</button>
             {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url}/>))}
             <div className="add-comment">
                 <div className="comment-avatar"></div>
@@ -120,7 +120,7 @@ const CreateCommentCard = ({ postId }) => {
                             <input name="comment" type="text" value={NewComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Write a comment..." />
                         </div>
                         
-                        <input name="fileInputComment" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
+                        <input id="fileInputComment" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
                         <button type="button" className="photo-action" onClick={importFile}>
                             <FontAwesomeIcon icon={faImage} />
                         </button>

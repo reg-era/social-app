@@ -1,18 +1,43 @@
 package core
 
 import (
+	"fmt"
 	"net/http"
 
 	"social/pkg/utils"
 )
 
 func (a *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(int)
+	if !ok {
+		utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
 	target := r.URL.Query().Get("target")
+	nich := r.URL.Query().Get("nich")
 	if target != "" {
-		data, err := a.ReadAll(`
-		SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
-		FROM users WHERE firstname LIKE $1 OR lastname LIKE $1 OR email LIKE $1 ;`, target+"%")
+		query := ""
+		values := []any{}
+		if nich == "close" {
+			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
+			FROM users
+			JOIN follows ON following_id = id 
+			WHERE 
+				(firstname LIKE '$1' OR lastname LIKE '$1' OR email LIKE '$1') 
+			AND
+				follower_id =$2 ;`
+			values = []any{target + "%", userId}
+		} else {
+			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
+			FROM users WHERE firstname LIKE $1 OR lastname LIKE $1 OR email LIKE $1 ;`
+			values = []any{target + "%"}
+		}
+
+		data, err := a.ReadAll(query, values...)
 		if err != nil {
+			fmt.Println("error: ", err)
+			return
 		}
 		defer data.Close()
 

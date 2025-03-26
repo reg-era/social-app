@@ -3,10 +3,11 @@ import { BellIcon, CommentIcon, UserIcon } from '@/utils/icons';
 import { useState, useRef, useEffect } from 'react';
 import Notif from './notification';
 import { useRouter } from 'next/navigation';
+import { useWebSocket } from '@/context/ws_context';
 
 const Navigation = () => {
     const router = useRouter();
-
+    
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -41,7 +42,8 @@ const Navigation = () => {
             }
         }, 300);
     };
-
+    
+    const { websocket, connected } = useWebSocket();
     const handleLogout = async (e) => {
         try {
             const res = await fetch(`http://127.0.0.1:8080/api/logout`, {
@@ -51,6 +53,7 @@ const Navigation = () => {
             });
             if (res.ok) {
                 document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                connected && websocket.close()
                 router.push('/login')
             }
         } catch (err) {

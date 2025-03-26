@@ -8,12 +8,12 @@ const CreatePostCard = ({ onCreatePost }) => {
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
-    const [postPrivacy, setPostPrivacy] = useState('public');
-    const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
-    const [taggedFriends, setTaggedFriends] = useState([]);
-    const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
     const [showTagFriends, setShowTagFriends] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [postPrivacy, setPostPrivacy] = useState('public');
+    const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
+    const [taggedFriends, setTaggedFriends] = useState(["test1","test3","test2"]);
+    const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
     const [friendSearchTerm, setFriendSearchTerm] = useState('');
 
     const emojiPickerRef = useRef(null);
