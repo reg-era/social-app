@@ -4,6 +4,7 @@ const publicRoutes = ['/login', '/signup']
 const privateRoutes = ['/', '/profile', '/chat', '/group']
 
 export async function middleware(req) {
+    return NextResponse.next();
     const path = req.nextUrl.pathname
 
     const authorized = await checkAuthentication(req.cookies.get('auth_session')?.value)
@@ -16,7 +17,7 @@ export async function middleware(req) {
         return NextResponse.redirect(new URL('/', req.nextUrl));
     }
 
-    return NextResponse.next();
+    
 }
 
 async function checkAuthentication(token) {
