@@ -26,7 +26,6 @@ export const WebSocketProvider = ({ children }) => {
 
         ws.onclose = (event) => {
             console.log('WebSocket Closed', event.code);
-            alert("websocket to server is closed")
             setConnected(false);
         };
 

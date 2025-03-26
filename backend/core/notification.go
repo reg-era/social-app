@@ -7,10 +7,6 @@ import (
 	"social/pkg/utils"
 )
 
-// follow_request group_invite group_request event_created
-// INSERT INTO notifications (user_id,type,content,related_id)
-// VALUES(1,'group_request','someont want to join your group',3);
-
 type Note struct {
 	Id       int
 	Type     string `json:"type"`     // follow_request, group_invite, group_request, event_created, post_comment

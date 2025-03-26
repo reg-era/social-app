@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+
 	"social/pkg/utils"
 )
 
@@ -109,8 +111,14 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithJSON(w, http.StatusCreated, map[string]string{"success": "Group created"})
 
 	case http.MethodPut:
-		groupId := r.PostFormValue("group_id")
 		action := r.PostFormValue("action")
+		groupId, err := strconv.Atoi(r.PostFormValue("group_id"))
+		if err != nil {
+			fmt.Println(err)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+			return
+		}
+
 		switch action {
 		case "invite":
 			targetUserEmail := r.PostFormValue("user_id")
@@ -127,8 +135,7 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			var inviterStatus string
 			err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).Scan(&inviterStatus)
 			if err != nil || inviterStatus != "accepted" {
-				fmt.Println(err)
-
+				fmt.Println("sssd", err)
 				utils.RespondWithJSON(w, http.StatusForbidden, map[string]string{"error": "Not authorized to invite"})
 				return
 			}
@@ -146,19 +153,26 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				case "declined":
 					_, err = a.Update(`UPDATE group_members SET status = 'pending', invitation_type = 'invite' 
 								WHERE group_id = ? AND user_id = ?`, groupId, targetUserID)
+
+					a.AddNotification(&Note{
+						Type:     "group_invite",
+						Sender:   userId,
+						Receiver: targetUserID,
+						Content:  fmt.Sprintf("user %d invite you o join group %d", userId, groupId),
+					})
 				}
 			} else {
 				_, err = a.Create(`INSERT INTO group_members 
 							(group_id, user_id, invitation_type, status) 
 							VALUES (?, ?, 'invite', 'pending')`, groupId, targetUserID)
+				a.AddNotification(&Note{
+					Type:     "group_invite",
+					Sender:   userId,
+					Receiver: targetUserID,
+					Content:  fmt.Sprintf("user %d invite you o join group %d", userId, groupId),
+				})
 			}
 
-			if err != nil {
-				fmt.Println(err)
-
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to send invitation"})
-				return
-			}
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation sent"})
 
 		case "request":
@@ -175,24 +189,37 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 				case "declined":
 					_, err = a.Update(`UPDATE group_members SET status = 'pending', invitation_type = 'request' 
 						WHERE group_id = ? AND user_id = ?`, groupId, userId)
+					a.AddNotification(&Note{
+						Type:     "group_request",
+						Sender:   groupId,
+						Receiver: userId,
+						Content:  fmt.Sprintf("you have group request from %d", groupId),
+					})
 				}
 			} else {
-				_, err = a.Create(`INSERT INTO group_members 
-					(group_id, user_id, invitation_type, status) 
-					VALUES (?, ?, 'request', 'pending')`, groupId, userId)
+				_, err := a.Create(`INSERT INTO group_members 
+									(group_id, user_id, invitation_type, status) 
+									VALUES (?, ?, 'request', 'pending')`, groupId, userId)
+				if err != nil {
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create request"})
+					return
+				}
+
+				a.AddNotification(&Note{
+					Type:     "group_request",
+					Sender:   groupId,
+					Receiver: userId,
+					Content:  fmt.Sprintf("you have group request from %d", groupId),
+				})
 			}
 
-			if err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create request"})
-				return
-			}
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Join request sent"})
 		case "accept", "reject":
 			targetUserEmail := r.PostFormValue("user_id")
 			var targetUserID int
 			err := a.Read(`SELECT id FROM users WHERE email = ?`, targetUserEmail).Scan(&targetUserID)
 			if err != nil {
-				fmt.Println("err selecting user",err)
+				fmt.Println("err selecting user", err)
 
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 				return
@@ -203,13 +230,13 @@ func (a *API) HandleGroup(w http.ResponseWriter, r *http.Request) {
 			err = a.Read(`SELECT invitation_type, status FROM group_members 
 						WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).Scan(&invitationType, &status)
 			if err != nil {
-				fmt.Println("invite status",err)
+				fmt.Println("invite status", err)
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No invitation found"})
 				return
 			}
 
 			if status != "pending" {
-				
+
 				utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
 				return
 			}
