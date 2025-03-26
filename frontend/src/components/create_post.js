@@ -11,12 +11,38 @@ const CreatePostCard = ({ onCreatePost }) => {
     const [postPrivacy, setPostPrivacy] = useState('public');
     const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
     const [taggedFriends, setTaggedFriends] = useState([]);
-    const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
+    const [friendsList, setFriendsList] = useState([]); 
     const [showTagFriends, setShowTagFriends] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     
     // Ref for the emoji picker container
     const emojiPickerRef = useRef(null);
+
+    // Mock list of friends to simulate backend data
+    const mockFriends = [
+        { id: 1, name: 'John Doe', username: 'johndoe' },
+        { id: 2, name: 'Jane Smith', username: 'janesmith' },
+        { id: 3, name: 'Mike Johnson', username: 'mikejohnson' },
+        { id: 4, name: 'Emily Brown', username: 'emilybrown' },
+        { id: 5, name: 'Alex Wilson', username: 'alexwilson' }
+    ];
+
+    // Fetch friends list when component mounts (simulated backend call)
+    useEffect(() => {
+        // Simulate API call to fetch friends
+        const fetchFriends = async () => {
+            try {
+                // In a real scenario, this would be an actual API call
+                // For now, we'll use the mock list
+                setFriendsList(mockFriends);
+            } catch (error) {
+                console.error('Failed to fetch friends:', error);
+                // Optionally set an error state
+            }
+        };
+
+        fetchFriends();
+    }, []);
 
     // Close emoji picker when clicking outside
     useEffect(() => {
@@ -51,7 +77,11 @@ const CreatePostCard = ({ onCreatePost }) => {
     };
 
     const handleAddTag = (friend) => {
-        setTaggedFriends([...taggedFriends, friend]);
+        // Prevent adding the same friend twice
+        if (!taggedFriends.some(tagged => tagged.id === friend.id)) {
+            setTaggedFriends([...taggedFriends, friend]);
+        }
+        setShowTagFriends(false);
     };
 
     const removeTag = (friendId) => {
@@ -84,6 +114,11 @@ const CreatePostCard = ({ onCreatePost }) => {
             }
             
             formData.append("visibility", postPrivacy);
+
+            // Add tagged friends to the form data
+            if (taggedFriends.length > 0) {
+                formData.append("taggedFriends", JSON.stringify(taggedFriends.map(f => f.id)));
+            }
 
             const res = await fetch('http://127.0.0.1:8080/api/post', {
                 method: 'POST',
@@ -214,7 +249,7 @@ const CreatePostCard = ({ onCreatePost }) => {
                         )}
                     </div>
                     
-                    {/* Tag Friends option only appears when Friends privacy is selected */}
+                    {/* Tag Friends option appears when Private privacy is selected */}
                     {postPrivacy === 'private' && (
                         <div className="tag-friends">
                             <button 
