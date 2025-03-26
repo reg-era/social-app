@@ -12,7 +12,7 @@ const CreatePostCard = ({ onCreatePost }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [postPrivacy, setPostPrivacy] = useState('public');
     const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
-    const [taggedFriends, setTaggedFriends] = useState(["test1","test3","test2"]);
+    const [taggedFriends, setTaggedFriends] = useState([]);
     const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
     const [friendSearchTerm, setFriendSearchTerm] = useState('');
 

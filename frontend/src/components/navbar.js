@@ -96,7 +96,7 @@ const Navigation = () => {
                     <BellIcon />
                     <span className="notification-count">3</span>
                 </div>
-                {show && <Notif notifications={["You have a new follower", "Your post got a like", "Someone commented on your post"]} />}
+                {show && <Notif />}
 
                 <Link href="/chat" className="nav-icon messages-icon">
                     <CommentIcon />

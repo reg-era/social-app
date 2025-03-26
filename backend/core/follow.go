@@ -59,16 +59,30 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else {
-			_, err = a.Create(`INSERT INTO follow_requests (follower_id, following_id)
-		VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
+			id, err := a.Create(`INSERT INTO follow_requests (follower_id, following_id)
+			VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
 			if err != nil {
 				fmt.Println(err)
-
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Could not follow user",
 				})
 				return
 			}
+
+			var receiver int
+			if err := a.Read("SELECT following_id FROM follow_requests WHERE id = ? ;", id).Scan(&receiver); err != nil {
+				fmt.Println(err)
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+					"error": "Could not follow user",
+				})
+				return
+			}
+			a.AddNotification(&Note{
+				Type:     "follow_request",
+				Sender:   userId,
+				Receiver: receiver,
+				Content:  fmt.Sprintf("%s Want to follow you", userAction.Email),
+			})
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, map[string]string{"valid": "Follow request sent to User"})
@@ -115,5 +129,5 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 	default:
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 		return
-  }
+	}
 }

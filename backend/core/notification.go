@@ -7,7 +7,12 @@ import (
 	"social/pkg/utils"
 )
 
+// follow_request group_invite group_request event_created
+// INSERT INTO notifications (user_id,type,content,related_id)
+// VALUES(1,'group_request','someont want to join your group',3);
+
 type Note struct {
+	Id       int
 	Type     string `json:"type"`     // follow_request, group_invite, group_request, event_created, post_comment
 	Sender   int    `json:"sender"`   // user or group id
 	Receiver int    `json:"receiver"` // userID
@@ -21,7 +26,7 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := api.ReadAll(`SELECT type, content FROM notifications WHERE related_id = ?`, userId)
+	data, err := api.ReadAll(`SELECT id, related_id, type, content FROM notifications WHERE user_id = ?`, userId)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 		return
@@ -31,20 +36,21 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 	response := []Note{}
 	for data.Next() {
 		var notif Note
-		if err := data.Scan(&notif.Type, &notif.Content); err != nil {
+		notif.Receiver = userId
+		if err := data.Scan(&notif.Id, &notif.Sender, &notif.Type, &notif.Content); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 			return
 		}
 		response = append(response, notif)
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "stiilll fixing"})
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 func (api *API) AddNotification(notif *Note) error {
 	_, err := api.Create(`
 	INSERT INTO notifications (user_id, related_id, type, content)
-	VALUES (?, ?, ?, ?)`, notif.Sender, notif.Receiver, notif.Type, notif.Content)
+	VALUES (?, ?, ?, ?)`, notif.Receiver, notif.Sender, notif.Type, notif.Content)
 	if err != nil {
 		fmt.Println("error on adding notif: ", err)
 		return fmt.Errorf("operation faild")
