@@ -56,14 +56,14 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resComment := a.Read(`
-		SELECT  u.firstname, u.lastname, c.content, c.image_url, c.created_at FROM comments c
+		SELECT  u.firstname, u.lastname, c.id, c.content, c.image_url, c.created_at FROM comments c
 		JOIN users u ON user_id = u.id
 		WHERE c.id = ?`, commentId)
 
 		var comment Comment
 		var first, last string
 		var postCreator int
-		if err := resComment.Scan(&first, &last, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
+		if err := resComment.Scan(&first, &last, &comment.ID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"failed": "Status Internal Server Error"})
 			return
 		}
