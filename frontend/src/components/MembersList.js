@@ -15,7 +15,8 @@ const MembersList = ({ groupId, isGroupCreator }) => {
             });
             if (response.ok) {
                 const data = await response.json();
-                setMembers(Array.isArray(data) ? data : []);
+                console.log("this is the group members", data.members);
+                setMembers(data.members || []);
             } else {
                 throw new Error('Failed to fetch members');
             }
@@ -114,4 +115,4 @@ const MembersList = ({ groupId, isGroupCreator }) => {
     );
 };
 
-export default MembersList; 
+export default MembersList;

@@ -55,6 +55,7 @@ func main() {
 	router.Handle("/api/group/create", mw.AuthMiddleware(http.HandlerFunc(api.HandleCreateGroup)))
 	router.Handle("/api/group/invitation", mw.AuthMiddleware(http.HandlerFunc(api.HandlePutGroup)))
 
+	router.Handle("/api/group/members", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
 	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
 	router.Handle("/api/group/invitations/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
 	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
