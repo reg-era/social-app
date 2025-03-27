@@ -11,6 +11,9 @@ import Sidebar from '@/components/sidebar';
 import PostCard from '@/components/post';
 import CreatePostCardGroup from '@/components/create_post_group';
 import GroupInvitations from '@/components/group_invitations';
+import CreateEventCard from '@/components/create_event';
+import EventList from '@/components/event_list';
+import MembersList from '@/components/MembersList';
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -25,10 +28,10 @@ const GroupDetailPage = () => {
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [pendingInvitations, setPendingInvitations] = useState([]);
+    const [currentUserID, setCurrentUserID] = useState('');
 
     const params = useParams();
     const groupId = params.id;
-
 
     const fetchGroupData = async () => {
         try {
@@ -45,7 +48,6 @@ const GroupDetailPage = () => {
             }
 
             const data = await response.json();
-            console.log("these are the group members", data.members)
             setGroupData(data);
 
             const postsResponse = await fetch(`http://127.0.0.1:8080/api/group/post?group_id=${groupId}`, {
@@ -67,28 +69,49 @@ const GroupDetailPage = () => {
         }
     };
 
-    const fetchPendingInvitations = async () => {
+    const fetchEvents = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitations', {
+            const response = await fetch(`http://127.0.0.1:8080/api/events?group_id=${groupId}`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
-                method: "GET"
             });
-
             if (response.ok) {
-                const data = await response.json();
-                setPendingInvitations(data);
+                const eventsData = await response.json();
+                setEvents(eventsData);
             }
         } catch (error) {
-            console.error('Error fetching invitations:', error);
+            console.error('Error fetching events:', error);
         }
     };
 
     useEffect(() => {
         fetchGroupData();
-        fetchPendingInvitations();
     }, [groupId]);
+
+    useEffect(() => {
+        fetchEvents();
+    }, [groupId]);
+
+    useEffect(() => {
+        const fetchCurrentID = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/user', {
+                    headers: {
+                        'Authorization': document.cookie.slice('auth_session='.length),
+                    },
+                });
+                if (response.ok) {
+                    const userData = await response.json();
+                    setCurrentUserID(userData.id);
+                }
+            } catch (error) {
+                console.error('Error fetching current user id:', error);
+            }
+        };
+
+        fetchCurrentID();
+    }, []);
 
     const toggleAttending = (eventId) => {
         setAttendingStatus({
@@ -97,40 +120,15 @@ const GroupDetailPage = () => {
         });
     };
 
-    // const handleFollowRequest = async (userEmail) => {
-    //     try {
-    //         const response = await fetch('http://127.0.0.1:8080/api/follow', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': document.cookie.slice('auth_session='.length),
-    //             },
-    //             body: JSON.stringify({
-    //                 email: userEmail
-    //             })
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error('Failed to send follow request');
-    //         }
-
-    //         alert('Follow request sent!');
-    //     } catch (error) {
-    //         console.error('Error sending follow request:', error);
-    //         alert('Failed to send follow request');
-    //     }
-    // };
-
     const handleInvite = async (e) => {
         e.preventDefault();
-        console.log("handle invite  ")
         try {
             const formData = new FormData();
             formData.append('group_id', groupId);
             formData.append('action', 'invite');
             formData.append('user_id', inviteEmail);
 
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch('http://127.0.0.1:8080/api/group/invitation', {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
@@ -151,7 +149,11 @@ const GroupDetailPage = () => {
         }
     };
 
+    const isGroupCreator = groupData && groupData.creatorId === currentUserID;
 
+    const handleCreateEvent = async () => {
+        await fetchEvents();
+    };
 
     if (isLoading) {
         return <div className="loading">Loading group data...</div>;
@@ -183,7 +185,11 @@ const GroupDetailPage = () => {
                                     </div>
                                     <div className="group-members-count">
                                         <FontAwesomeIcon icon={faUsers} />
-                                        <span>{groupData && groupData.members ? `${groupData.members.length} members` : '0 members'}</span>
+                                        <span>
+                                            {groupData && groupData.members
+                                                ? `${groupData.members.filter(member => member.status === "accepted").length} members`
+                                                : '0 members'}
+                                        </span>
                                     </div>
                                 </div>
                                 <p className="group-description">{groupData ? groupData.description : ''}</p>
@@ -201,24 +207,24 @@ const GroupDetailPage = () => {
                         </div>
 
                         <div className="group-content-nav">
-                            <div
+                            <button
                                 className={`nav-tab ${activeTab === 'discussion' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('discussion')}
                             >
                                 Discussion
-                            </div>
-                            <div
+                            </button>
+                            <button
                                 className={`nav-tab ${activeTab === 'members' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('members')}
                             >
                                 Members
-                            </div>
-                            <div
+                            </button>
+                            <button
                                 className={`nav-tab ${activeTab === 'events' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('events')}
                             >
                                 Events
-                            </div>
+                            </button>
                         </div>
 
                         {activeTab === 'discussion' && (
@@ -256,73 +262,20 @@ const GroupDetailPage = () => {
                         )}
 
                         {activeTab === 'members' && (
-                            <div className="members-list">
-                                <div className="members-header">
-                                    <h3>Group Members ({groupData?.Members?.length || 0})</h3>
-                                    <input type="text" placeholder="Search members..." className="search-members" />
-                                </div>
-                                <div className="members-grid">
-                                    {groupData?.members?.length > 0 ? (
-                                        groupData.members.map(member => (
-                                            <div className="member-card" key={member.userId}>
-                                                <div className="member-card-avatar"></div>
-                                                <div className="member-card-name">{member.userName}</div>
-                                                <div className="member-card-role">{member.status}</div>
-                                                <button
-                                                    className="member-card-action"
-                                                    onClick={() => handleFollowRequest(member.email)}
-                                                >
-                                                    <FontAwesomeIcon icon={faUserPlus} />
-                                                    <span>Connect</span>
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="no-members">
-                                            <p>No members in this group yet.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <MembersList 
+                                groupId={groupId}
+                                isGroupCreator={isGroupCreator}
+                            />
                         )}
 
                         {activeTab === 'events' && (
-                            <div className="events-list">
-                                <div className="events-header">
-                                    <h3>Upcoming Events</h3>
-                                    <button className="create-event-btn">
-                                        <FontAwesomeIcon icon={faCalendarPlus} />
-                                        <span>Create Event</span>
-                                    </button>
-                                </div>
-                                <div className="events-container">
-                                    {events.map(event => (
-                                        <div className="event-card" key={event.id}>
-                                            <div className="event-date">
-                                                <div className="event-month">{event.date.month}</div>
-                                                <div className="event-day">{event.date.day}</div>
-                                            </div>
-                                            <div className="event-details">
-                                                <div className="event-title">{event.title}</div>
-                                                <div className="event-meta">
-                                                    <div className="event-time">
-                                                        <FontAwesomeIcon icon={faClock} />
-                                                        <span>{event.time}</span>
-                                                    </div>
-                                                    <div className="event-location">
-                                                        <FontAwesomeIcon icon={faMapMarkerAlt} />
-                                                        <span>{event.location}</span>
-                                                    </div>
-                                                </div>
-                                                <button className={`event-attend-btn ${attendingStatus[event.id] ? 'attending' : ''}`}
-                                                    onClick={() => toggleAttending(event.id)}
-                                                >
-                                                    {attendingStatus[event.id] ? 'Attending' : 'Attend'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="events-header">
+                                <h3>Upcoming Events</h3>
+                                <CreateEventCard
+                                    onCreateEvent={handleCreateEvent}
+                                    groupId={groupId}
+                                />
+                                <EventList events={events} />
                             </div>
                         )}
                     </div>

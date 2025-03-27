@@ -27,7 +27,7 @@ const GroupsPage = () => {
   // Fetch groups on mount
   const fetchGroups = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/group', {
+      const response = await fetch('http://127.0.0.1:8080/api/group/all', {
         headers: {
           'Authorization': document.cookie.slice('auth_session='.length),
         },
@@ -35,6 +35,7 @@ const GroupsPage = () => {
       });
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
+      console.log(data)
     } catch (error) {
       console.error('Error fetching groups:', error);
       setGroups([]);
@@ -54,7 +55,7 @@ const GroupsPage = () => {
     formData.append('type', newGroupType);
 
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/group', {
+      const response = await fetch('http://127.0.0.1:8080/api/group/create', {
         method: 'POST',
         headers: {
           'Authorization': document.cookie.slice('auth_session='.length),
@@ -65,7 +66,6 @@ const GroupsPage = () => {
       if (response.ok) {
         const result = await response.json();
 
-        // Send invitations
         for (const email of inviteList) {
           const inviteFormData = new FormData();
           inviteFormData.append('group_id', result.group_id);
@@ -108,6 +108,30 @@ const GroupsPage = () => {
     setInviteList(inviteList.filter(item => item !== email));
   };
 
+  const handleJoinRequest = async (groupId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8080/api/group/invitation`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': document.cookie.slice('auth_session='.length),
+        },
+        body: new URLSearchParams({
+          group_id: groupId,
+          action: 'request',
+        }),
+      });
+
+      if (response.ok) {
+        fetchGroups()
+        console.log('Join request sent successfully');
+      } else {
+        console.error('Failed to send join request');
+      }
+    } catch (error) {
+      console.error('Error sending join request:', error);
+    }
+  };
+
   return (
     <div>
       <Navigation />
@@ -146,9 +170,19 @@ const GroupsPage = () => {
                         <span>•</span>
                         <span>Created by: {group.creator_email}</span>
                       </div>
-                      <Link href={`/group/${group.id}`}>
-                        <button className="open-btn">OPEN</button>
-                      </Link>
+                      {group.status === 'accepted' ? (
+                        <Link href={`/group/${group.id}`}>
+                          <button className="open-btn">Open</button>
+                        </Link>
+                      ) : group.status === 'pending' ? (
+                        <button className="pending-btn" disabled>
+                          Pending
+                        </button>
+                      ) : (
+                        <button className="join-btn" onClick={() => handleJoinRequest(group.id)}>
+                          Join
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -199,36 +233,6 @@ const GroupsPage = () => {
                   <option value="public">Public Group</option>
                   <option value="closed">Closed Group</option>
                 </select>
-              </div>
-              <div className="form-group">
-                <label>Invite Users</label>
-                <div className="invite-input-container">
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email address"
-                  />
-                  <button className="add-invite-btn" onClick={addInvite}>
-                    <FontAwesomeIcon icon={faPlus} />
-                  </button>
-                </div>
-                {inviteList.length > 0 && (
-                  <div className="invite-list">
-                    {inviteList.map((email, index) => (
-                      <div key={index} className="invite-item">
-                        <span>{email}</span>
-                        <button
-                          type="button"
-                          className="remove-invite"
-                          onClick={() => removeInvite(email)}
-                        >
-                          <FontAwesomeIcon icon={faTimes} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowCreateModal(false)}>

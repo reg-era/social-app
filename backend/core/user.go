@@ -163,13 +163,13 @@ func (a *API) AddUser(user *User) (int, error) {
 
 func (a *API) ReadUser(id int, user *User) error {
 	data_userInfo := a.Read(`
-	SELECT u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public,
+	SELECT u.id, u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public,
 	(SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS followings,
 	(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS followers
 	FROM users u WHERE id = ? ;
 	`, id)
 
-	if err := data_userInfo.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic, &user.Followings, &user.Followers); err != nil {
+	if err := data_userInfo.Scan(&user.Id, &user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic, &user.Followings, &user.Followers); err != nil {
 		return err
 	}
 	return nil
