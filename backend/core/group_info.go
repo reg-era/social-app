@@ -12,7 +12,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-
 		groupIDStr := r.URL.Query().Get("group_id")
 		groupID, err := strconv.Atoi(groupIDStr)
 		if err != nil || groupID <= 0 {

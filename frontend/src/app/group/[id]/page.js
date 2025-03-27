@@ -150,7 +150,6 @@ const GroupDetailPage = () => {
     };
 
     const isGroupCreator = groupData && groupData.creatorId === currentUserID;
-    console.log("compare", groupData?.creatorId, currentUserID, isGroupCreator)
 
     const handleCreateEvent = async () => {
         await fetchEvents();
