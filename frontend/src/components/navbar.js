@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { BellIcon, CommentIcon, UserIcon } from '@/utils/icons';
-import { useState, useRef, useEffect } from 'react';
+import { BellIcon, CommentIcon, UserIcon, LogOutIcon } from '@/utils/icons';
+import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { useState, useRef, useEffect,  } from 'react';
 import Notif from './notification';
 import { useRouter } from 'next/navigation';
 
@@ -101,7 +102,7 @@ const Navigation = () => {
                 </Link>
 
                 <button className="nav-icon logout-btn" onClick={() => handleLogout()}>
-                    <UserIcon />
+                    <LogOutIcon />
                 </button>
             </div>
         </nav>

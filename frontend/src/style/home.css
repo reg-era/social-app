@@ -70,6 +70,297 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
+/* Notification Dropdown Styles */
+.notification-dropdown {
+    position: absolute;
+    top: 60px;  /* Adjust depending on the nav bar height */
+    right: 20px; /* Adjust position as needed */
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    width: 250px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+/* Header for the dropdown */
+.notification-header {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+/* Notifications list */
+.notification-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.notification {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.notification:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.notification p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+/* Unread notification style */
+.notification.unread {
+    background: rgba(108, 92, 231, 0.1);  /* Highlight unread notifications */
+}
+
+/* Add styles for notification icon with count */
+.notification-icon {
+    position: relative;
+}
+
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/***********************/
+/* Search Dropdown Styles */
+.nav-search {
+    position: relative;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+/* Search items */
+.search-item {
+    overflow-x: hidden;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background 0.2s ease;
+}
+
+.search-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.search-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.search-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-info p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+/* No results message */
+.no-results {
+    padding: 10px;
+    text-align: center;
+    color: gray;
+}
+
+/* Optional: Unread search item style */
+.search-item.unread {
+    background-color: rgba(108, 92, 231, 0.1);  /* Highlight unread search items */
+}
+
+
+/*****************************/
+
+.messageBox {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 20px;
+  padding: .8rem 1rem;
+  color: var(--text-color);
+  outline: none;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.messageBox:focus-within {
+  border: 1px solid rgb(110, 110, 110);
+}
+.fileUploadWrapper {
+  width: fit-content;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#file {
+  display: none;
+}
+.fileUploadWrapper label {
+  cursor: pointer;
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.fileUploadWrapper label svg {
+  height: 18px;
+}
+.fileUploadWrapper label svg path {
+  transition: all 0.3s;
+}
+.fileUploadWrapper label svg circle {
+  transition: all 0.3s;
+}
+.fileUploadWrapper label:hover svg path {
+  stroke: #fff;
+}
+.fileUploadWrapper label:hover svg circle {
+  stroke: #fff;
+  fill: #3c3c3c;
+}
+.fileUploadWrapper label:hover .tooltip {
+  display: block;
+  opacity: 1;
+}
+.tooltip {
+  position: absolute;
+  top: -40px;
+  display: none;
+  opacity: 0;
+  color: white;
+  font-size: 10px;
+  text-wrap: nowrap;
+  background-color: #000;
+  padding: 6px 10px;
+  border: 1px solid #3c3c3c;
+  border-radius: 5px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.596);
+  transition: all 0.3s;
+}
+#messageInput {
+  width: 200px;
+  height: 100%;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  padding-left: 10px;
+  color: white;
+}
+#messageInput:focus ~ #sendButton svg path,
+#messageInput:valid ~ #sendButton svg path {
+  fill: #3c3c3c;
+  stroke: white;
+}
+
+#sendButton {
+  width: fit-content;
+  height: 100%;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#sendButton svg {
+  height: 18px;
+  transition: all 0.3s;
+}
+#sendButton svg path {
+  transition: all 0.3s;
+}
+#sendButton:hover svg path {
+  fill: #3c3c3c;
+  stroke: white;
+}
+
+
+
+
+  
+  #file {
+    display: none;
+  }
+  .fileUploadIcon label {
+    cursor: pointer;
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .fileUploadIcon label svg path {
+    transition: all 0.3s;
+  }
+  .fileUploadIcon label svg circle {
+    transition: all 0.3s;
+  }
+  .fileUploadIcon label:hover svg path {
+    stroke: #fff;
+  }
+  .fileUploadIcon label:hover svg circle {
+    stroke: #fff;
+    fill: #3c3c3c;
+  }
+  .fileUploadIcon label:hover .tooltip {
+    display: block;
+    opacity: 1;
+  }
+/*********************************/
 
 .logo {
     font-weight: 700;

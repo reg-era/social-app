@@ -198,10 +198,6 @@ const GroupDetailPage = () => {
                                         <FontAwesomeIcon icon={faUserPlus} />
                                         <span>Invite</span>
                                     </button>
-                                    <button className="action-btn secondary-btn">
-                                        <FontAwesomeIcon icon={faCog} />
-                                        <span>Settings</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>

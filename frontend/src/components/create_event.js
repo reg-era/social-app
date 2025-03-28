@@ -39,11 +39,26 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
 
     return (
         <form className="create-event-card" onSubmit={handleCreateEvent}>
-            <input type="text" placeholder="Event Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <textarea placeholder="Event Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-            <input type="datetime-local" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-            {error && <p className="error-message">{error}</p>}
-            <button type="submit">Create Event</button>
+            <div className="create-event-header">
+                <input 
+                    type="text" 
+                    placeholder="Event Title" 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <textarea 
+                    placeholder="Event Description" 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                />
+                <input 
+                    type="datetime-local" 
+                    value={eventDate} 
+                    onChange={(e) => setEventDate(e.target.value)}
+                />
+                {error && <p className="error-message">{error}</p>}
+                <button type="submit" className="submit-button">Create Event</button>
+            </div>
         </form>
     );
 };
