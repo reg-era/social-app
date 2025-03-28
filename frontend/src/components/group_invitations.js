@@ -19,7 +19,6 @@ const GroupInvitations = () => {
             if (response.ok) {
                 const data = await response.json();
                 setPendingInvitations(Array.isArray(data) ? data : []);
-                console.log("this is invitation data" , data)
             }
         } catch (error) {
             console.error('Error fetching invitations:', error);

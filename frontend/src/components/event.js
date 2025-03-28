@@ -33,6 +33,7 @@ const EventCard = ({ event }) => {
 
     return (
         <div className="event-card">
+            <h3>working but still needs to be handled properly check event file f components !!!!!!!!</h3>
             <h3>{event.title}</h3>
             <p>{event.description}</p>
             <p><strong>Date:</strong> {event.event_date}</p>
@@ -40,7 +41,7 @@ const EventCard = ({ event }) => {
             {eventDetails && (
                 <>
                     <p><strong>Going:</strong> {eventDetails.going_count}</p>
-                    <p><strong>Not Going:</strong> {eventDetails.not_going_count}</p>
+                    <p><strong>Not Going: </strong> {eventDetails.not_going_count}</p>
                     <EventResponseButtons eventId={event.id} userResponse={eventDetails.user_response} onResponseChange={handleResponseChange} />
                 </>
             )}
