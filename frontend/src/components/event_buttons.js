@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckIcon, CrossIcon } from "@/utils/icons";
 
 const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
     const [response, setResponse] = useState(userResponse || "");
@@ -30,14 +31,16 @@ const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
     return (
         <div className="event-response-buttons">
             <button
+                className={response === "going" ? "active" : ""}
                 onClick={() => handleResponse("going")}
             >
-                ✅ Going
+                <CheckIcon /> Going
             </button>
             <button
+                className={response === "not_going" ? "active" : ""}
                 onClick={() => handleResponse("not_going")}
             >
-                ❌ Not Going
+                <CrossIcon /> Not Going
             </button>
         </div>
     );

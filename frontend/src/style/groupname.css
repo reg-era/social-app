@@ -37,6 +37,91 @@ body {
 }
 
 /***********/
+
+/* Event Card */
+.event-card {
+    background: var(--card-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.5s ease-in-out;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0.5rem;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Event Title */
+.event-card h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* Event Description */
+.event-card p {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+/* Strong Text */
+.event-card p strong {
+    color: var(--primary-color);
+}
+
+.event-response-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.event-response-buttons button {
+    background: #222263; /* Default darker color */
+    color: white;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.1s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Hover effect */
+.event-response-buttons button:hover {
+    background: var(--primary-hover);
+}
+
+/* Active state - when selected */
+.event-response-buttons button.active {
+    background: var(--primary-color); /* Lighter color when selected */
+    transform: scale(1.05); /* Slightly enlarge */
+}
+
+/* Inactive state - when not selected */
+.event-response-buttons button.inactive {
+    background: #222263; /* Keep the dark default color */
+    opacity: 0.7;
+}
+
+
 /* Event Card */
 .create-event-card {
     background: var(--card-bg);

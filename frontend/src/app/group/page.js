@@ -167,7 +167,7 @@ const GroupsPage = () => {
                     <div className="group-footer">
                       <div className="group-meta">
                         <span>Members: {group.member_count || 0}</span>
-                        <span>•</span>
+                        <span>•</span><br/>
                         <span>Created by: {group.creator_email}</span>
                       </div>
                       {group.status === 'accepted' ? (
