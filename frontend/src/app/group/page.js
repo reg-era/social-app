@@ -35,7 +35,6 @@ const GroupsPage = () => {
       });
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
-      console.log(data)
     } catch (error) {
       console.error('Error fetching groups:', error);
       setGroups([]);
@@ -66,20 +65,20 @@ const GroupsPage = () => {
       if (response.ok) {
         const result = await response.json();
 
-        for (const email of inviteList) {
-          const inviteFormData = new FormData();
-          inviteFormData.append('group_id', result.group_id);
-          inviteFormData.append('action', 'invite');
-          inviteFormData.append('user_id', email);
+        // for (const email of inviteList) {
+        //   const inviteFormData = new FormData();
+        //   inviteFormData.append('group_id', result.group_id);
+        //   inviteFormData.append('action', 'invite');
+        //   inviteFormData.append('user_id', email);
 
-          await fetch('http://127.0.0.1:8080/api/group', {
-            method: 'PUT',
-            headers: {
-              'Authorization': document.cookie.slice('auth_session='.length),
-            },
-            body: inviteFormData
-          });
-        }
+        //   await fetch('http://127.0.0.1:8080/api/group', {
+        //     method: 'PUT',
+        //     headers: {
+        //       'Authorization': document.cookie.slice('auth_session='.length),
+        //     },
+        //     body: inviteFormData
+        //   });
+        // }
 
         fetchGroups();
         setShowCreateModal(false);

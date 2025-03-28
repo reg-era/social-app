@@ -97,6 +97,7 @@ func (a *API) HandleCreateGroup(w http.ResponseWriter, r *http.Request) {
 	groupName := r.PostFormValue("group_name")
 	description := r.PostFormValue("description")
 
+	fmt.Printf("jslkjfqsdf")
 	groupId, err := a.Create(
 		`INSERT INTO groups (title, description, creator_id) VALUES (?, ?, ?)`,
 		groupName, description, userId,
