@@ -8,12 +8,44 @@ import {
     faBell, faComment, faUser, faHome, faUsers, faEllipsisH,
     faSignOut, faLock, faGlobe, faUserPlus, faBell as faNotification,
     faCalendarAlt, faClock, faMapMarkerAlt, faCamera, faHeart,
-    faShare, faCalendarPlus, faCog, faBookmark, faThumbsUp
+    faShare, faCalendarPlus, faCog, faBookmark, faThumbsUp,
+    faPaperPlane, faTimes, faChevronDown, faChevronUp
 } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 
 const GroupDetailPage = () => {
     const [activeTab, setActiveTab] = useState('discussion');
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatMaximized, setChatMaximized] = useState(true);
+    const [chatMessage, setChatMessage] = useState('');
+    const [chatMessages, setChatMessages] = useState([
+        { id: 1, sender: 'David Kim', text: 'Hey everyone! Has anyone tried the new React 18 features?', time: '5:30 PM' },
+        { id: 2, sender: 'Sarah Chen', text: 'Yes, the new concurrent features are amazing!', time: '5:32 PM' },
+        { id: 3, sender: 'You', text: 'I\'m still getting used to the new suspense patterns', time: '5:35 PM' },
+    ]);
+
+    const toggleChat = () => {
+        setChatOpen(!chatOpen);
+    };
+
+    const toggleChatMaximize = () => {
+        setChatMaximized(!chatMaximized);
+    };
+
+    const sendMessage = (e) => {
+        e.preventDefault();
+        if (chatMessage.trim() === '') return;
+        
+        const newMessage = {
+            id: chatMessages.length + 1,
+            sender: 'You',
+            text: chatMessage,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        
+        setChatMessages([...chatMessages, newMessage]);
+        setChatMessage('');
+    };
 
     // Sample data for posts
     const posts = [
@@ -365,6 +397,50 @@ const GroupDetailPage = () => {
                         )}
 
                     </div>
+                </div>
+            </div>
+
+            {/* Group Chat Popup */}
+            <div className={`group-chat-popup ${chatOpen ? 'open' : ''}`}>
+                <div className="group-chat-header" onClick={toggleChat}>
+                    <div className="group-chat-title">
+                        <FontAwesomeIcon icon={faUsers} className="group-chat-icon" />
+                        <span>Group Chat</span>
+                        <span className="online-indicator">●</span>
+                        <span className="online-count">12 online</span>
+                    </div>
+                    <div className="group-chat-actions">
+                        <button className="chat-action-btn" onClick={(e) => { e.stopPropagation(); toggleChatMaximize(); }}>
+                            <FontAwesomeIcon icon={chatMaximized ? faChevronDown : faChevronUp} />
+                        </button>
+                        <button className="chat-action-btn" onClick={(e) => { e.stopPropagation(); setChatOpen(false); }}>
+                            <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                    </div>
+                </div>
+                <div className={`group-chat-body ${chatMaximized ? '' : 'minimized'}`}>
+                    <div className="group-chat-messages">
+                        {chatMessages.map(message => (
+                            <div key={message.id} className={`chat-message ${message.sender === 'You' ? 'sent' : 'received'}`}>
+                                <div className="message-sender">{message.sender}</div>
+                                <div className="message-content">
+                                    <div className="message-text">{message.text}</div>
+                                    <div className="message-time">{message.time}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <form className="group-chat-input" onSubmit={sendMessage}>
+                        <input 
+                            type="text" 
+                            placeholder="Type a message..." 
+                            value={chatMessage}
+                            onChange={(e) => setChatMessage(e.target.value)}
+                        />
+                        <button type="submit" className="send-message-btn">
+                            <FontAwesomeIcon icon={faPaperPlane} />
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
