@@ -38,7 +38,6 @@ func (net *NetworkHub) RegisterUser(userId int, conn *websocket.Conn) {
 	defer net.Mutex.Unlock()
 
 	net.Network[userId] = append(net.Network[userId], conn)
-	fmt.Println(net.Network)
 }
 
 func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
@@ -52,12 +51,10 @@ func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
 			break
 		}
 	}
-	fmt.Println(net.Network)
 }
 
 func (net *NetworkHub) RunHubListner() {
 	for {
-		fmt.Println(net.Network)
 		select {
 		case newMsg := <-net.Message:
 			fmt.Println(newMsg)
@@ -90,8 +87,6 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	fmt.Println("upcoming connection: ", userID)
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -135,6 +130,6 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		fmt.Printf("Received message type: %v\nwith data: %v\n", upComingMsg.Type, newMessage)
+		// fmt.Printf("Received message type: %v\nwith data: %v\n", upComingMsg.Type, newMessage)
 	}
 }

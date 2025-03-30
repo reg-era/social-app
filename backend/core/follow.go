@@ -15,7 +15,6 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		if err := json.NewDecoder(r.Body).Decode(&userAction); err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -23,7 +22,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		exists := false
 		err := a.Read(`SELECT EXISTS(
 			SELECT 1 FROM follows
-			WHERE FOLLOWER_id =? AND following_id = (SELECT id FROM users WHERE email = ?) )`,
+			WHERE follower_id =? AND following_id = (SELECT id FROM users WHERE email = ?) )`,
 			userId, userAction.Email).Scan(&exists)
 		if err != nil {
 			fmt.Println(err)
@@ -39,7 +38,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unfollow error"})
 				return
 			}
-			utils.RespondWithJSON(w, http.StatusAccepted, map[string]string{"valid": "User unfollowed"})
+			utils.RespondWithJSON(w, http.StatusAccepted, map[string]string{"state": "unfollowed"})
 			return
 		}
 
@@ -58,34 +57,61 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "followed"})
 		} else {
-			id, err := a.Create(`INSERT INTO follow_requests (follower_id, following_id)
-			VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
+			var requested int
+			err := a.Read(`SELECT COUNT(*) FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email).Scan(&requested)
 			if err != nil {
 				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Could not follow user",
+					"error": "Could not check follow request",
 				})
 				return
 			}
 
-			var receiver int
-			if err := a.Read("SELECT following_id FROM follow_requests WHERE id = ? ;", id).Scan(&receiver); err != nil {
-				fmt.Println(err)
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Could not follow user",
-				})
+			if requested > 0 {
+				_, err = a.Create(`DELETE FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email)
+				if err != nil {
+					fmt.Println(err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "Could not remove follow request",
+					})
+					return
+				}
+
+				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "unfollowed"})
 				return
+			} else {
+				id, err := a.Create(`INSERT INTO follow_requests (follower_id, following_id)
+				VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
+				if err != nil {
+					fmt.Println(err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "Could not follow user",
+					})
+					return
+				}
+
+				var receiver int
+				if err := a.Read("SELECT following_id FROM follow_requests WHERE id = ? ;", id).Scan(&receiver); err != nil {
+					fmt.Println(err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+						"error": "Could not follow user",
+					})
+					return
+				}
+
+				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "pending"})
+
+				a.AddNotification(&Note{
+					Type:     "follow_request",
+					Sender:   userId,
+					Receiver: receiver,
+					Content:  fmt.Sprintf("%s Want to follow you", userAction.Email),
+				})
 			}
-			a.AddNotification(&Note{
-				Type:     "follow_request",
-				Sender:   userId,
-				Receiver: receiver,
-				Content:  fmt.Sprintf("%s Want to follow you", userAction.Email),
-			})
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]string{"valid": "Follow request sent to User"})
 	case http.MethodPut:
 		var response struct {
 			UserEmail string `json:"email"`

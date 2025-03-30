@@ -2,20 +2,21 @@ package core
 
 import (
 	"net/http"
+
 	"social/pkg/utils"
 )
 
 func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("userID").(int)
 
-	if r.Method != http.MethodPost{
+	if r.Method != http.MethodPost {
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{
 			"error": "Method not allowed",
 		})
 		return
 	}
 
-	//getting the current vis
+	// getting the current vis
 	var currentVisibility int
 	err := a.Read("SELECT is_public FROM users WHERE id = ?", userId).Scan(&currentVisibility)
 	if err != nil {
@@ -25,7 +26,7 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//change the vis form private to public || public to private
+	// change the vis form private to public || public to private
 	newVisibility := 0
 	if currentVisibility == 0 {
 		newVisibility = 1
@@ -39,18 +40,18 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	// if the user changed to private we delete the follow req / to public we accept all the pending follow req automatically
-	if newVisibility == 0 {
-		_, err = a.Update("DELETE FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
+	if newVisibility == 1 {
+		tx, err := a.DB.Begin()
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Failed to clean up follow requests",
+				"error": "Failed to start transaction",
 			})
 			return
 		}
-	} else {
-		rows, err := a.ReadAll("SELECT follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
+		defer tx.Rollback()
+
+		rows, err := tx.Query("SELECT follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"error": "Failed to fetch pending requests",
@@ -68,7 +69,7 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			_, err = a.Create("INSERT INTO follows (follower_id, following_id) VALUES (?, ?)", followerId, userId)
+			_, err = tx.Exec("INSERT INTO follows (follower_id, following_id) VALUES (?, ?)", followerId, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Failed to add followers",
@@ -77,13 +78,22 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		_, err = a.Update("DELETE FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
+		_, err = tx.Exec("DELETE FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"error": "Failed to clean up follow requests",
 			})
 			return
 		}
+
+		err = tx.Commit()
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "Failed to commit transaction",
+			})
+			return
+		}
+
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{
