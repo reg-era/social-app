@@ -44,18 +44,14 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 	if newVisibility == 1 {
 		tx, err := a.DB.Begin()
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Failed to start transaction",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to start transaction"})
 			return
 		}
 		defer tx.Rollback()
 
 		rows, err := tx.Query("SELECT follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "Failed to fetch pending requests",
-			})
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch pending requests"})
 			return
 		}
 		defer rows.Close()
@@ -63,22 +59,32 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			var followerId int
 			if err := rows.Scan(&followerId); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Failed to process follow requests",
-				})
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to process follow requests"})
 				return
 			}
 
 			_, err = tx.Exec("INSERT INTO follows (follower_id, following_id) VALUES (?, ?)", followerId, userId)
 			if err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Failed to add followers",
-				})
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to add followers"})
 				return
 			}
 		}
 
-		_, err = tx.Exec("DELETE FROM follow_requests WHERE following_id = ? AND status = 'pending'", userId)
+		var reqID, relatedID int
+		if err := tx.QueryRow(`SELECT id, follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending';`, userId).Scan(&reqID, &relatedID); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed fetch data"})
+			return
+		}
+
+		_, err = tx.Exec("DELETE FROM follow_requests WHERE id = ? ", reqID)
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "Failed to clean up follow requests",
+			})
+			return
+		}
+
+		_, err = tx.Exec("DELETE FROM notifications WHERE user_id = ? AND related_id = ? AND type = 'follow_request';", userId, relatedID)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 				"error": "Failed to clean up follow requests",

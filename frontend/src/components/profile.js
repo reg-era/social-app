@@ -6,13 +6,9 @@ import Link from "next/link.js";
 import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/utils/icons';
 import PostCard from "./post.js";
 
-// aboutMe avatarUrl dateOfBirth firstName followers followings id isPublic lastName nickname password
-
 export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     const isOwnProfile = window.location.pathname === '/profile'
     const [user, setUser] = useState({})
-    console.log('is youser owner', isOwnProfile)
-    console.log(userEmail)
     const getUserInfo = async () => {
         const res = await fetch(`http://localhost:8080/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
             headers: {
@@ -23,9 +19,27 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         if (res.ok) {
             const data = await res.json();
             setUser(data)
-            console.log(data)
         } else {
             console.error('Failed to fetch userinfos');
+        }
+    };
+
+    const [profileImage, setProfileImage] = useState('/default_profile.jpg');
+
+    const getDownloadImage = async (link, isPost) => {
+        try {
+            if (link !== '') {
+                const res = await fetch(link, {
+                    headers: {
+                        'Authorization': document.cookie.slice('auth_session='.length),
+                    },
+                });
+                const image = await res.blob();
+                const newUrl = URL.createObjectURL(image);
+                isPost ? setImageURL(newUrl) : setProfileImage(newUrl)
+            }
+        } catch (err) {
+            console.error("fetching image: ", err);
         }
     };
 
@@ -34,7 +48,6 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     }, [userEmail]);
 
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
-
     const togglePrivacy = async () => {
         const res = await fetch(`http://localhost:8080/api/change-vis`, {
             method: 'POST',
@@ -45,7 +58,6 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 
         if (res.ok) {
             const data = await res.json();
-            console.log(data)
             setUser({ ...user, isPublic: data.isPublic });
             setShowPrivacySettings(false);
         } else {
@@ -66,7 +78,6 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 
         if (res.ok) {
             const data = await res.json();
-            console.log(data)
             setUser({ ...user, isFollowing: data.state });
             setShowPrivacySettings(false);
         } else {
@@ -79,7 +90,10 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
             <div className="profile-header">
                 <div className="profile-cover-photo"></div>
                 <div className="profile-header-content">
-                    <div className="profile-avatar"></div>
+                    <div className="profile-avatar" style={{
+                        backgroundImage: `url(${profileImage})`,
+                        backgroundSize: 'cover'
+                    }}></div>
                     <div className="profile-info">
                         <div className="profile-name-container">
                             <h1>{`${user.firstName} ${user.lastName}`}</h1>
@@ -115,9 +129,9 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
                                 className={`follow-btn ${(user.isFollowing != 'unfollowed') ? 'following' : ''}`}
                                 onClick={toggleFollow}
                             >
-                                {(user.isFollowing==='followed') && <><CheckIcon /> Following </>}
-                                {(user.isFollowing==='pending') && <><CheckIcon /> Request sent </>}
-                                {(user.isFollowing==='unfollowed') && <><UserPlusIcon /> Follow </>}
+                                {(user.isFollowing === 'followed') && <><CheckIcon /> Following </>}
+                                {(user.isFollowing === 'pending') && <><CheckIcon /> Request sent </>}
+                                {(user.isFollowing === 'unfollowed') && <><UserPlusIcon /> Follow </>}
                             </button>
                         )}
                     </div>

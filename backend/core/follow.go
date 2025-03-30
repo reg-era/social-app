@@ -93,7 +93,9 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				}
 
 				var receiver int
-				if err := a.Read("SELECT following_id FROM follow_requests WHERE id = ? ;", id).Scan(&receiver); err != nil {
+				var actionerEmail string
+				if err := a.Read(`SELECT following_id, u.email FROM follow_requests f
+				JOIN users u ON f.follower_id = u.id WHERE f.id = ? ;`, id).Scan(&receiver, &actionerEmail); err != nil {
 					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 						"error": "Could not follow user",
@@ -107,15 +109,16 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 					Type:     "follow_request",
 					Sender:   userId,
 					Receiver: receiver,
-					Content:  fmt.Sprintf("%s Want to follow you", userAction.Email),
+					Content:  fmt.Sprintf("%s Want to follow you", actionerEmail),
 				})
 			}
 		}
 
 	case http.MethodPut:
 		var response struct {
-			UserEmail string `json:"email"`
-			Action    string `json:"action"`
+			NotefId    int    `json:"noteId"`
+			UserAction int    `json:"actioner"`
+			Action     string `json:"action"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&response); err != nil {
@@ -126,20 +129,36 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if response.Action == "accept" {
-			_, err := a.Create(`
-                INSERT INTO follows (follower_id, following_id) 
-                VALUES ( (SELECT id FROM users WHERE email = ?) , ? )`, response.UserEmail, userId)
+			tx, err := a.DB.Begin()
 			if err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Failed to accept follow request",
-				})
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed"})
 				return
 			}
+			defer tx.Rollback()
+
+			_, err = tx.Exec(`INSERT INTO follows (follower_id, following_id)  VALUES ($1, $2)`, response.UserAction, userId)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed"})
+				return
+			}
+
+			_, err = tx.Exec(`DELETE FROM follow_requests WHERE follower_id = $1 AND following_id = $2`, response.UserAction, userId)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed"})
+				return
+			}
+
+			err = tx.Commit()
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed"})
+				return
+			}
+
 		} else if response.Action == "decline" {
 			_, err := a.Create(`
                 DELETE FROM follow_requests 
-                WHERE follower_id = (SELECT id FROM users WHERE email = ?) AND following_id = ?`,
-				response.UserEmail, userId)
+                WHERE follower_id = ? AND following_id = ?`,
+				response.UserAction, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
 					"error": "Failed to process follow request",
@@ -148,6 +167,11 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad request"})
+			return
+		}
+
+		if _, err := a.Create(`DELETE FROM notifications WHERE id = ? ;`, response.NotefId); err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to remove note"})
 			return
 		}
 
