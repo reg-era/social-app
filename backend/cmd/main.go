@@ -16,6 +16,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
 
 	db, err := data.Init()
 	if err != nil {
@@ -52,13 +56,12 @@ func main() {
 	router.Handle("/api/post", mw.AuthMiddleware(http.HandlerFunc(api.HandlePost)))
 	router.Handle("/api/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleComment)))
 	router.Handle("/api/chat", mw.AuthMiddleware(http.HandlerFunc(api.HandleChat)))
-	
+
 	router.Handle("/api/group", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroup)))
 	router.Handle("/api/group/comment", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPostComments)))
 	router.Handle("/api/group/invitations", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupInvitations)))
 	router.Handle("/api/group/post", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupPost)))
 	router.Handle("/api/group/info", mw.AuthMiddleware(http.HandlerFunc(api.HandleGroupDetails)))
-
 
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
@@ -66,8 +69,8 @@ func main() {
 	// run hub channels listner
 	go api.HUB.RunHubListner()
 
-	log.Printf("Server running on http://127.0.0.1:%s\n", port)
-	if err := http.ListenAndServe("127.0.0.1:"+port, middleware.CORS(router)); err != nil {
+	log.Printf("Server running on http://%s:%s\n", host, port)
+	if err := http.ListenAndServe(host+":"+port, middleware.CORS(router)); err != nil {
 		log.Fatalf("Server failed: %v\n", err)
 	}
 }

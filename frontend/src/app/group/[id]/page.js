@@ -33,7 +33,7 @@ const GroupDetailPage = () => {
     const fetchGroupData = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`http://127.0.0.1:8080/api/group/info?group_id=${groupId}`, {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/info?group_id=${groupId}`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -48,7 +48,7 @@ const GroupDetailPage = () => {
             console.log("these are the group members", data.members)
             setGroupData(data);
 
-            const postsResponse = await fetch(`http://127.0.0.1:8080/api/group/post?group_id=${groupId}`, {
+            const postsResponse = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/post?group_id=${groupId}`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -69,7 +69,7 @@ const GroupDetailPage = () => {
 
     const fetchPendingInvitations = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitations', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitations`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -130,7 +130,7 @@ const GroupDetailPage = () => {
             formData.append('action', 'invite');
             formData.append('user_id', inviteEmail);
 
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

@@ -4,7 +4,7 @@ const Notif = () => {
     const [notifications, setNotif] = useState([])
 
     const getNotification = async () => {
-        const res = await fetch(`http://127.0.0.1:8080/api/notif`, {
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
             headers: {
                 'Authorization': document.cookie.slice('auth_session='.length),
             },

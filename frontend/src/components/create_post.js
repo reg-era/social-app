@@ -36,7 +36,7 @@ const CreatePostCard = ({ onCreatePost }) => {
             form.append('image', e.target.fileInputPost.files[0])
             form.append("visibility", 'public')
 
-            const res = await fetch('http://127.0.0.1:8080/api/post', {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post`, {
                 method: 'POST',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

@@ -36,7 +36,7 @@ const CreateCommentCard = ({ postId }) => {
                 return;
             }
 
-            const res = await fetch(`http://127.0.0.1:8080/api/comment?id=${postId}&page=${page}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/comment?id=${postId}&page=${page}`, {
                 headers: {
                     'Authorization': authToken,
                 },
@@ -77,7 +77,7 @@ const CreateCommentCard = ({ postId }) => {
             form.append("comment", comment)
             form.append('image', e.target.fileInputComment.files[0])
 
-            const res = await fetch('http://127.0.0.1:8080/api/comment', {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/comment`, {
                 method: 'POST',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

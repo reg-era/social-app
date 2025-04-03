@@ -9,7 +9,7 @@ const GroupInvitations = () => {
 
     const fetchPendingInvitations = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group/invitations', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitations`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -38,7 +38,7 @@ const GroupInvitations = () => {
             formData.append('action', action);
             formData.append('user_id', document.cookie.slice('auth_session='.length));
 
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

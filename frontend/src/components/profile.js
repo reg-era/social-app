@@ -7,7 +7,11 @@ import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/utils/i
 import PostCard from "./post.js";
 
 export const ProfileHeader = ({ setActiveTab, userEmail }) => {
-    const isOwnProfile = window.location.pathname === '/profile'
+    let isOwnProfile = false;
+    if (typeof window !== 'undefined') {
+        isOwnProfile = window.location.pathname === '/profile';
+    }
+
     const [user, setUser] = useState({})
     const getUserInfo = async () => {
         const res = await fetch(`http://localhost:8080/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
@@ -153,7 +157,10 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 }
 
 export const ProfilePost = ({ userEmail }) => {
-    const isOwnProfile = window.location.pathname === '/profile'
+    let isOwnProfile = false;
+    if (typeof window !== 'undefined') {
+        isOwnProfile = window.location.pathname === '/profile';
+    }
     const [posts, setPosts] = useState([]);
     const getUserPosts = async () => {
         const res = await fetch(`http://localhost:8080/api/user?target=post${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
@@ -191,7 +198,10 @@ export const ProfilePost = ({ userEmail }) => {
 }
 
 export const ProfileFollower = ({ activeTab, userEmail }) => {
-    const isOwnProfile = window.location.pathname === '/profile'
+    let isOwnProfile = false;
+    if (typeof window !== 'undefined') {
+        isOwnProfile = window.location.pathname === '/profile';
+    }
     const [users, setUsers] = useState([])
     const getUserFollowers = async () => {
         const res = await fetch(`http://localhost:8080/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {

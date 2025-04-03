@@ -27,7 +27,7 @@ const Navigation = () => {
                 return;
             }
             try {
-                const res = await fetch(`http://127.0.0.1:8080/api/search?target=${e.target.value}`, {
+                const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=${e.target.value}`, {
                     headers: {
                         'Authorization': document.cookie.slice('auth_session='.length),
                     },
@@ -46,7 +46,7 @@ const Navigation = () => {
     const { websocket, connected } = useWebSocket();
     const handleLogout = async (e) => {
         try {
-            const res = await fetch(`http://127.0.0.1:8080/api/logout`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/logout`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -117,7 +117,7 @@ const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
     const getImage = async () => {
         if (avatar === '') return
         try {
-            const res = await fetch(`http://127.0.0.1:8080/${avatar}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${avatar}`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },

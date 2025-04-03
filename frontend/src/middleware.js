@@ -24,7 +24,7 @@ async function checkAuthentication(token) {
         if (!token || token.length <= 0) {
             return false
         }
-        const res = await fetch('http://127.0.0.1:8080/api/check', {
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/check`, {
             method: 'POST',
             headers: {
                 'Authorization': token,
