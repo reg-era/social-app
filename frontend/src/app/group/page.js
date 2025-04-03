@@ -27,7 +27,7 @@ const GroupsPage = () => {
   // Fetch groups on mount
   const fetchGroups = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/group/all', {
+      const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/all`, {
         headers: {
           'Authorization': document.cookie.slice('auth_session='.length),
         },
@@ -55,7 +55,7 @@ const GroupsPage = () => {
     formData.append('type', newGroupType);
 
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/group/create', {
+      const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/create`, {
         method: 'POST',
         headers: {
           'Authorization': document.cookie.slice('auth_session='.length),
@@ -72,7 +72,7 @@ const GroupsPage = () => {
           inviteFormData.append('action', 'invite');
           inviteFormData.append('user_id', email);
 
-          await fetch('http://127.0.0.1:8080/api/group', {
+          await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
             method: 'PUT',
             headers: {
               'Authorization': document.cookie.slice('auth_session='.length),
@@ -110,7 +110,7 @@ const GroupsPage = () => {
 
   const handleJoinRequest = async (groupId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8080/api/group/invitation`, {
+      const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`, {
         method: 'PUT',
         headers: {
           'Authorization': document.cookie.slice('auth_session='.length),

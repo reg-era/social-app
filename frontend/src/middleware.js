@@ -4,7 +4,6 @@ const publicRoutes = ['/login', '/signup']
 const privateRoutes = ['/', '/profile', '/chat', '/group']
 
 export async function middleware(req) {
-    return NextResponse.next();
     const path = req.nextUrl.pathname
 
     const authorized = await checkAuthentication(req.cookies.get('auth_session')?.value)
@@ -17,7 +16,7 @@ export async function middleware(req) {
         return NextResponse.redirect(new URL('/', req.nextUrl));
     }
 
-    
+    return NextResponse.next();
 }
 
 async function checkAuthentication(token) {
@@ -25,7 +24,7 @@ async function checkAuthentication(token) {
         if (!token || token.length <= 0) {
             return false
         }
-        const res = await fetch('http://127.0.0.1:8080/api/check', {
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/check`, {
             method: 'POST',
             headers: {
                 'Authorization': token,

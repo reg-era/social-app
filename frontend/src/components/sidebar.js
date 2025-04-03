@@ -8,7 +8,7 @@ const Sidebar = () => {
     // Fetch groups on mount
     const fetchGroups = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/group', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },

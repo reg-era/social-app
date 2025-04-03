@@ -23,12 +23,51 @@ inject-fake-data:
 
 backend:
 	@echo "Running backend..."
-	@cd backend && PORT=8080 go run cmd/main.go
+	@cd backend && PORT=8080 HOST=127.0.0.1 go run cmd/main.go
 
 frontend:
-	@echo "Installing dependencies..."
-	@cd frontend && npm install
 	@echo "Running frontend..."
-	@cd frontend && npm run dev
+	@cd frontend && NEXT_PUBLIC_GOSERVER=127.0.0.1:8080 npm run dev
+
+IMAGE_NAME=social-back-img
+CONTAINER_NAME=social-back-container
+docker-backend:
+	@echo "Cleaning up old containers and images..."
+	@docker rm -f $(CONTAINER_NAME) || true
+	@docker rmi -f $(IMAGE_NAME) || true
+
+	@echo "Building the Docker image..."
+	@cd backend && docker build -t $(IMAGE_NAME) .
+
+	@echo "Running the Docker container..."
+	docker run --name $(CONTAINER_NAME) -p 8080:8080 $(IMAGE_NAME)	
+
+
+FRONTEND_IMAGE_NAME=frontend-img
+FRONTEND_CONTAINER_NAME=frontend-container
+docker-frontend:
+	@echo "Cleaning up old containers and images..."
+	@docker rm -f $(FRONTEND_CONTAINER_NAME) || true
+	@docker rmi -f $(FRONTEND_IMAGE_NAME) || true
+
+	@echo "Building the Docker image for frontend..."
+	@cd frontend && docker build -t $(FRONTEND_IMAGE_NAME) .
+
+	@echo "Running the Docker container for frontend..."
+	docker run --name $(FRONTEND_CONTAINER_NAME) -p 3000:3000 $(FRONTEND_IMAGE_NAME)
+
+docker-clean:
+	@echo "Cleaning up old containers and images..."
+	@docker rm -f $(FRONTEND_CONTAINER_NAME) || true
+	@docker rmi -f $(FRONTEND_IMAGE_NAME) || true
+	@echo "Cleaning up old containers and images..."
+	@docker rm -f $(CONTAINER_NAME) || true
+	@docker rmi -f $(IMAGE_NAME) || true
+	@echo "Cleaning up old docker compose services..."
+	@docker-compose down --rmi all --volumes  
+
+run-docker-compose: docker-clean
+	docker-compose build
+	docker-compose up
 
 .PHONY: install-dependencies install-migration-tool create-migration backend frontend

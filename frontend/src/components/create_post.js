@@ -8,12 +8,12 @@ const CreatePostCard = ({ onCreatePost }) => {
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
+    const [showTagFriends, setShowTagFriends] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [postPrivacy, setPostPrivacy] = useState('public');
     const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
     const [taggedFriends, setTaggedFriends] = useState([]);
     const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
-    const [showTagFriends, setShowTagFriends] = useState(false);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [friendSearchTerm, setFriendSearchTerm] = useState('');
 
     const emojiPickerRef = useRef(null);
@@ -36,7 +36,7 @@ const CreatePostCard = ({ onCreatePost }) => {
             form.append('image', e.target.fileInputPost.files[0])
             form.append("visibility", 'public')
 
-            const res = await fetch('http://127.0.0.1:8080/api/post', {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post`, {
                 method: 'POST',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

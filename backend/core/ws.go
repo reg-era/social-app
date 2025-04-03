@@ -38,7 +38,6 @@ func (net *NetworkHub) RegisterUser(userId int, conn *websocket.Conn) {
 	defer net.Mutex.Unlock()
 
 	net.Network[userId] = append(net.Network[userId], conn)
-	fmt.Println(net.Network)
 }
 
 func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
@@ -52,12 +51,10 @@ func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
 			break
 		}
 	}
-	fmt.Println(net.Network)
 }
 
 func (net *NetworkHub) RunHubListner() {
 	for {
-		fmt.Println(net.Network)
 		select {
 		case newMsg := <-net.Message:
 			fmt.Println(newMsg)
@@ -91,7 +88,6 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -102,7 +98,11 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+		utils.RespondWithJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{"error": "Status Internal Server Error"},
+		)
 		return
 	}
 	defer conn.Close()
@@ -114,7 +114,12 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 		var upComingMsg WSMessage
 
 		if err := conn.ReadJSON(&upComingMsg); err != nil {
-			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseAbnormalClosure) {
+			if websocket.IsCloseError(
+				err,
+				websocket.CloseGoingAway,
+				websocket.CloseNormalClosure,
+				websocket.CloseAbnormalClosure,
+			) {
 				fmt.Println("Connection closed by client:", err)
 				break
 			}
@@ -134,6 +139,6 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		fmt.Printf("Received message type: %v\nwith data: %v\n", upComingMsg.Type, newMessage)
+		// fmt.Printf("Received message type: %v\nwith data: %v\n", upComingMsg.Type, newMessage)
 	}
 }

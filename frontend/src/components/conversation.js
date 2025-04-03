@@ -15,7 +15,7 @@ const Conversation = ({ email, username }) => {
 
     const getMessages = async () => {
         try {
-            const res = await fetch(`http://127.0.0.1:8080/api/chat?target=${email}&page=0`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=${email}&page=0`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
@@ -37,7 +37,7 @@ const Conversation = ({ email, username }) => {
                 email_receiver: email,
                 create_at: new Date().toISOString().replace('T', ' ').slice(0, 19)
             }
-            const res = await fetch(`http://127.0.0.1:8080/api/chat?target=${email}&page=0`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=${email}&page=0`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },

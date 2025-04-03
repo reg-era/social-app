@@ -4,10 +4,11 @@ import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile, faSearch } from 
 import { useState, useRef, useEffect,  } from 'react';
 import Notif from './notification';
 import { useRouter } from 'next/navigation';
+import { useWebSocket } from '@/context/ws_context';
 
 const Navigation = () => {
     const router = useRouter();
-
+    
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -27,7 +28,7 @@ const Navigation = () => {
                 return;
             }
             try {
-                const res = await fetch(`http://127.0.0.1:8080/api/search?target=${e.target.value}`, {
+                const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=${e.target.value}`, {
                     headers: {
                         'Authorization': document.cookie.slice('auth_session='.length),
                     },
@@ -42,16 +43,18 @@ const Navigation = () => {
             }
         }, 300);
     };
-
+    
+    const { websocket, connected } = useWebSocket();
     const handleLogout = async (e) => {
         try {
-            const res = await fetch(`http://127.0.0.1:8080/api/logout`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/logout`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
             });
             if (res.ok) {
                 document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                connected && websocket.close()
                 router.push('/login')
             }
         } catch (err) {
@@ -94,7 +97,7 @@ const Navigation = () => {
                     <BellIcon />
                     <span className="notification-count">3</span>
                 </div>
-                {show && <Notif notifications={["You have a new follower", "Your post got a like", "Someone commented on your post"]} />}
+                {show && <Notif />}
 
                 <Link href="/chat" className="nav-icon messages-icon">
                     <CommentIcon />
@@ -115,7 +118,7 @@ const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
     const getImage = async () => {
         if (avatar === '') return
         try {
-            const res = await fetch(`http://127.0.0.1:8080/${avatar}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${avatar}`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },

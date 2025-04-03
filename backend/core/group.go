@@ -57,7 +57,11 @@ func (a *API) HandleGetGroups(w http.ResponseWriter, r *http.Request) {
 	rows, err := a.ReadAll(query, userId)
 	if err != nil {
 		fmt.Println("failed to get groups:", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve groups"})
+		utils.RespondWithJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{"error": "Failed to retrieve groups"},
+		)
 		return
 	}
 	defer rows.Close()
@@ -76,7 +80,11 @@ func (a *API) HandleGetGroups(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			fmt.Println("error processing groups:", err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error processing groups"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "Error processing groups"},
+			)
 			return
 		}
 		groups = append(groups, group)
@@ -84,7 +92,11 @@ func (a *API) HandleGetGroups(w http.ResponseWriter, r *http.Request) {
 
 	if err = rows.Err(); err != nil {
 		fmt.Println("error finalizing group list:", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error finalizing group list"})
+		utils.RespondWithJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{"error": "Error finalizing group list"},
+		)
 		return
 	}
 
@@ -113,7 +125,11 @@ func (a *API) HandleCreateGroup(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		fmt.Println("failed to add creator to group:", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to add creator to group"})
+		utils.RespondWithJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{"error": "Failed to add creator to group"},
+		)
 		return
 	}
 
@@ -154,7 +170,8 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 	}
 
 	var inviterStatus string
-	err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).Scan(&inviterStatus)
+	err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).
+		Scan(&inviterStatus)
 	if err != nil || inviterStatus != "accepted" {
 		fmt.Println("unauthorized invite attempt:", err)
 		utils.RespondWithJSON(w, http.StatusForbidden, map[string]string{"error": "Not authorized to invite"})
@@ -162,7 +179,8 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 	}
 
 	var existingStatus string
-	err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).Scan(&existingStatus)
+	err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, targetUserID).
+		Scan(&existingStatus)
 	if err == nil {
 		switch existingStatus {
 		case "accepted":
@@ -174,7 +192,8 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 		case "declined":
 			_, err = a.Update(
 				`UPDATE group_members SET status = 'pending', invitation_type = 'invite' WHERE group_id = ? AND user_id = ?`,
-				groupId, targetUserID,
+				groupId,
+				targetUserID,
 			)
 		}
 	} else {
@@ -186,7 +205,11 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 
 	if err != nil {
 		fmt.Println("failed to send invitation:", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to send invitation"})
+		utils.RespondWithJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{"error": "Failed to send invitation"},
+		)
 		return
 	}
 
@@ -197,7 +220,8 @@ func (a *API) HandleRequestAction(w http.ResponseWriter, r *http.Request, userId
 	groupId := r.PostFormValue("group_id")
 
 	var existingStatus string
-	err := a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).Scan(&existingStatus)
+	err := a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`, groupId, userId).
+		Scan(&existingStatus)
 	if err == nil {
 		switch existingStatus {
 		case "accepted":
@@ -209,7 +233,8 @@ func (a *API) HandleRequestAction(w http.ResponseWriter, r *http.Request, userId
 		case "declined":
 			_, err = a.Update(
 				`UPDATE group_members SET status = 'pending', invitation_type = 'request' WHERE group_id = ? AND user_id = ?`,
-				groupId, userId,
+				groupId,
+				userId,
 			)
 		}
 	} else {
@@ -232,10 +257,10 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 	groupId := r.PostFormValue("group_id")
 	targetUserID := r.PostFormValue("user_id")
 	action := r.PostFormValue("action")
-	if targetUserID == ""{
+	if targetUserID == "" {
 		targetUserID = strconv.Itoa(userId)
 	}
-	
+
 	var invitationType string
 	var status string
 	err := a.Read(

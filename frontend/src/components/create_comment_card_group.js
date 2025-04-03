@@ -12,7 +12,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                 return;
             }
 
-            const res = await fetch(`http://127.0.0.1:8080/api/group/comment?post_id=${postId}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment?post_id=${postId}`, {
                 headers: {
                     'Authorization': authToken,
                 },
@@ -41,7 +41,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
             formData.append('post_id', postId);
             formData.append('comment', newComment);
 
-            const response = await fetch('http://127.0.0.1:8080/api/group/comment', {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment`, {
                 method: 'POST',
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),

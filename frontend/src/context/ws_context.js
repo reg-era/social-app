@@ -9,7 +9,7 @@ export const WebSocketProvider = ({ children }) => {
     const [connected, setConnected] = useState(false);
 
     useEffect(() => {
-        const url = new URL('ws://localhost:8080/api/ws')
+        const url = new URL(`ws://${process.env.NEXT_PUBLIC_GOSERVER}/api/ws`)
         url.searchParams.append('auth', document.cookie.slice('auth_session='.length));
 
         const ws = new WebSocket(url.toString());

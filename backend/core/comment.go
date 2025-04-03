@@ -49,22 +49,36 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		if imagePath != "" {
 			imagePath = path.Join("api/global/", imagePath)
 		}
-		commentId, err := a.Create(`INSERT INTO comments (post_id, user_id, content, image_url) VALUES (?, ?, ?, ?)`, postId, userId, content, imagePath)
+		commentId, err := a.Create(
+			`INSERT INTO comments (post_id, user_id, content, image_url) VALUES (?, ?, ?, ?)`,
+			postId,
+			userId,
+			content,
+			imagePath,
+		)
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"failed": "Status Internal Server Error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"failed": "Status Internal Server Error"},
+			)
 			return
 		}
 
 		resComment := a.Read(`
-		SELECT  u.firstname, u.lastname, c.content, c.image_url, c.created_at FROM comments c
+		SELECT  u.firstname, u.lastname, c.id, c.content, c.image_url, c.created_at FROM comments c
 		JOIN users u ON user_id = u.id
 		WHERE c.id = ?`, commentId)
 
 		var comment Comment
 		var first, last string
 		var postCreator int
-		if err := resComment.Scan(&first, &last, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"failed": "Status Internal Server Error"})
+		if err := resComment.Scan(&first, &last, &comment.ID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"failed": "Status Internal Server Error"},
+			)
 			return
 		}
 		comment.Username = first + " " + last
@@ -100,7 +114,11 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		LIMIT 3 OFFSET (3 * ?) `, postId, page)
 		if err != nil {
 			fmt.Println(err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "Status Internal Server Error"},
+			)
 			return
 		}
 		defer dataRows.Close()
@@ -111,7 +129,11 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			var first, last string
 			if err := dataRows.Scan(&first, &last, &comment.ID, &comment.PostID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
 				fmt.Println(err)
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"failed": "Status Internal Server Error"})
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"failed": "Status Internal Server Error"},
+				)
 				return
 			}
 			comment.Username = first + " " + last
