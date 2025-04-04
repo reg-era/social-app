@@ -1267,6 +1267,7 @@ body {
     border-radius: 16px;
     padding: 4px 10px;
     font-size: 13px;
+    color: var(--bg-color);
 }
 
 .remove-tag {

@@ -45,11 +45,83 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			imagePath = path.Join("api/global/", imagePath)
 		}
 
-		postId, err := a.Create(`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`, userId, content, imagePath, visibility)
-		if err != nil {
-			fmt.Println(err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
-			return
+		var postId int64
+		if visibility == "private" {
+			listOfFriends := []string{}
+			for i := 0; ; i++ {
+				email := r.FormValue(fmt.Sprintf("tagged[email][%d]", i))
+				if email == "" {
+					break
+				}
+				listOfFriends = append(listOfFriends, email)
+			}
+			trx, err := a.DB.Begin()
+			if err != nil {
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"faild": "Status Internal Server Error"},
+				)
+				return
+			}
+			defer trx.Rollback()
+
+			detai, err := trx.Exec(
+				`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`,
+				userId,
+				content,
+				imagePath,
+				visibility,
+			)
+			if err != nil {
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"faild": "Status Internal Server Error"},
+				)
+				return
+			}
+
+			postId, err = detai.LastInsertId()
+			if err != nil {
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"faild": "Status Internal Server Error"},
+				)
+				return
+			}
+
+			for i := 0; i < len(listOfFriends); i++ {
+				_, err := trx.Exec(
+					`INSERT INTO post_viewers ( post_id ,user_id ) VALUES ( ? ,(SELECT id FROM users WHERE email = ?) )`,
+					postId,
+					listOfFriends[i],
+				)
+				if err != nil {
+					utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"faild": "Status Bad Request"})
+					return
+				}
+			}
+
+			err = trx.Commit()
+			if err != nil {
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"faild": "Status Internal Server Error"},
+				)
+				return
+			}
+		} else {
+			var err error
+			postId, err = a.Create(
+				`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`, userId, content, imagePath, visibility,
+			)
+			if err != nil {
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
+				return
+			}
 		}
 
 		resPost := a.Read(`
@@ -61,7 +133,11 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		if err := resPost.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
 			fmt.Println(err)
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"faild": "Status Internal Server Error"},
+			)
 			return
 		}
 
@@ -99,7 +175,11 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		LIMIT 5 OFFSET (5 * $2);
 		`, userId, page)
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "Status Internal Server Error"},
+			)
 			return
 		}
 		defer data.Close()
@@ -108,14 +188,22 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		for data.Next() {
 			var post Post
 			if err := data.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Visibility, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"error": "Status Internal Server Error"},
+				)
 				return
 			}
 			allPost = append(allPost, post)
 		}
 
 		if err := data.Err(); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "Status Internal Server Error"},
+			)
 			return
 		}
 

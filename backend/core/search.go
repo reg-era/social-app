@@ -22,12 +22,9 @@ func (a *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		if nich == "close" {
 			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
 			FROM users
-			JOIN follows ON following_id = id 
-			WHERE 
-				(firstname LIKE '$1' OR lastname LIKE '$1' OR email LIKE '$1') 
-			AND
-				follower_id =$2 ;`
-			values = []any{target + "%", userId}
+			JOIN follows ON follower_id = id 
+			WHERE following_id =$1 ;`
+			values = []any{userId}
 		} else {
 			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
 			FROM users WHERE firstname LIKE $1 OR lastname LIKE $1 OR email LIKE $1 ;`

@@ -1,23 +1,64 @@
-"use client"
-import { useState,useRef } from "react";
+'use client'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile } from '@fortawesome/free-solid-svg-icons';
 import { EMOJI_CATEGORIES } from "@/utils/emoji";
+
+import { useState, useRef, useEffect } from "react";
 
 const CreatePostCard = ({ onCreatePost }) => {
     const [newPost, setNewPost] = useState('');
-    const [error, setError] = useState('');
-    const [file, setFile] = useState('')
-    const [showTagFriends, setShowTagFriends] = useState(false);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [postPrivacy, setPostPrivacy] = useState('public');
-    const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
-    const [taggedFriends, setTaggedFriends] = useState([]);
-    const [friendsList, setFriendsList] = useState([]); // Assuming friendsList comes from somewhere
-    const [friendSearchTerm, setFriendSearchTerm] = useState('');
 
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef(null);
-    const friendsDropdownRef = useRef(null);
+
+    const [file, setFile] = useState('')
+
+    const [showPrivacyOptions, setShowPrivacyOptions] = useState(false);
+    const [postPrivacy, setPostPrivacy] = useState('public');
+
+    const [error, setError] = useState('');
+
+    const [showTagFriends, setShowTagFriends] = useState(false);
+    const [taggedFriends, setTaggedFriends] = useState([]);
+    const [friendsList, setFriendsList] = useState([]);
+
+    useEffect(() => {
+        const fetchFriends = async () => {
+            try {
+                const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=nothing&nich=close`, {
+                    headers: {
+                        'Authorization': document.cookie.slice('auth_session='.length),
+                    },
+                })
+
+                if (res.ok) {
+                    const data = await res.json()
+                    console.log(data)
+                    setFriendsList(data);
+                } else {
+                    throw new Error('faild to singup');
+                }
+            } catch (error) {
+                console.error('Failed to fetch friends:', error);
+            }
+        };
+
+        fetchFriends();
+    }, []);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+                setShowEmojiPicker(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const importFile = (e) => {
         e.preventDefault()
@@ -34,7 +75,13 @@ const CreatePostCard = ({ onCreatePost }) => {
             const form = new FormData()
             form.append("post", post)
             form.append('image', e.target.fileInputPost.files[0])
-            form.append("visibility", 'public')
+            form.append("visibility", postPrivacy)
+            
+            if (postPrivacy === 'private') {
+                taggedFriends.forEach((user,index)=>{
+                    form.append(`tagged[email][${index}]`, user.email)
+                })
+            }
 
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post`, {
                 method: 'POST',
@@ -74,18 +121,18 @@ const CreatePostCard = ({ onCreatePost }) => {
 
     const toggleTagFriends = () => {
         setShowTagFriends(!showTagFriends);
-        setFriendSearchTerm('');
     };
 
     const handleAddTag = (friend) => {
         // Check if friend is already tagged
-        if (!taggedFriends.some(taggedFriend => taggedFriend.id === friend.id)) {
+        if (!taggedFriends.some(taggedFriend => taggedFriend.email === friend.email)) {
             setTaggedFriends([...taggedFriends, friend]);
         }
+        setShowTagFriends(false);
     };
 
     const removeTag = (friendId) => {
-        setTaggedFriends(taggedFriends.filter(friend => friend.id !== friendId));
+        setTaggedFriends(taggedFriends.filter(friend => friend.email !== friendId));
     };
 
     const toggleEmojiPicker = () => {
@@ -95,14 +142,6 @@ const CreatePostCard = ({ onCreatePost }) => {
     const insertEmoji = (emoji) => {
         setNewPost(newPost + emoji);
     };
-
-    // Search functionality for friends
-    const filteredFriends = friendsList.filter(friend =>
-        friend.name.toLowerCase().includes(friendSearchTerm.toLowerCase())
-    );
-
-    const canTagFriends = postPrivacy === 'private';
-
     return (
         <form className="create-post-form" onSubmit={handlePost}>
             <div className="create-post-container">
@@ -193,7 +232,7 @@ const CreatePostCard = ({ onCreatePost }) => {
                                 </div>
                                 <div
                                     className="privacy-option"
-                                    onClick={() => handlePrivacyChange('friends')}
+                                    onClick={() => handlePrivacyChange('followers')}
                                 >
                                     <FontAwesomeIcon icon={faUserTag} />
                                     <span>Friends</span>
@@ -209,8 +248,8 @@ const CreatePostCard = ({ onCreatePost }) => {
                         )}
                     </div>
 
-                    {/* Tag Friends option now appears ONLY when Private privacy is selected */}
-                    {canTagFriends && (
+                    {/* Tag Friends option appears when Private privacy is selected */}
+                    {postPrivacy === 'private' && (
                         <div className="tag-friends">
                             <button
                                 type="button"
@@ -222,33 +261,16 @@ const CreatePostCard = ({ onCreatePost }) => {
                             </button>
 
                             {showTagFriends && (
-                                <div className="friends-dropdown" ref={friendsDropdownRef}>
-                                    <div className="friend-search">
-                                        <FontAwesomeIcon icon={faSearch} className="search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search friends..."
-                                            value={friendSearchTerm}
-                                            onChange={(e) => setFriendSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="friends-list">
-                                        {filteredFriends.length > 0 ? (
-                                            filteredFriends.map(friend => (
-                                                <div
-                                                    key={friend.id}
-                                                    className="friend-option"
-                                                    onClick={() => handleAddTag(friend)}
-                                                >
-                                                    <span>{friend.name}</span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="no-friends-found">
-                                                <span>No friends found</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="friends-dropdown">
+                                    {friendsList.map((friend, index) => (
+                                        <div
+                                            key={index}
+                                            className="friend-option"
+                                            onClick={() => handleAddTag(friend)}
+                                        >
+                                            <span>{`${friend.firstName} ${friend.lastName}`}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -261,13 +283,13 @@ const CreatePostCard = ({ onCreatePost }) => {
                     <div className="tagged-friends">
                         <p>Tagged:</p>
                         <div className="tags-container">
-                            {taggedFriends.map(friend => (
-                                <div key={friend.id} className="friend-tag">
-                                    <span>{friend.name}</span>
+                            {taggedFriends.map((friend, index) => (
+                                <div key={index} className="friend-tag">
+                                    <span>{`${friend.firstName} ${friend.lastName}`}</span>
                                     <button
                                         type="button"
                                         className="remove-tag"
-                                        onClick={() => removeTag(friend.id)}
+                                        onClick={() => removeTag(friend.email)}
                                     >
                                         <FontAwesomeIcon icon={faTimes} />
                                     </button>
@@ -282,5 +304,3 @@ const CreatePostCard = ({ onCreatePost }) => {
 };
 
 export default CreatePostCard;
-
-
