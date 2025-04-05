@@ -8,18 +8,23 @@ const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
 
     const handleResponse = async (newResponse) => {
         try {
+            const finalResponse = response === newResponse ? "" : newResponse;
+            
             const res = await fetch("http://127.0.0.1:8080/api/event/respond", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": document.cookie.slice("auth_session=".length),
                 },
-                body: JSON.stringify({ event_id: eventId, response: newResponse }),
+                body: JSON.stringify({ 
+                    event_id: eventId, 
+                    response: finalResponse 
+                }),
             });
 
             if (res.ok) {
-                setResponse(newResponse);
-                onResponseChange(newResponse);
+                setResponse(finalResponse); 
+                onResponseChange(finalResponse);
             } else {
                 throw new Error("Failed to respond to event");
             }

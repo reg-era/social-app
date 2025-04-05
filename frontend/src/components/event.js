@@ -26,9 +26,25 @@ const EventCard = ({ event }) => {
     }, [event.id]);
 
 
-    // i still need to handle this so that each action get called once and if clicked the opposite it cancels the one selected before here and in the backend
     const handleResponseChange = (newResponse) => {
-        
+        if (eventDetails) {
+            let newDetails = { ...eventDetails };
+            
+            if (eventDetails.user_response === "going") {
+                newDetails.going_count--;
+            } else if (eventDetails.user_response === "not_going") {
+                newDetails.not_going_count--;
+            }
+
+            if (newResponse === "going") {
+                newDetails.going_count++;
+            } else if (newResponse === "not_going") {
+                newDetails.not_going_count++;
+            }
+
+            newDetails.user_response = newResponse; // !!!!!!!!!!! this would be empty string when unselecting
+            setEventDetails(newDetails);
+        }
     };
 
     return (
