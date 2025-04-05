@@ -8,7 +8,8 @@ export async function middleware(req) {
 
     const authorized = await checkAuthentication(req.cookies.get('auth_session')?.value)
 
-    if (privateRoutes.includes(path) && !authorized) {
+    const isDynamicRoute = /^(\/profile|\/group)\/[^/]+$/.test(path);
+    if (!authorized && (privateRoutes.includes(path) || isDynamicRoute)) {
         return NextResponse.redirect(new URL('/login', req.nextUrl));
     }
 

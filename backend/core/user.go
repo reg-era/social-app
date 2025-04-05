@@ -159,6 +159,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User Status Not Found"})
 				return
 			}
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -173,6 +174,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var userInfo User
 		if err := a.ReadUser(userId, &userInfo); err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -215,7 +217,7 @@ func (a *API) ReadUser(id int, user *User) error {
 	FROM users u WHERE id = ? ;
 	`, id)
 
-	if err := data_userInfo.Scan(&user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic, &user.Followers, &user.Followings); err != nil {
+	if err := data_userInfo.Scan(&user.Id, &user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic, &user.Followers, &user.Followings); err != nil {
 		return err
 	}
 	return nil

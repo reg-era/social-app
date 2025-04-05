@@ -1,6 +1,7 @@
 package core
 
 import (
+	"database/sql"
 	"net/http"
 
 	"social/pkg/utils"
@@ -90,7 +91,8 @@ func (a *API) HandleVisibilityChange(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var reqID, relatedID int
-		if err := tx.QueryRow(`SELECT id, follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending';`, userId).Scan(&reqID, &relatedID); err != nil {
+		if err := tx.QueryRow(`SELECT id, follower_id FROM follow_requests WHERE following_id = ? AND status = 'pending';`, userId).Scan(&reqID, &relatedID); err != nil &&
+			err != sql.ErrNoRows {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed fetch data"})
 			return
 		}
