@@ -72,7 +72,6 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 
 		var comment Comment
 		var first, last string
-		var postCreator int
 		if err := resComment.Scan(&first, &last, &comment.ID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
 			utils.RespondWithJSON(
 				w,
@@ -83,12 +82,6 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		}
 		comment.Username = first + " " + last
 		utils.RespondWithJSON(w, http.StatusCreated, comment)
-		a.HUB.Notification <- &Note{
-			Type:     "post_comment",
-			Sender:   userId,
-			Receiver: postCreator,
-			Content:  "",
-		}
 	case http.MethodGet:
 		param1 := r.URL.Query().Get("id")
 		postId, err := strconv.Atoi(param1)

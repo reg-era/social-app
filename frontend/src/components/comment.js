@@ -1,16 +1,18 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faImage,faSmile   } from '@fortawesome/free-solid-svg-icons';
+import { faImage, faSmile } from '@fortawesome/free-solid-svg-icons';
 
 import { EMOJI_CATEGORIES } from "@/utils/emoji";
 
-import { useState,useEffect,useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const CreateCommentCard = ({ postId }) => {
     const [page, setPage] = useState(0);
     const [comments, setComments] = useState(new Map());
-    const [NewComment,setNewComment] = useState('');
+    const [NewComment, setNewComment] = useState('');
     const [file, setFile] = useState('');
     const [error, setError] = useState('');
+
+    const [endOfComment, setEndComment] = useState(false)
 
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef(null);
@@ -43,15 +45,21 @@ const CreateCommentCard = ({ postId }) => {
             });
             if (res.ok) {
                 const data = await res.json();
-                console.log(data);
                 if (data) {
-                    setComments((prevComments) => {
-                        const newComments = data.filter(
-                            (newComment) => !prevComments.some((existingComment) => existingComment.commentId === newComment.commentId)
-                        );
-                        return [...prevComments, ...newComments];
+                    setComments(prevComm => {
+                        const newComments = new Map(prevComm);
+                        data.forEach(newComm => {
+                            if (!newComments.has(newComm.comment_id)) {
+                                newComments.set(newComm.comment_id, newComm);
+                            }
+                        });
+                        return newComments;
                     });
-                    setPage((prevPage) => prevPage + 1);
+                    if (data.length < 3) {
+                        setEndComment(true)
+                        return
+                    }
+                    setPage(() => page + 1);
                 }
             } else {
                 console.error('Failed to fetch comments');
@@ -69,7 +77,7 @@ const CreateCommentCard = ({ postId }) => {
                 return
             }
             const form = new FormData()
-            
+
             form.append("postID", postId)
             form.append("comment", comment)
             form.append('image', e.target.fileInputComment.files[0])
@@ -107,11 +115,11 @@ const CreateCommentCard = ({ postId }) => {
 
     return (
         <div className="post-comments">
-            <button onClick={(e)=>  getComments()}>show more</button>
-            {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url}/>))}
+            {!endOfComment && <button onClick={(e) => getComments()}>show more</button>}
+            {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url} />))}
             <div className="add-comment">
                 <div className="comment-avatar"></div>
-                <div className="messageBox">
+                <form className="messageBox" onSubmit={handleComment} >
                     <div className="fileUploadWrapper">
                         <label htmlFor="file">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 337 337">
@@ -121,22 +129,42 @@ const CreateCommentCard = ({ postId }) => {
                             </svg>
                             <span className="tooltip">Add an image</span>
                         </label>
-                        <input type="file" id="file" name="file" />
+                        <input id="fileInputComment" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
+                        <button type="button" id="file" name="file" className="photo-action" onClick={importFile}></button>
                     </div>
-                    <input required placeholder="Write a comment..." type="text" id="messageInput" />
-                    <button id="sendButton">
+
+                    <input required id="messageInput" name="comment" type="text" value={NewComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Write a comment..." />
+
+                    <button type="button" className="emoji-action" onClick={toggleEmojiPicker}>
+                        <FontAwesomeIcon icon={faSmile} />
+                    </button>
+
+                    {showEmojiPicker && (
+                        <div className="emoji-picker-container" ref={emojiPickerRef}>
+                            <div className="emoji-list">
+                                {EMOJI_CATEGORIES.smileys.map((emoji, index) => (
+                                    <span key={index} className="emoji-item" onClick={() => insertEmoji(emoji)}>
+                                        {emoji}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <button type="submit" id="sendButton" >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 664 663">
                             <path fill="none" d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"></path>
                             <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="33.67" stroke="#6c6c6c" d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"></path>
                         </svg>
                     </button>
-                </div>
+                    {error && <p className="error-message">{error}</p>}
+                </form>
             </div>
         </div>
     );
 };
 
-const CommentCard = ({ userName, content ,imageUrl }) => {
+const CommentCard = ({ userName, content, imageUrl }) => {
     const [newImageURL, setImageURL] = useState('');
     const [profileImage, setProfileImage] = useState('/default_profile.jpg');
 
@@ -161,26 +189,26 @@ const CommentCard = ({ userName, content ,imageUrl }) => {
         imageUrl != '' && getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imageUrl}`, true);
         // imageProfileUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
     }, []);
-    
+
     return (
         <div className="comment-item">
             <div className="comment-avatar" style={{
-                    backgroundImage: `url(${profileImage})`,
-                    backgroundSize: 'cover'
-                }}
+                backgroundImage: `url(${profileImage})`,
+                backgroundSize: 'cover'
+            }}
             ></div>
             <div className="comment-content">
                 <div className="comment-author">{userName}</div>
                 <div className="comment-text">
                     {content}
                     {imageUrl !== '' && (
-                    <div className="post-image"
-                        style={{
-                            backgroundImage: `url(${newImageURL})`,
-                            backgroundSize: 'cover'
-                        }}>
-                    </div>
-                )}
+                        <div className="post-image"
+                            style={{
+                                backgroundImage: `url(${newImageURL})`,
+                                backgroundSize: 'cover'
+                            }}>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
