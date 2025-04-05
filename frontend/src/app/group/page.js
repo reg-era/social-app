@@ -224,16 +224,6 @@ const GroupsPage = () => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label>Group Type</label>
-                <select
-                  value={newGroupType}
-                  onChange={(e) => setNewGroupType(e.target.value)}
-                >
-                  <option value="public">Public Group</option>
-                  <option value="closed">Closed Group</option>
-                </select>
-              </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowCreateModal(false)}>
                   Cancel

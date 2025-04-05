@@ -42,7 +42,7 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		Title       string `json:"title"`
 		Description string `json:"description"`
 		EventDate   string `json:"event_date"`
-		GroupID     string    `json:"group_id"`
+		GroupID     string `json:"group_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
 		fmt.Println(err)
@@ -72,6 +72,10 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := a.sendEventNotifications(event.GroupID, event.Title, userId); err != nil {
+		fmt.Println("Warning: Failed to send some notifications:", err)
+	}
+
 	fmt.Println("event created")
 	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(eventID), Response: "Event created successfully"})
 }
@@ -97,7 +101,7 @@ func (a *API) HandleGetEvents(w http.ResponseWriter, r *http.Request) {
 	var events []Event
 	for rows.Next() {
 		var event Event
-		if err := rows.Scan(&event.ID, &event.GroupID, &event.Title, &event.Description, 
+		if err := rows.Scan(&event.ID, &event.GroupID, &event.Title, &event.Description,
 			&event.CreatorID, &event.EventDate, &event.CreatedAt); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to scan event"})
 			return
@@ -123,10 +127,10 @@ func (a *API) HandleGetEventDetails(w http.ResponseWriter, r *http.Request) {
 		SELECT id, group_id, title, description, creator_id, event_date, created_at
 		FROM events
 		WHERE id = ?`, eventID).Scan(
-		&eventDetails.ID, &eventDetails.GroupID, &eventDetails.Title, 
-		&eventDetails.Description, &eventDetails.CreatorID, 
+		&eventDetails.ID, &eventDetails.GroupID, &eventDetails.Title,
+		&eventDetails.Description, &eventDetails.CreatorID,
 		&eventDetails.EventDate, &eventDetails.CreatedAt)
-	
+
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
@@ -158,38 +162,38 @@ func (a *API) HandleGetEventDetails(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
-	
+
 	var request struct {
 		EventID  int    `json:"event_id"`
 		Response string `json:"response"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 		return
 	}
-	
+
 	if request.Response != "going" && request.Response != "not_going" {
-		utils.RespondWithJSON(w, http.StatusBadRequest, 
+		utils.RespondWithJSON(w, http.StatusBadRequest,
 			map[string]string{"error": "Response must be 'going' or 'not_going'"})
 		return
 	}
-	
+
 	var eventExists bool
 	err := a.Read(`SELECT EXISTS(SELECT 1 FROM events WHERE id = ?)`, request.EventID).Scan(&eventExists)
 	if err != nil || !eventExists {
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
 	}
-	
+
 	var groupID int
 	err = a.Read(`SELECT group_id FROM events WHERE id = ?`, request.EventID).Scan(&groupID)
 	if err != nil {
-		utils.RespondWithJSON(w, http.StatusInternalServerError, 
+		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to get event details"})
 		return
 	}
-	
+
 	var memberStatus string
 	err = a.Read(`SELECT status FROM group_members WHERE group_id = ? AND user_id = ?`,
 		groupID, userID).Scan(&memberStatus)
@@ -198,19 +202,20 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 			map[string]string{"error": "Not a group member"})
 		return
 	}
-	
+
 	_, err = a.Create(`
 		INSERT INTO event_responses (event_id, user_id, response)
 		VALUES (?, ?, ?)
 		ON CONFLICT(event_id, user_id) DO UPDATE SET response = ?`,
 		request.EventID, userID, request.Response, request.Response)
-	
+
 	if err != nil {
-		utils.RespondWithJSON(w, http.StatusInternalServerError, 
+		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to save response"})
 		return
 	}
-	
-	utils.RespondWithJSON(w, http.StatusOK, 
+
+	utils.RespondWithJSON(w, http.StatusOK,
 		map[string]string{"message": "Response saved successfully"})
 }
+

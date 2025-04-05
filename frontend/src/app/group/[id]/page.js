@@ -166,8 +166,6 @@ const GroupDetailPage = () => {
                 <Sidebar />
 
                 <div className="content-area">
-                    <GroupInvitations />
-
                     <div className="group-detail-container">
                         {/* Group Header */}
                         <div>

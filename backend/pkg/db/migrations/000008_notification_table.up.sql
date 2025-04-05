@@ -6,5 +6,6 @@ CREATE TABLE notifications (
     related_id INTEGER,
     is_read INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    group_id TEXT DEFAULT '',
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

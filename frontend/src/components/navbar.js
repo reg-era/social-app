@@ -8,7 +8,7 @@ import { useWebSocket } from '@/context/ws_context';
 
 const Navigation = () => {
     const router = useRouter();
-    
+    const [notifications, setNotifications] = useState([]);
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -62,6 +62,26 @@ const Navigation = () => {
         }
     }
 
+    const getNotifications = async () => {
+        try {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setNotifications(data);
+            }
+        } catch (err) {
+            console.error("Error fetching notifications:", err);
+        }
+    };
+
+    useEffect(() => {
+        getNotifications();
+    }, []);
+
     const handleClickOutside = (event) => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {
             setDisplayResult(false);
@@ -95,9 +115,9 @@ const Navigation = () => {
             <div className="nav-icons">
                 <div className="nav-icon notification-icon" onClick={() => setDisplay(!show)}>
                     <BellIcon />
-                    <span className="notification-count">3</span>
+                    <span className="notification-count">{notifications.length || ''}</span>
                 </div>
-                {show && <Notif />}
+                {show && <Notif notifications={notifications} setNotifications={setNotifications} />}
 
                 <Link href="/chat" className="nav-icon messages-icon">
                     <CommentIcon />
