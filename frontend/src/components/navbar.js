@@ -115,13 +115,13 @@ const Navigation = () => {
             <div className="nav-icons">
                 <div className="nav-icon notification-icon" onClick={() => setDisplay(!show)}>
                     <BellIcon />
-                    <span className="notification-count">{notifications.length || ''}</span>
+                    {/* <span className="notification-count">{notifications.length || ''}</span> */}
                 </div>
                 {show && <Notif notifications={notifications} setNotifications={setNotifications} />}
 
                 <Link href="/chat" className="nav-icon messages-icon">
                     <CommentIcon />
-                    <span className="messages-count">5</span>
+                    {/* <span className="messages-count">5</span> */}
                 </Link>
 
                 <button className="nav-icon logout-btn" onClick={() => handleLogout()}>

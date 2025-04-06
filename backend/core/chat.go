@@ -56,9 +56,13 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				WHERE (m.sender_id = $1 AND u2.email = $2 )
 				OR (u1.email = $2 AND m.receiver_id = $1 )
 				ORDER BY m.created_at DESC
-				LIMIT 5 OFFSET (5 * $3);`, userId, target, page)
+				LIMIT 20 OFFSET (20 * $3);`, userId, target, page)
 			if err != nil {
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
+				utils.RespondWithJSON(
+					w,
+					http.StatusInternalServerError,
+					map[string]string{"error": "Status Internal Server Error"},
+				)
 				return
 			}
 			defer data.Close()
@@ -67,7 +71,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				var msg Msg
 				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreateAt, &msg.EmailSender, &msg.EmailReceiver); err != nil {
 					fmt.Println(err)
-					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
+					utils.RespondWithJSON(
+						w,
+						http.StatusInternalServerError,
+						map[string]string{"faild": "Status Internal Server Error"},
+					)
 					return
 				}
 				conversation = append(conversation, msg)
@@ -107,7 +115,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var msg Msg
 		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "status internal server error"},
+			)
 			return
 		}
 
@@ -115,7 +127,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO messages (sender_id,receiver_id,content)
 		VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`, userId, msg.EmailReceiver, msg.Content)
 		if err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			utils.RespondWithJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]string{"error": "status internal server error"},
+			)
 			return
 		}
 
@@ -125,13 +141,12 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			JOIN users u1 ON m.sender_id = u1.id
 			JOIN users u2 ON m.receiver_id = u2.id
 			WHERE m.id = ? ;`, msgID)
-		// implemente websocket
 
 		var brodMessage Msg
 		if err := data.Scan(&brodMessage.Sender, &brodMessage.Receiver, &brodMessage.Content, &brodMessage.CreateAt, &brodMessage.EmailSender, &brodMessage.EmailReceiver); err != nil {
 			fmt.Println("error on marshling", err)
 		}
-		fmt.Println("from post message: ", brodMessage)
+
 		api.HUB.Message <- &brodMessage
 
 		utils.RespondWithJSON(w, http.StatusCreated, nil)

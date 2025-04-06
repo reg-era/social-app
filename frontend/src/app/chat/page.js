@@ -22,7 +22,6 @@ const ChatPage = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                // console.log(data);
                 setUsers(data)
             }
         } catch (err) {

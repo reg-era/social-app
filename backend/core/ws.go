@@ -57,7 +57,6 @@ func (net *NetworkHub) RunHubListner() {
 	for {
 		select {
 		case newMsg := <-net.Message:
-			fmt.Println(newMsg)
 			net.Mutex.RLock()
 			if connections, ok := net.Network[newMsg.Receiver]; ok {
 				for _, window := range connections {
