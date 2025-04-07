@@ -35,7 +35,7 @@ const Notif = () => {
                 formData.append('action', `${decision}`);
             } else {
                 // Handle follow requests
-                endpoint = `http://localhost:8080/api/follow`;
+                endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`;
                 const body = JSON.stringify({
                     noteId: notifID,
                     actioner: actioner,

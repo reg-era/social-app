@@ -19,25 +19,28 @@ const ForeingProfile = ({ params }) => {
             });
         }
     }, [params]);
+
     return (
         <div>
             <Navigation />
             <div className="profile-container">
-                <ProfileHeader setActiveTab={setActiveTab} userEmail={userEmail} />
+                <ProfileHeader isOwnProfile={false} setActiveTab={setActiveTab} userEmail={userEmail} />
 
-                <div className="profile-content">
-                    <div className="profile-tabs">
-                        <div className={`profile-tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>Posts</div>
-                        <div className={`profile-tab ${activeTab === 'followers' ? 'active' : ''}`} onClick={() => setActiveTab('followers')}>Followers</div>
-                        <div className={`profile-tab ${activeTab === 'following' ? 'active' : ''}`} onClick={() => setActiveTab('following')}>Following</div>
-                    </div>
+                {activeTab !== 'none' &&
+                    <div className="profile-content">
+                        <div className="profile-tabs">
+                            <div className={`profile-tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>Posts</div>
+                            <div className={`profile-tab ${activeTab === 'followers' ? 'active' : ''}`} onClick={() => setActiveTab('followers')}>Followers</div>
+                            <div className={`profile-tab ${activeTab === 'following' ? 'active' : ''}`} onClick={() => setActiveTab('following')}>Following</div>
+                        </div>
 
-                    <div className="profile-tab-content">
-                        {activeTab === 'posts' && <ProfilePost userEmail={userEmail} />}
-                        {activeTab === 'followers' && <ProfileFollower activeTab={activeTab} userEmail={userEmail} />}
-                        {activeTab === 'following' && <ProfileFollower activeTab={activeTab} userEmail={userEmail} />}
+                        <div className="profile-tab-content">
+                            {activeTab === 'posts' && <ProfilePost isOwnProfile={false} userEmail={userEmail} />}
+                            {activeTab === 'followers' && <ProfileFollower isOwnProfile={false} activeTab={activeTab} userEmail={userEmail} />}
+                            {activeTab === 'following' && <ProfileFollower isOwnProfile={false} activeTab={activeTab} userEmail={userEmail} />}
+                        </div>
                     </div>
-                </div>
+                }
             </div>
 
             <BackHome />
@@ -46,14 +49,3 @@ const ForeingProfile = ({ params }) => {
 }
 
 export default ForeingProfile;
-
-/*
-<div className="private-profile-message">
-    <LockIcon size="3x" />
-    <h2>This Profile is Private</h2>
-    <p>Follow this user to see their posts and other information.</p>
-    <button className="follow-btn" onClick={toggleFollow}>
-        <UserPlusIcon /> Follow
-    </button>
-</div>
-*/

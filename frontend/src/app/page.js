@@ -7,11 +7,32 @@ import Navigation from '@/components/navbar.js';
 import Sidebar from '@/components/sidebar.js';
 import CreatePostCard from '@/components/create_post.js';
 import PostCard from '@/components/post.js';
+import { getDownloadImage } from '@/utils/helper';
 
 const Home = () => {
   const [posts, setPosts] = useState(new Map());
   const [page, setPage] = useState(0);
   const [isThrottling, setIsThrottling] = useState(false);
+
+  const saveUserInfos = async () => {
+    console.log('saving data');
+    try {
+      const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user`, {
+        headers: {
+          'Authorization': document.cookie.slice('auth_session='.length),
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const downloaded = await getDownloadImage(data.avatarUrl)
+        data.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
+        localStorage.setItem('user_info', JSON.stringify(data))
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   const getPosts = async () => {
     const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post${`?page=${page}`}`, {
@@ -39,6 +60,9 @@ const Home = () => {
 
   useEffect(() => {
     getPosts();
+    if (localStorage.getItem('user_info') === null) {
+      saveUserInfos();
+    }
   }, []);
 
   useEffect(() => {
@@ -69,19 +93,19 @@ const Home = () => {
       <div className="main-container">
         <Sidebar />
         <div className="content-area">
-          <CreatePostCard onCreatePost={(data) =>{
+          <CreatePostCard onCreatePost={(data) => {
             const newMap = new Map()
-            newMap.set(data.PostId,data)
-            posts.forEach((elem)=>{
-              newMap.set(elem.PostId,elem)
+            newMap.set(data.PostId, data)
+            posts.forEach((elem) => {
+              newMap.set(elem.PostId, elem)
             })
             setPosts(newMap)
-          }}/>
+          }} />
           {[...posts.values()].map(post => (
             <PostCard
               key={post.PostId}
               PostId={post.PostId}
-              authorName={post.user.firstName+post.user.lastName}
+              authorName={post.user.firstName + post.user.lastName}
               imageProfileUrl={post.user.avatarUrl}
               imagePostUrl={post.imagePostUrl}
               postText={post.postText}

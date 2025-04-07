@@ -14,7 +14,7 @@ const ProfilePage = () => {
         <div>
             <Navigation />
             <div className="profile-container">
-                <ProfileHeader setActiveTab={setActiveTab} />
+                <ProfileHeader isOwnProfile={true} setActiveTab={setActiveTab} />
 
                 <div className="profile-content">
                     <div className="profile-tabs">
@@ -25,8 +25,8 @@ const ProfilePage = () => {
 
                     <div className="profile-tab-content">
                         {activeTab === 'posts' && <ProfilePost />}
-                        {activeTab === 'followers' && <ProfileFollower activeTab={activeTab}/>}
-                        {activeTab === 'following' && <ProfileFollower activeTab={activeTab}/>}
+                        {activeTab === 'followers' && <ProfileFollower isOwnProfile={true} activeTab={activeTab} />}
+                        {activeTab === 'following' && <ProfileFollower isOwnProfile={true} activeTab={activeTab} />}
                     </div>
                 </div>
             </div>
