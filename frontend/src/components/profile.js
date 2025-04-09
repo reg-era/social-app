@@ -27,6 +27,12 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
                 const data = await res.json();
                 data.avatarUrl = await getDownloadImage(data.avatarUrl, token)
                 setUser(data)
+            } else {
+                setActiveTab('none')
+                switch (res.status) {
+                    case 404: setError(404);
+                    case 401: setError(401);
+                }
             }
         } catch (error) {
             console.error(error)
@@ -86,7 +92,7 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         }
     };
 
-    if (error === 404) {
+    if (error !== null && error === 404) {
         return (
             <div className="profile-header">
                 <div className="profile-cover-photo"></div>
@@ -99,14 +105,16 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         )
     }
 
-    if (error === 401) {
-        setActiveTab('none');
+    if (error !== null && error === 401) {
         return (
             <div className="private-profile-message">
                 <LockIcon size="3x" />
                 <h2>This Profile is Private</h2>
                 <p>Follow this user to see their posts and other information.</p>
-                <button className="follow-btn" onClick={toggleFollow}>
+                <button
+                    className={`follow-btn ${(user.isFollowing != 'unfollowed') ? 'following' : ''}`}
+                    onClick={toggleFollow}
+                >
                     <UserPlusIcon /> Follow
                 </button>
             </div>
@@ -195,12 +203,15 @@ export const ProfilePost = ({ userEmail }) => {
                 },
             });
 
-            if (!res.ok) {
-                setError(500)
-                return
+            if (res.ok) {
+                const data = await res.json();
+                setPosts(data);
+            } else {
+                switch (res.status) {
+                    case 401: setError(401);
+                    case 404: setError(404);
+                }
             }
-            const data = await res.json();
-            setPosts(data);
         } catch (error) {
             setError(500)
         }
@@ -212,6 +223,10 @@ export const ProfilePost = ({ userEmail }) => {
         }
         !loading && getUserPosts();
     }, [userEmail, loading]);
+
+    if (error !== null) {
+        return null
+    }
 
     return (
         <div className="profile-posts">
@@ -252,7 +267,10 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
                 });
                 setUsers(data)
             } else {
-                setError(500)
+                switch (res.status) {
+                    case 401: setError(401);
+                    case 404: setError(404);
+                }
             }
         } catch (error) {
             setError(500)
@@ -265,6 +283,10 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
         }
         !loading && getUserFollowers();
     }, [userEmail, loading]);
+
+    if (error !== null) {
+        return null
+    }
 
     return (
         <div className="profile-people-list">

@@ -34,6 +34,38 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	target := r.URL.Query().Get("target")
+	checking_email := r.URL.Query().Get("user")
+	if (target != "following" && target != "follower" && target != "post" && target != "") || (target != "following" && target != "follower" && target != "post" && checking_email != "") || ((target == "following" || target == "follower" || target == "post") && checking_email != "") {
+		var arg string
+		if checking_email == "" {
+			arg = target
+		} else {
+			arg = checking_email
+		}
+
+		var isPublic bool
+		if err := a.Read(`SELECT is_public FROM users WHERE email = ? ;`, arg).Scan(&isPublic); err != nil {
+			if err == sql.ErrNoRows {
+				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "status Not Found"})
+				return
+			}
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
+			return
+		}
+		//
+		if !isPublic {
+			var exist bool
+			if err := a.Read(`SELECT 1 FROM follows WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ? ) ;`, userId, arg).Scan(&exist); err != nil {
+				if err == sql.ErrNoRows {
+					utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "status Unauthorized"})
+					return
+				}
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+				return
+			}
+		}
+	}
+
 	if target == "following" || target == "follower" {
 		var query string
 		var args []any
@@ -77,11 +109,7 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 
 		data, err := a.ReadAll(query, args...)
 		if err != nil {
-			utils.RespondWithJSON(
-				w,
-				http.StatusInternalServerError,
-				map[string]string{"error": "status internal server error"},
-			)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 		defer data.Close()
@@ -173,8 +201,14 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithJSON(w, http.StatusOK, guest)
 	} else {
 		var userInfo User
-		if err := a.ReadUser(userId, &userInfo); err != nil {
-			fmt.Println(err)
+		data_userInfo := a.Read(`
+		SELECT u.id, u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public,
+		(SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS followings,
+		(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS followers
+		FROM users u WHERE id = ? ;
+		`, userId)
+
+		if err := data_userInfo.Scan(&userInfo.Id, &userInfo.Email, &userInfo.FirstName, &userInfo.LastName, &userInfo.DateOfBirth, &userInfo.AvatarUrl, &userInfo.Nickname, &userInfo.AboutMe, &userInfo.IsPublic, &userInfo.Followers, &userInfo.Followings); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -207,18 +241,4 @@ func (a *API) AddUser(user *User) (int, error) {
 		return 409, fmt.Errorf("faild to add user")
 	}
 	return 200, nil
-}
-
-func (a *API) ReadUser(id int, user *User) error {
-	data_userInfo := a.Read(`
-	SELECT u.id, u.email, u.firstname, u.lastname, u.birthdate, u.avatarUrl, u.nickname, u.about, u.is_public,
-	(SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS followings,
-	(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS followers
-	FROM users u WHERE id = ? ;
-	`, id)
-
-	if err := data_userInfo.Scan(&user.Id, &user.Email, &user.FirstName, &user.LastName, &user.DateOfBirth, &user.AvatarUrl, &user.Nickname, &user.AboutMe, &user.IsPublic, &user.Followers, &user.Followings); err != nil {
-		return err
-	}
-	return nil
 }
