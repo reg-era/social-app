@@ -5,8 +5,11 @@ import Link from "next/link.js";
 
 import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/utils/icons';
 import PostCard from "./post.js";
+import { useAuth } from "@/context/auth_context.js";
 
 export const ProfileHeader = ({ setActiveTab, userEmail }) => {
+    const { token, loading } = useAuth();
+
     let isOwnProfile = false;
     isOwnProfile = window?.location.pathname === '/profile';
 
@@ -14,7 +17,7 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     const getUserInfo = async () => {
         const res = await fetch(`http://localhost:8080/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
 
@@ -33,7 +36,7 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
             if (link !== '') {
                 const res = await fetch(link, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 const image = await res.blob();
@@ -46,15 +49,15 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     };
 
     useEffect(() => {
-        getUserInfo();
-    }, [userEmail]);
+        !loading && getUserInfo();
+    }, [userEmail, loading]);
 
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
     const togglePrivacy = async () => {
         const res = await fetch(`http://localhost:8080/api/change-vis`, {
-            method: 'POST',
+            method: 'POST', 
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
 
@@ -74,7 +77,7 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
                 email: userEmail,
             }),
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
 
@@ -155,6 +158,8 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 }
 
 export const ProfilePost = ({ userEmail }) => {
+    const { token, loading } = useAuth();
+
     let isOwnProfile = false;
     isOwnProfile = window?.location.pathname === '/profile';
 
@@ -162,7 +167,7 @@ export const ProfilePost = ({ userEmail }) => {
     const getUserPosts = async () => {
         const res = await fetch(`http://localhost:8080/api/user?target=post${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
 
@@ -175,8 +180,8 @@ export const ProfilePost = ({ userEmail }) => {
     };
 
     useEffect(() => {
-        getUserPosts();
-    }, [userEmail]);
+        !loading && getUserPosts();
+    }, [userEmail, loading]);
 
     return (
         <div className="profile-posts">
@@ -195,6 +200,8 @@ export const ProfilePost = ({ userEmail }) => {
 }
 
 export const ProfileFollower = ({ activeTab, userEmail }) => {
+    const { token, loading } = useAuth();
+
     let isOwnProfile = false;
     isOwnProfile = window?.location.pathname === '/profile';
 
@@ -202,7 +209,7 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
     const getUserFollowers = async () => {
         const res = await fetch(`http://localhost:8080/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
 
@@ -215,8 +222,8 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
     };
 
     useEffect(() => {
-        getUserFollowers();
-    }, [userEmail]);
+        !loading && getUserFollowers();
+    }, [userEmail, loading]);
 
     return (
         <div className="profile-people-list">

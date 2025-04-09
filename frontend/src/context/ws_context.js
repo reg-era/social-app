@@ -9,8 +9,11 @@ export const WebSocketProvider = ({ children }) => {
     const [connected, setConnected] = useState(false);
 
     useEffect(() => {
+        const match = document.cookie.match(new RegExp(`(?:^|;\\s*)auth_session=([^;]+)`));
+        const token_cookie = match ? match[1] : null;
+
         const url = new URL(`ws://${process.env.NEXT_PUBLIC_GOSERVER}/api/ws`)
-        url.searchParams.append('auth', document.cookie.slice('auth_session='.length));
+        url.searchParams.append('auth', token_cookie);
 
         const ws = new WebSocket(url.toString());
         setWebSocket(ws);

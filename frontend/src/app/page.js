@@ -7,8 +7,11 @@ import Navigation from '@/components/navbar.js';
 import Sidebar from '@/components/sidebar.js';
 import CreatePostCard from '@/components/create_post.js';
 import PostCard from '@/components/post.js';
+import { useAuth } from '@/context/auth_context';
 
 const Home = () => {
+  const { token, loading } = useAuth();
+
   const [posts, setPosts] = useState(new Map());
   const [page, setPage] = useState(0);
   const [isThrottling, setIsThrottling] = useState(false);
@@ -16,7 +19,7 @@ const Home = () => {
   const getPosts = async () => {
     const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post${`?page=${page}`}`, {
       headers: {
-        'Authorization': document.cookie.slice('auth_session='.length),
+        'Authorization': token,
       },
     });
 
@@ -32,14 +35,14 @@ const Home = () => {
         return newPosts;
       });
       setPage((prevPage) => prevPage + 1);
-    } else {
-      console.error('Failed to fetch posts');
     }
   };
 
   useEffect(() => {
-    getPosts();
-  }, []);
+    if (!loading) {
+      getPosts();
+    }
+  }, [loading]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,19 +72,19 @@ const Home = () => {
       <div className="main-container">
         <Sidebar />
         <div className="content-area">
-          <CreatePostCard onCreatePost={(data) =>{
+          <CreatePostCard onCreatePost={(data) => {
             const newMap = new Map()
-            newMap.set(data.PostId,data)
-            posts.forEach((elem)=>{
-              newMap.set(elem.PostId,elem)
+            newMap.set(data.PostId, data)
+            posts.forEach((elem) => {
+              newMap.set(elem.PostId, elem)
             })
             setPosts(newMap)
-          }}/>
+          }} />
           {[...posts.values()].map(post => (
             <PostCard
               key={post.PostId}
               PostId={post.PostId}
-              authorName={post.user.firstName+post.user.lastName}
+              authorName={post.user.firstName + post.user.lastName}
               imageProfileUrl={post.user.avatarUrl}
               imagePostUrl={post.imagePostUrl}
               postText={post.postText}

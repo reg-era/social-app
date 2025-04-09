@@ -1,12 +1,15 @@
+import { useAuth } from "@/context/auth_context";
 import { useEffect, useState } from "react";
 
 const Notif = () => {
+    const { token, loading } = useAuth();
+
     const [notifications, setNotif] = useState([])
 
     const getNotification = async () => {
         const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
         if (res.ok) {
@@ -19,8 +22,8 @@ const Notif = () => {
     }
 
     useEffect(() => {
-        getNotification()
-    }, [])
+        !loading && getNotification()
+    }, [loading])
 
     const sendResponse = async (decision, actioner, notifID, notifType) => {
         try {
@@ -45,7 +48,7 @@ const Notif = () => {
                     method: 'PUT',
                     body: body,
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                         'Content-Type': 'application/json',
                     },
                 });
@@ -54,7 +57,7 @@ const Notif = () => {
             const response = await fetch(endpoint, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: formData
             });
@@ -65,9 +68,9 @@ const Notif = () => {
             }
 
             setNotif((allNote) => allNote.filter(notif => notif.Id !== notifID));
-            
+
             getNotification();
-            
+
         } catch (err) {
             console.error('Failed to make decision: ', err);
             alert(err.message || 'Failed to process request');

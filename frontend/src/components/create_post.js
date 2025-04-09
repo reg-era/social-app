@@ -5,8 +5,11 @@ import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile } from '@fortawes
 import { EMOJI_CATEGORIES } from "@/utils/emoji";
 
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from '@/context/auth_context';
 
 const CreatePostCard = ({ onCreatePost }) => {
+    const { token, loading } = useAuth();
+
     const [newPost, setNewPost] = useState('');
 
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -28,24 +31,21 @@ const CreatePostCard = ({ onCreatePost }) => {
             try {
                 const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=nothing&nich=close`, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 })
 
                 if (res.ok) {
                     const data = await res.json()
-                    console.log(data)
                     setFriendsList(data);
-                } else {
-                    throw new Error('faild to singup');
                 }
             } catch (error) {
                 console.error('Failed to fetch friends:', error);
             }
         };
 
-        fetchFriends();
-    }, []);
+        !loading && fetchFriends();
+    }, [loading]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -76,9 +76,9 @@ const CreatePostCard = ({ onCreatePost }) => {
             form.append("post", post)
             form.append('image', e.target.fileInputPost.files[0])
             form.append("visibility", postPrivacy)
-            
+
             if (postPrivacy === 'private') {
-                taggedFriends.forEach((user,index)=>{
+                taggedFriends.forEach((user, index) => {
                     form.append(`tagged[email][${index}]`, user.email)
                 })
             }
@@ -86,7 +86,7 @@ const CreatePostCard = ({ onCreatePost }) => {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: form,
             })
@@ -96,8 +96,6 @@ const CreatePostCard = ({ onCreatePost }) => {
                 onCreatePost(data);
                 setNewPost('');
                 setFile('')
-            } else {
-                throw new Error('faild to singup');
             }
         } catch (error) {
             console.log(error);
