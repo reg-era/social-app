@@ -8,8 +8,11 @@ import BackHome from '@/components/back_home';
 
 import { useEffect, useState } from 'react';
 import Conversation from '@/components/conversation';
+import { useAuth } from '@/context/auth_context';
 
 const ChatPage = () => {
+    const { token, loading } = useAuth();
+
     const [selectedUser, setSelectedUser] = useState(null);
     const [users, setUsers] = useState([])
 
@@ -17,7 +20,7 @@ const ChatPage = () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (res.ok) {
@@ -31,8 +34,8 @@ const ChatPage = () => {
 
 
     useEffect(() => {
-        getConversations()
-    }, [])
+        !loading && getConversations()
+    }, [loading])
 
     return (
         <div>

@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import { BellIcon, CommentIcon, UserIcon, LogOutIcon } from '@/utils/icons';
-import { faImage, faGlobe, faLock, faUserTag, faTimes, faSmile, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { useState, useRef, useEffect,  } from 'react';
+import { useState, useRef, useEffect, } from 'react';
+
+import { BellIcon, CommentIcon, LogOutIcon } from '@/utils/icons';
 import Notif from './notification';
-import { useRouter } from 'next/navigation';
-import { useWebSocket } from '@/context/ws_context';
+import { handleLogout } from '@/utils/helper';
+import { useAuth } from '@/context/auth_context';
 
 const Navigation = () => {
-    const router = useRouter();
+    const { token, loading } = useAuth();
+
     const [notifications, setNotifications] = useState([]);
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
@@ -30,7 +31,7 @@ const Navigation = () => {
             try {
                 const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=${e.target.value}`, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 if (res.ok) {
@@ -43,30 +44,12 @@ const Navigation = () => {
             }
         }, 300);
     };
-    
-    const { websocket, connected } = useWebSocket();
-    const handleLogout = async (e) => {
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/logout`, {
-                headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
-                },
-            });
-            if (res.ok) {
-                document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                connected && websocket.close()
-                router.push('/login')
-            }
-        } catch (err) {
-            console.error("Error: ", err);
-        }
-    }
 
     const getNotifications = async () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (res.ok) {
@@ -79,8 +62,8 @@ const Navigation = () => {
     };
 
     useEffect(() => {
-        getNotifications();
-    }, []);
+        !loading && getNotifications();
+    }, [loading]);
 
     const handleClickOutside = (event) => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -140,7 +123,7 @@ const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${avatar}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             })
             if (res.ok) {

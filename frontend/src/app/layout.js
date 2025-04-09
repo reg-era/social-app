@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { WebSocketProvider } from '@/context/ws_context'
-import '../style/home.css'
+import { WebSocketProvider } from '@/context/ws_context';
+import { AuthProvider } from '@/context/auth_context';
+import '../style/home.css';
 
 export default function Layout({ children }) {
     const router = useRouter();
@@ -18,12 +19,14 @@ export default function Layout({ children }) {
     }
 
     return (
-        <WebSocketProvider>
-            <html>
-                <body>
-                    {children}
-                </body>
-            </html>
-        </WebSocketProvider>
-    )
+        <AuthProvider>
+            <WebSocketProvider>
+                <html>
+                    <body>
+                        {children}
+                    </body>
+                </html>
+            </WebSocketProvider>
+        </AuthProvider>
+    );
 }

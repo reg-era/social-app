@@ -7,9 +7,12 @@ import Navigation from '@/components/navbar.js';
 import Sidebar from '@/components/sidebar.js';
 import CreatePostCard from '@/components/create_post.js';
 import PostCard from '@/components/post.js';
+import { useAuth } from '@/context/auth_context';
 import { getDownloadImage } from '@/utils/helper';
 
 const Home = () => {
+  const { token, loading } = useAuth();
+
   const [posts, setPosts] = useState(new Map());
   const [page, setPage] = useState(0);
   const [isThrottling, setIsThrottling] = useState(false);
@@ -37,7 +40,7 @@ const Home = () => {
   const getPosts = async () => {
     const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post${`?page=${page}`}`, {
       headers: {
-        'Authorization': document.cookie.slice('auth_session='.length),
+        'Authorization': token,
       },
     });
 
@@ -53,17 +56,14 @@ const Home = () => {
         return newPosts;
       });
       setPage((prevPage) => prevPage + 1);
-    } else {
-      console.error('Failed to fetch posts');
     }
   };
 
   useEffect(() => {
-    getPosts();
-    if (localStorage.getItem('user_info') === null) {
-      saveUserInfos();
+    if (!loading) {
+      getPosts();
     }
-  }, []);
+  }, [loading]);
 
   useEffect(() => {
     const handleScroll = () => {

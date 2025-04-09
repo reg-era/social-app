@@ -5,43 +5,62 @@ import Link from "next/link.js";
 
 import { LockIcon, GlobeIcon, CogIcon, UserPlusIcon, CheckIcon } from '@/utils/icons';
 import PostCard from "./post.js";
-import { getDownloadImage } from "@/utils/helper.js";
+import { useAuth } from "@/context/auth_context.js";
 
-export const ProfileHeader = ({ isOwnProfile, setActiveTab, userEmail }) => {
-    if (!process.env.NEXT_PUBLIC_GOSERVER || (!isOwnProfile && !userEmail)) {
-        return <h1>Loading...</h1>;
-    }
+export const ProfileHeader = ({ setActiveTab, userEmail }) => {
+    const { token, loading } = useAuth();
+
+    let isOwnProfile = false;
+    isOwnProfile = window?.location.pathname === '/profile';
 
     const [error, setError] = useState(null);
     const getUserInfo = async () => {
         try {
-            if (error) return
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
+            const res = await fetch(`http://localhost:8080/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
 
             if (res.ok) {
                 const data = await res.json();
-                const downloaded = await getDownloadImage(data.avatarUrl)
-                data.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
                 setUser(data)
-            } else if (res.status === 404) {
-                setError(404)
             }
         } catch (error) {
-            console.error(error);
+            console.error(error)
         }
     };
 
+    const [profileImage, setProfileImage] = useState('/default_profile.jpg');
+
+    const getDownloadImage = async (link, isPost) => {
+        try {
+            if (link !== '') {
+                const res = await fetch(link, {
+                    headers: {
+                        'Authorization': token,
+                    },
+                });
+                const image = await res.blob();
+                const newUrl = URL.createObjectURL(image);
+                isPost ? setImageURL(newUrl) : setProfileImage(newUrl)
+            }
+        } catch (err) {
+            console.error("fetching image: ", err);
+        }
+    };
+
+    useEffect(() => {
+        !loading && getUserInfo();
+    }, [userEmail, loading]);
+
+    const [showPrivacySettings, setShowPrivacySettings] = useState(false);
     const togglePrivacy = async () => {
         try {
-            if (error) return
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/change-vis`, {
+            const res = await fetch(`http://localhost:8080/api/change-vis`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
 
@@ -59,14 +78,13 @@ export const ProfileHeader = ({ isOwnProfile, setActiveTab, userEmail }) => {
 
     const toggleFollow = async () => {
         try {
-            if (error) return
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`, {
+            const res = await fetch(`http://localhost:8080/api/follow`, {
                 method: 'POST',
                 body: JSON.stringify({
                     email: userEmail,
                 }),
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
 
@@ -83,7 +101,6 @@ export const ProfileHeader = ({ isOwnProfile, setActiveTab, userEmail }) => {
     };
 
     const [user, setUser] = useState({})
-    const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
     useEffect(() => {
         getUserInfo();
@@ -184,15 +201,20 @@ export const ProfileHeader = ({ isOwnProfile, setActiveTab, userEmail }) => {
     )
 }
 
-export const ProfilePost = ({ isOwnProfile, userEmail }) => {
+export const ProfilePost = ({ userEmail }) => {
+    const { token, loading } = useAuth();
+
+    let isOwnProfile = false;
+    isOwnProfile = window?.location.pathname === '/profile';
+
     const [posts, setPosts] = useState([]);
     const [error, setError] = useState(null);
 
     const getUserPosts = async () => {
         try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=post${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
+            const res = await fetch(`http://localhost:8080/api/user?target=post${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
 
@@ -208,12 +230,8 @@ export const ProfilePost = ({ isOwnProfile, userEmail }) => {
     };
 
     useEffect(() => {
-        getUserPosts();
-    }, [userEmail]);
-
-    if (error) {
-        return <div className="profile-posts"></div>
-    }
+        !loading && getUserPosts();
+    }, [userEmail, loading]);
 
     return (
         <div className="profile-posts">
@@ -231,19 +249,20 @@ export const ProfilePost = ({ isOwnProfile, userEmail }) => {
     )
 }
 
-export const ProfileFollower = ({ isOwnProfile, activeTab, userEmail }) => {
-    if (!process.env.NEXT_PUBLIC_GOSERVER || (!isOwnProfile && !userEmail)) {
-        return <h1>Loading...</h1>;
-    }
+export const ProfileFollower = ({ activeTab, userEmail }) => {
+    const { token, loading } = useAuth();
+
+    let isOwnProfile = false;
+    isOwnProfile = window?.location.pathname === '/profile';
 
     const [users, setUsers] = useState([])
     const [error, setError] = useState(null);
 
     const getUserFollowers = async () => {
         try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
+            const res = await fetch(`http://localhost:8080/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
 
@@ -263,12 +282,8 @@ export const ProfileFollower = ({ isOwnProfile, activeTab, userEmail }) => {
     };
 
     useEffect(() => {
-        getUserFollowers();
-    }, [userEmail]);
-
-    if (error) {
-        return <div className="profile-people-list"></div>
-    }
+        !loading && getUserFollowers();
+    }, [userEmail, loading]);
 
     return (
         <div className="profile-people-list">
