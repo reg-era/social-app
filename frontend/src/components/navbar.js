@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, } from 'react';
 
 import { BellIcon, CommentIcon, LogOutIcon } from '@/utils/icons';
 import Notif from './notification';
-import { handleLogout } from '@/utils/helper';
+import { handleLogout, getDownloadImage } from '@/utils/helper';
 import { useAuth } from '@/context/auth_context';
 
 const Navigation = () => {
@@ -87,7 +87,7 @@ const Navigation = () => {
                     <div className="search-dropdown">
                         {searchResults.length > 0 ? (
                             searchResults.map((user, index) => (
-                                <ResultCard key={index} email={user.email} firstName={user.firstName} lastName={user.lastName} avatar={user.avatarUrl} />
+                                <ResultCard key={index} token={token} email={user.email} firstName={user.firstName} lastName={user.lastName} avatar={user.avatarUrl} />
                             ))
                         ) : (
                             <p className="no-results">No results found</p>
@@ -115,28 +115,14 @@ const Navigation = () => {
     );
 };
 
-const ResultCard = ({ email, firstName, lastName, nickname, avatar }) => {
+const ResultCard = ({ token, email, firstName, lastName, nickname, avatar }) => {
     const [image, setImage] = useState('/default_profile.jpg')
 
-    const getImage = async () => {
-        if (avatar === '') return
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${avatar}`, {
-                headers: {
-                    'Authorization': token,
-                },
-            })
-            if (res.ok) {
-                const image = await res.blob();
-                const newUrl = URL.createObjectURL(image);
-                setImage(newUrl)
-            }
-        } catch (err) {
-            console.error("geting img: ", err);
-        }
-    }
-
     useEffect(() => {
+        const getImage = async () => {
+            const newUrl = await getDownloadImage(avatar, token)
+            setImage(newUrl)
+        }
         getImage()
     }, [])
 

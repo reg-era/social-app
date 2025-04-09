@@ -15,16 +15,16 @@ export const handleLogout = async (e) => {
     }
 }
 
-export const getDownloadImage = async (link) => {
+export const getDownloadImage = async (link, token) => {
     try {
         if (!link || link === '') {
-            return null
+            return '/default_profile.jpg'
         }
         const newLink = `http://${process.env.NEXT_PUBLIC_GOSERVER}/${link}`
         console.log('downloading: ', newLink);
         const res = await fetch(newLink, {
             headers: {
-                'Authorization': document.cookie.slice('auth_session='.length),
+                'Authorization': token,
             },
         });
         if (res.ok) {
@@ -32,10 +32,10 @@ export const getDownloadImage = async (link) => {
             const newUrl = URL.createObjectURL(image);
             return newUrl
         } else {
-            return null
+            return '/default_profile.jpg'
         }
     } catch (err) {
         console.error("fetching image: ", err);
-        return null
+        return '/default_profile.jpg'
     }
 };
