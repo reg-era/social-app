@@ -327,9 +327,9 @@
       grid-template-columns: 1fr;
     }
     
-    .chat-sidebar {
-      display: none;
-    }
+    /* .chat-sidebar { */
+      /* display: none; */
+    /* } */
     
     .chat-content {
       border-left: none;

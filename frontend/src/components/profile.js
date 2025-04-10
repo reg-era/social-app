@@ -262,7 +262,7 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
             if (res.ok) {
                 const data = await res.json();
                 data.forEach(async (user) => {
-                    const downloaded = await getDownloadImage(user.avatarUrl)
+                    const downloaded = await getDownloadImage(user.avatarUrl, token)
                     user.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
                 });
                 setUsers(data)

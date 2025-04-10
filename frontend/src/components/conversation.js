@@ -6,8 +6,11 @@ import { faSmile } from '@fortawesome/free-solid-svg-icons';
 import { useWebSocket } from '@/context/ws_context';
 import { useState, useEffect, useRef } from 'react';
 import { EMOJI_CATEGORIES } from '@/utils/emoji';
+import { useAuth } from '@/context/auth_context';
 
-const Conversation = ({ email, username }) => {
+const Conversation = ({ email, username, imageProfUrl }) => {
+    const { token, loading } = useAuth();
+
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
 
@@ -34,16 +37,18 @@ const Conversation = ({ email, username }) => {
     }
 
     const getMessages = async () => {
+        console.log('fetching for: ', email, page)
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=${email}&page=${page}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data.reverse());
-                setPage((prev) => prev + 1);
+                console.log(data)
+                // setPage((prev) => prev + 1);
                 setIsThrottling(false);
             }
         } catch (err) {
@@ -61,14 +66,13 @@ const Conversation = ({ email, username }) => {
             }
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=${email}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 method: 'POST',
                 body: JSON.stringify(msg)
             });
             if (res.ok) {
                 setNewMessage('');
-                setMessages((prevMsg) => [...prevMsg, msg]);
                 messageSectionRef.current.scrollTop = messageSectionRef.current.scrollHeight;
             }
         } catch (err) {
@@ -82,7 +86,7 @@ const Conversation = ({ email, username }) => {
         const scrollHeight = messageSectionRef.current.scrollHeight;
         const scrollPosition = messageSectionRef.current.scrollTop + messageSectionRef.current.clientHeight;
 
-        if (scrollPosition <= scrollHeight * 0.40) {
+        if (scrollPosition <= scrollHeight * 0.65) {
             console.log('Throttling scroll - loading older messages');
             setIsThrottling(true);
 
@@ -93,8 +97,8 @@ const Conversation = ({ email, username }) => {
     }
 
     useEffect(() => {
-        setMessages([])
-        getMessages()
+        setPage(0)
+        !loading && getMessages()
 
         const handleClickOutside = (event) => {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
@@ -115,13 +119,16 @@ const Conversation = ({ email, username }) => {
                 messageContainer.removeEventListener('scroll', handleScroll);
             }
         };
-    }, [email, username])
+    }, [email, loading])
 
     return (
         <div className="chat-content">
             <div className="chat-header">
                 <div className="chat-user-details">
-                    <div className="user-avatar"></div>
+                    <div className="user-avatar" style={{
+                        backgroundImage: `url(${imageProfUrl})`,
+                        backgroundSize: 'cover'
+                    }}></div>
                     <div className="chat-user-name">{username}</div>
                 </div>
                 <div className="chat-options"></div>

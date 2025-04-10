@@ -28,7 +28,7 @@ const Home = () => {
 
       if (res.ok) {
         const data = await res.json();
-        const downloaded = await getDownloadImage(data.avatarUrl)
+        const downloaded = await getDownloadImage(user.avatarUrl, token)
         data.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
         localStorage.setItem('user_info', JSON.stringify(data))
       }

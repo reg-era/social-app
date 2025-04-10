@@ -56,7 +56,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				WHERE (m.sender_id = $1 AND u2.email = $2 )
 				OR (u1.email = $2 AND m.receiver_id = $1 )
 				ORDER BY m.created_at DESC
-				LIMIT 20 OFFSET (20 * $3);`, userId, target, page)
+				LIMIT 5 OFFSET (5 * $3);`, userId, target, page)
 			if err != nil {
 				utils.RespondWithJSON(
 					w,

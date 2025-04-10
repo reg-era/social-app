@@ -36,21 +36,29 @@ func NewWebSocketHub() *NetworkHub {
 func (net *NetworkHub) RegisterUser(userId int, conn *websocket.Conn) {
 	net.Mutex.Lock()
 	defer net.Mutex.Unlock()
+	fmt.Println("adding: ", userId)
 
 	net.Network[userId] = append(net.Network[userId], conn)
+	fmt.Println("hub: ", len(net.Network), net.Network)
 }
 
 func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
 	net.Mutex.Lock()
 	defer net.Mutex.Unlock()
+	fmt.Println("deleting: ", userId)
 
 	conns := net.Network[userId]
-	for i, c := range conns {
-		if c == conn {
-			net.Network[userId] = slices.Delete(net.Network[userId], i, i+1)
-			break
+	if len(conns) == 1 {
+		delete(net.Network, userId)
+	} else {
+		for i, c := range conns {
+			if c == conn {
+				net.Network[userId] = slices.Delete(net.Network[userId], i, i+1)
+				break
+			}
 		}
 	}
+	fmt.Println("hub: ", len(net.Network), net.Network)
 }
 
 func (net *NetworkHub) RunHubListner() {
@@ -58,14 +66,19 @@ func (net *NetworkHub) RunHubListner() {
 		select {
 		case newMsg := <-net.Message:
 			net.Mutex.RLock()
-			if connections, ok := net.Network[newMsg.Receiver]; ok {
+			if connections, ok := net.Network[newMsg.Receiver]; ok { // range to send msj for all receivers
 				for _, window := range connections {
 					if err := window.WriteJSON(newMsg); err != nil {
 						fmt.Println("Error sending message:", err)
 					}
 				}
-			} else {
-				fmt.Println("Receiver user not found:", newMsg.Receiver)
+			}
+			if connections, ok := net.Network[newMsg.Sender]; ok { // range to send msj for all senders
+				for _, window := range connections {
+					if err := window.WriteJSON(newMsg); err != nil {
+						fmt.Println("Error sending message:", err)
+					}
+				}
 			}
 			net.Mutex.RUnlock()
 		case newNotif := <-net.Notification:
@@ -97,11 +110,7 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		utils.RespondWithJSON(
-			w,
-			http.StatusInternalServerError,
-			map[string]string{"error": "Status Internal Server Error"},
-		)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 		return
 	}
 	defer conn.Close()
@@ -113,13 +122,8 @@ func (api *API) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 		var upComingMsg WSMessage
 
 		if err := conn.ReadJSON(&upComingMsg); err != nil {
-			if websocket.IsCloseError(
-				err,
-				websocket.CloseGoingAway,
-				websocket.CloseNormalClosure,
-				websocket.CloseAbnormalClosure,
-			) {
-				fmt.Println("Connection closed by client:", err)
+			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseAbnormalClosure) {
+				// fmt.Println("Connection closed by client:", err)
 				break
 			}
 			fmt.Println("Error reading message:", err)
