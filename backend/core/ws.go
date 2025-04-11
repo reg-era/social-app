@@ -36,16 +36,16 @@ func NewWebSocketHub() *NetworkHub {
 func (net *NetworkHub) RegisterUser(userId int, conn *websocket.Conn) {
 	net.Mutex.Lock()
 	defer net.Mutex.Unlock()
-	fmt.Println("adding: ", userId)
+	// fmt.Println("adding: ", userId)
 
 	net.Network[userId] = append(net.Network[userId], conn)
-	fmt.Println("hub: ", len(net.Network), net.Network)
+	// fmt.Println("hub: ", len(net.Network), net.Network)
 }
 
 func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
 	net.Mutex.Lock()
 	defer net.Mutex.Unlock()
-	fmt.Println("deleting: ", userId)
+	// fmt.Println("deleting: ", userId)
 
 	conns := net.Network[userId]
 	if len(conns) == 1 {
@@ -58,7 +58,7 @@ func (net *NetworkHub) UnregisterUser(userId int, conn *websocket.Conn) {
 			}
 		}
 	}
-	fmt.Println("hub: ", len(net.Network), net.Network)
+	// fmt.Println("hub: ", len(net.Network), net.Network)
 }
 
 func (net *NetworkHub) RunHubListner() {

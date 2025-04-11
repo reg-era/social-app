@@ -58,11 +58,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				ORDER BY m.created_at DESC
 				LIMIT 5 OFFSET (5 * $3);`, userId, target, page)
 			if err != nil {
-				utils.RespondWithJSON(
-					w,
-					http.StatusInternalServerError,
-					map[string]string{"error": "Status Internal Server Error"},
-				)
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
 			}
 			defer data.Close()
@@ -71,11 +67,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				var msg Msg
 				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreateAt, &msg.EmailSender, &msg.EmailReceiver); err != nil {
 					fmt.Println(err)
-					utils.RespondWithJSON(
-						w,
-						http.StatusInternalServerError,
-						map[string]string{"faild": "Status Internal Server Error"},
-					)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
 				}
 				conversation = append(conversation, msg)
@@ -115,11 +107,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var msg Msg
 		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-			utils.RespondWithJSON(
-				w,
-				http.StatusInternalServerError,
-				map[string]string{"error": "status internal server error"},
-			)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
@@ -127,11 +115,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO messages (sender_id,receiver_id,content)
 		VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`, userId, msg.EmailReceiver, msg.Content)
 		if err != nil {
-			utils.RespondWithJSON(
-				w,
-				http.StatusInternalServerError,
-				map[string]string{"error": "status internal server error"},
-			)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
@@ -149,7 +133,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 
 		api.HUB.Message <- &brodMessage
 
-		utils.RespondWithJSON(w, http.StatusCreated, nil)
+		utils.RespondWithJSON(w, http.StatusCreated, brodMessage)
 	default:
 		utils.RespondWithJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Status Method Not Allowed"})
 	}
