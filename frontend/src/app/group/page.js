@@ -2,7 +2,7 @@
 
 import '@/style/home.css';
 import '@/style/group.css';
-
+import { useAuth } from '@/context/auth_context';  
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -10,26 +10,25 @@ import { faUsers, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Import existing components
 import Navigation from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
 
 const GroupsPage = () => {
-  // State variables
+  const { token, loading } = useAuth(); 
   const [groups, setGroups] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
-  const [newGroupType, setNewGroupType] = useState('public');
+  // const [newGroupType, setNewGroupType] = useState('public');
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteList, setInviteList] = useState([]);
+  // const [inviteList, setInviteList] = useState([]);
 
   // Fetch groups on mount
   const fetchGroups = async () => {
     try {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/all`, {
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,  
         },
         method: "GET"
       });
@@ -43,8 +42,15 @@ const GroupsPage = () => {
   };
 
   useEffect(() => {
-    fetchGroups();
-  }, []);
+    if (!loading) { 
+      fetchGroups();
+    }
+  }, [loading]); 
+
+  // Add loading display
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   // Create group handler
   const handleCreateGroup = async (e) => {
@@ -58,7 +64,7 @@ const GroupsPage = () => {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/create`, {
         method: 'POST',
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,  // Use token instead of cookie
         },
         body: formData
       });
@@ -66,27 +72,27 @@ const GroupsPage = () => {
       if (response.ok) {
         const result = await response.json();
 
-        for (const email of inviteList) {
-          const inviteFormData = new FormData();
-          inviteFormData.append('group_id', result.group_id);
-          inviteFormData.append('action', 'invite');
-          inviteFormData.append('user_id', email);
+        // for (const email of inviteList) {
+        //   const inviteFormData = new FormData();
+        //   inviteFormData.append('group_id', result.group_id);
+        //   inviteFormData.append('action', 'invite');
+        //   inviteFormData.append('user_id', email);
 
-          await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': document.cookie.slice('auth_session='.length),
-            },
-            body: inviteFormData
-          });
-        }
+        //   await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
+        //     method: 'PUT',
+        //     headers: {
+        //       'Authorization': document.cookie.slice('auth_session='.length),
+        //     },
+        //     body: inviteFormData
+        //   });
+        // }
 
         fetchGroups();
         setShowCreateModal(false);
         setNewGroupTitle('');
         setNewGroupDescription('');
-        setNewGroupType('public');
-        setInviteList([]);
+        // setNewGroupType('public');
+        // setInviteList([]);
       } else {
         console.error('Failed to create group');
       }
@@ -95,26 +101,26 @@ const GroupsPage = () => {
     }
   };
 
-  // Invitation management
-  const addInvite = (e) => {
-    e.preventDefault();
-    if (inviteEmail && !inviteList.includes(inviteEmail)) {
-      setInviteList([...inviteList, inviteEmail]);
-      setInviteEmail('');
-    }
-  };
+  // // Invitation management
+  // const addInvite = (e) => {
+  //   e.preventDefault();
+  //   if (inviteEmail && !inviteList.includes(inviteEmail)) {
+  //     setInviteList([...inviteList, inviteEmail]);
+  //     setInviteEmail('');
+  //   }
+  // };
 
-  const removeInvite = (email) => {
-    setInviteList(inviteList.filter(item => item !== email));
-  };
+  // const removeInvite = (email) => {
+  //   setInviteList(inviteList.filter(item => item !== email));
+  // };
 
   const handleJoinRequest = async (groupId) => {
     try {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`, {
         method: 'PUT',
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
-        },
+          'Authorization': token,
+      },
         body: new URLSearchParams({
           group_id: groupId,
           action: 'request',

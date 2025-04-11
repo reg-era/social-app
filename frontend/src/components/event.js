@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/auth_context";
 import EventResponseButtons from "./event_buttons";
 
 const EventCard = ({ event }) => {
+    const { token, loading } = useAuth();
     const [eventDetails, setEventDetails] = useState(null);
 
     useEffect(() => {
         const fetchEventDetails = async () => {
             try {
                 const res = await fetch(`http://127.0.0.1:8080/api/event/details?event_id=${event.id}`, {
-                    headers: { "Authorization": document.cookie.slice("auth_session=".length) },
+                    headers: { "Authorization": token },
                 });
 
                 if (res.ok) {
@@ -22,8 +24,10 @@ const EventCard = ({ event }) => {
             }
         };
 
-        fetchEventDetails();
-    }, [event.id]);
+        if (!loading && token) {
+            fetchEventDetails();
+        }
+    }, [event.id, token, loading]);
 
 
     const handleResponseChange = (newResponse) => {

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/auth_context";
 
 const CreateEventCard = ({ onCreateEvent, groupId }) => {
+    const { token } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [eventDate, setEventDate] = useState('');
@@ -17,7 +19,7 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": document.cookie.slice("auth_session=".length),
+                    "Authorization": token,
                 },
                 body: JSON.stringify({ title, description, event_date: eventDate, group_id: groupId }),
             });

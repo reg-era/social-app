@@ -16,9 +16,11 @@ import EventList from '@/components/event_list';
 import MembersList from '@/components/MembersList';
 
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/context/auth_context';
 import { useState, useEffect } from 'react';
 
 const GroupDetailPage = () => {
+    const { token, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState('discussion');
     const [groupData, setGroupData] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -33,12 +35,12 @@ const GroupDetailPage = () => {
     const params = useParams();
     const groupId = params.id;
 
-    const fetchGroupData = async () => {
+    const fetchGroupData = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/info?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 method: "GET"
             });
@@ -52,7 +54,7 @@ const GroupDetailPage = () => {
 
             const postsResponse = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/post?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 method: "GET"
             });
@@ -62,18 +64,18 @@ const GroupDetailPage = () => {
                 setPosts(Array.isArray(postsData) ? postsData : []);
             }
 
-            setIsLoading(false);
         } catch (error) {
             console.error('Error fetching group data:', error);
+        } finally {
             setIsLoading(false);
         }
-    };
+    }, [groupId, token]);
 
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/events?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (response.ok) {
@@ -83,22 +85,22 @@ const GroupDetailPage = () => {
         } catch (error) {
             console.error('Error fetching events:', error);
         }
-    };
+    }, [groupId, token]);
 
     useEffect(() => {
-        fetchGroupData();
-    }, [groupId]);
+        if (!authLoading && token) {
+            fetchGroupData();
+            fetchEvents();
+        }
+    }, [groupId, authLoading, token, fetchGroupData, fetchEvents]);
 
-    useEffect(() => {
-        fetchEvents();
-    }, [groupId]);
-
+  
     useEffect(() => {
         const fetchCurrentID = async () => {
             try {
                 const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user`, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 if (response.ok) {
@@ -110,8 +112,10 @@ const GroupDetailPage = () => {
             }
         };
 
-        fetchCurrentID();
-    }, []);
+        if (!authLoading && token) {
+            fetchCurrentID();
+        }
+    }, [authLoading, token]);
 
     const toggleAttending = (eventId) => {
         setAttendingStatus({
@@ -131,7 +135,7 @@ const GroupDetailPage = () => {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: formData
             });
@@ -155,7 +159,7 @@ const GroupDetailPage = () => {
         await fetchEvents();
     };
 
-    if (isLoading) {
+    if (authLoading || isLoading) {
         return <div className="loading">Loading group data...</div>;
     }
 

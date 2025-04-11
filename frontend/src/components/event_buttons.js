@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/auth_context";
 import { CheckIcon, CrossIcon } from "@/utils/icons";
 
 const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
+    const { token } = useAuth();
     const [response, setResponse] = useState(userResponse || "");
 
     const handleResponse = async (newResponse) => {
@@ -14,7 +16,7 @@ const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": document.cookie.slice("auth_session=".length),
+                    "Authorization": token,
                 },
                 body: JSON.stringify({ 
                     event_id: eventId, 
