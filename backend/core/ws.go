@@ -66,17 +66,29 @@ func (net *NetworkHub) RunHubListner() {
 		select {
 		case newMsg := <-net.Message:
 			net.Mutex.RLock()
-			if connections, ok := net.Network[newMsg.Receiver]; ok { // range to send msj for all receivers
-				for _, window := range connections {
-					if err := window.WriteJSON(newMsg); err != nil {
-						fmt.Println("Error sending message:", err)
+			if newMsg.Group_id != 0 && len(newMsg.Group_members) > 0 {
+				for _, member := range newMsg.Group_members {
+					if connections, ok := net.Network[member]; ok { // range to send msj for all group members also with users
+						for _, window := range connections {
+							if err := window.WriteJSON(newMsg); err != nil {
+								fmt.Println("Error sending message:", err)
+							}
+						}
 					}
 				}
-			}
-			if connections, ok := net.Network[newMsg.Sender]; ok { // range to send msj for all senders
-				for _, window := range connections {
-					if err := window.WriteJSON(newMsg); err != nil {
-						fmt.Println("Error sending message:", err)
+			} else {
+				if connections, ok := net.Network[newMsg.Receiver]; ok { // range to send msj for all receivers
+					for _, window := range connections {
+						if err := window.WriteJSON(newMsg); err != nil {
+							fmt.Println("Error sending message:", err)
+						}
+					}
+				}
+				if connections, ok := net.Network[newMsg.Sender]; ok { // range to send msj for all senders
+					for _, window := range connections {
+						if err := window.WriteJSON(newMsg); err != nil {
+							fmt.Println("Error sending message:", err)
+						}
 					}
 				}
 			}

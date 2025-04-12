@@ -11,11 +11,7 @@ const GroupChat = ({ groupId, userId }) => {
     const { websocket, connected } = useWebSocket();
 
     const [newChatMessage, setNewChatMessage] = useState('');
-    const [chatMessages, setChatMessages] = useState([
-        { id: 1, sender: 'David Kim', text: 'Hey everyone! Has anyone tried the new React 18 features?', time: '5:30 PM' },
-        { id: 2, sender: 'Sarah Chen', text: 'Yes, the new concurrent features are amazing!', time: '5:32 PM' },
-        { id: 3, sender: 'You', text: 'I\'m still getting used to the new suspense patterns', time: '5:35 PM' },
-    ]);
+    const [chatMessages, setChatMessages] = useState([]);
 
     const [isFinale, setFinal] = useState(false);
     const [page, setPage] = useState(0);
@@ -40,8 +36,8 @@ const GroupChat = ({ groupId, userId }) => {
 
         const handleMessage = (event) => {
             const data = JSON.parse(event.data);
-            if (data.email_sender === email || data.email_receiver === email) {
-                setChatMessages(prev => [...prev, data]);
+            if (data.group_id == groupId) {
+                setChatMessages((prevMsg) => [...prevMsg, data]);
 
                 setTimeout(() => {
                     requestAnimationFrame(() => {
@@ -89,7 +85,7 @@ const GroupChat = ({ groupId, userId }) => {
         try {
             const previousScrollHeight = messageSectionRef.current?.scrollHeight || 0;
 
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=${group_id}&page=${pageNum}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/chat?target=group_${group_id}&page=${pageNum}`, {
                 headers: { 'Authorization': token },
             });
 
@@ -136,7 +132,7 @@ const GroupChat = ({ groupId, userId }) => {
             if (newChatMessage.trim() === '') return;
             const msg = {
                 content: newChatMessage,
-                group_id: groupId,
+                group_id: Number.parseInt(groupId),
                 create_at: new Date().toISOString().replace('T', ' ').slice(0, 19)
             };
 
@@ -162,8 +158,8 @@ const GroupChat = ({ groupId, userId }) => {
             <div className={`group-chat-body`}>
                 <div ref={messageSectionRef} className="group-chat-messages">
                     {chatMessages.map((message, index) => (
-                        <div ref={index === 0 ? topMessageRef : null} key={index} className={`chat-message ${message.sender === 'You' ? 'sent' : 'received'}`}>
-                            <div className="message-sender">{message.sender}</div>
+                        <div ref={index === 0 ? topMessageRef : null} key={index} className={`chat-message ${message.sender === userId ? 'sent' : 'received'}`}>
+                            <div className="message-sender">{message.sender === userId ? 'You' : message.email_sender}</div>
                             <div className="message-content">
                                 <div className="message-text">{message.content}</div>
                                 <div className="message-time">{message.create_at}</div>
@@ -186,5 +182,6 @@ const GroupChat = ({ groupId, userId }) => {
         </>
     )
 }
+
 
 export default GroupChat;
