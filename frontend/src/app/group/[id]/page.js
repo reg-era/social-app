@@ -4,7 +4,7 @@ import '@/style/home.css';
 import '@/style/groupname.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faLock, faGlobe, faUserPlus, faCog, faCalendarPlus, faMapMarkerAlt, faClock, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faLock, faGlobe, faUserPlus, faCog, faCalendarPlus, faMapMarkerAlt, faClock, faTimes, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 import Navigation from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
@@ -14,6 +14,7 @@ import GroupInvitations from '@/components/group_invitations';
 import CreateEventCard from '@/components/create_event';
 import EventList from '@/components/event_list';
 import MembersList from '@/components/MembersList';
+import GroupChat from '@/components/group_chat';
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -32,6 +33,11 @@ const GroupDetailPage = () => {
 
     const params = useParams();
     const groupId = params.id;
+
+    const [chatOpen, setChatOpen] = useState(false);
+    const toggleChat = () => {
+        setChatOpen(!chatOpen);
+    };
 
     const fetchGroupData = async () => {
         try {
@@ -256,7 +262,7 @@ const GroupDetailPage = () => {
                         )}
 
                         {activeTab === 'members' && (
-                            <MembersList 
+                            <MembersList
                                 groupId={groupId}
                                 isGroupCreator={isGroupCreator}
                             />
@@ -297,6 +303,20 @@ const GroupDetailPage = () => {
                     </div>
                 </div>
             )}
+
+            <div className={`group-chat-popup ${chatOpen ? 'open' : ''}`}>
+                <div className="group-chat-header" onClick={toggleChat}>
+                    <div className="group-chat-title">
+                        <FontAwesomeIcon icon={faUsers} className="group-chat-icon" />
+                        <span>Group Chat</span>
+                        <span className="online-indicator">●</span>
+                    </div>
+                    <div className="group-chat-actions">
+                        <button className="chat-action-btn"><FontAwesomeIcon icon={chatOpen ? faChevronDown : faChevronUp} /></button>
+                    </div>
+                </div>
+                {chatOpen && <GroupChat groupId={groupId} userId={currentUserID} />}
+            </div>
         </div>
     );
 };
