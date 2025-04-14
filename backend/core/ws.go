@@ -94,7 +94,13 @@ func (net *NetworkHub) RunHubListner() {
 			}
 			net.Mutex.RUnlock()
 		case newNotif := <-net.Notification:
-			fmt.Println(newNotif)
+			if connections, ok := net.Network[newNotif.Receiver]; ok { // range to send msj for all senders
+				for _, window := range connections {
+					if err := window.WriteJSON(newNotif); err != nil {
+						fmt.Println("Error sending message:", err)
+					}
+				}
+			}
 		}
 	}
 }

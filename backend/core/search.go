@@ -18,7 +18,7 @@ func (a *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	nich := r.URL.Query().Get("nich")
 	if target != "" {
 		query := ""
-		values := []any{}
+		var values []any
 		if nich == "close" {
 			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
 			FROM users

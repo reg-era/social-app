@@ -5,17 +5,21 @@ import { BellIcon, CommentIcon, LogOutIcon } from '@/utils/icons';
 import Notif from './notification';
 import { handleLogout, getDownloadImage } from '@/utils/helper';
 import { useAuth } from '@/context/auth_context';
+import { useWebSocket } from '@/context/ws_context';
 
 const Navigation = () => {
     const { token, loading } = useAuth();
+    const { websocket, connected } = useWebSocket();
 
     const [notifications, setNotifications] = useState([]);
     const [show, setDisplay] = useState(false);
     const [result, setDisplayResult] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [keyWord, setKeyword] = useState('');
+    const [newNotif, setNewNotif] = useState(false);
     const typingTimeout = useRef(null);
     const searchRef = useRef(null);
+
 
     const handleSearch = async (e) => {
         setKeyword(e.target.value);
@@ -69,6 +73,7 @@ const Navigation = () => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {
             setDisplayResult(false);
         }
+        setNewNotif(false);
     };
 
     useEffect(() => {
@@ -77,6 +82,20 @@ const Navigation = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    useEffect(() => {
+        if (!websocket || !connected) return;
+
+        const handleNewNotif = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'follow_request') {
+                setNewNotif(true);
+            } 
+        };
+
+        websocket.addEventListener('message', handleNewNotif);
+        return () => websocket.removeEventListener('message', handleNewNotif);
+    }, [websocket, connected]);
 
     return (
         <nav className="main-nav">
@@ -98,13 +117,12 @@ const Navigation = () => {
             <div className="nav-icons">
                 <div className="nav-icon notification-icon" onClick={() => setDisplay(!show)}>
                     <BellIcon />
-                    {/* <span className="notification-count">{notifications.length || ''}</span> */}
+                    {newNotif && <span className="notification-count"></span>}
                 </div>
                 {show && <Notif notifications={notifications} setNotifications={setNotifications} />}
 
                 <Link href="/chat" className="nav-icon messages-icon">
                     <CommentIcon />
-                    {/* <span className="messages-count">5</span> */}
                 </Link>
 
                 <button className="nav-icon logout-btn" onClick={() => handleLogout()}>

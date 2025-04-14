@@ -1,6 +1,7 @@
 package core
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"sync"
@@ -60,7 +61,19 @@ func (api *API) AddNotification(notif *Note) error {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
 
-	_, err := api.Create(`
+	var exists int
+	query := `
+	SELECT 1 FROM notifications 
+	WHERE user_id = ? AND related_id = ? AND type = ? AND group_id = ? LIMIT 1`
+	err := api.Read(query, notif.Receiver, notif.Sender, notif.Type, notif.GroupID).Scan(&exists)
+	if err == nil {
+		return nil
+	} else if err != sql.ErrNoRows {
+		fmt.Println("error on checking notif existence: ", err)
+		return fmt.Errorf("operation failed")
+	}
+
+	_, err = api.Create(`
 	INSERT INTO notifications (user_id, related_id, type, content, group_id)
 	VALUES (?, ?, ?, ?, ?)`,
 		notif.Receiver, notif.Sender, notif.Type, notif.Content, notif.GroupID)
@@ -68,6 +81,9 @@ func (api *API) AddNotification(notif *Note) error {
 		fmt.Println("error on adding notif: ", err)
 		return fmt.Errorf("operation failed")
 	}
+
+	api.HUB.Notification <- notif
+
 	return nil
 }
 

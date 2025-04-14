@@ -14,7 +14,6 @@ const Notif = () => {
         });
         if (res.ok) {
             const data = await res.json();
-            console.log('notific', data)
             setNotif(() => data)
         } else {
             console.error('Failed to fetch posts');
@@ -27,30 +26,21 @@ const Notif = () => {
 
     const sendResponse = async (decision, actioner, notifID, notifType) => {
         try {
-            let endpoint = '';
-            let formData = new FormData();
+            let endpoint, body;
 
             if (notifType === 'group_invite') {
                 // Handle group invitations
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`;
-                formData.append('group_id', actioner);
-                console.log('groupppp id', actioner)
-                formData.append('action', `${decision}`);
+                body = new FormData();
+                body.append('group_id', actioner);
+                body.append('action', `${decision}`);
             } else {
                 // Handle follow requests
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`;
-                const body = JSON.stringify({
+                body = JSON.stringify({
                     noteId: notifID,
                     actioner: actioner,
                     action: decision
-                });
-                return await fetch(endpoint, {
-                    method: 'PUT',
-                    body: body,
-                    headers: {
-                        'Authorization': token,
-                        'Content-Type': 'application/json',
-                    },
                 });
             }
 
@@ -59,7 +49,7 @@ const Notif = () => {
                 headers: {
                     'Authorization': token,
                 },
-                body: formData
+                body: body,
             });
 
             if (!response.ok) {
@@ -68,12 +58,9 @@ const Notif = () => {
             }
 
             setNotif((allNote) => allNote.filter(notif => notif.Id !== notifID));
-
             getNotification();
-
         } catch (err) {
             console.error('Failed to make decision: ', err);
-            alert(err.message || 'Failed to process request');
         }
     }
 

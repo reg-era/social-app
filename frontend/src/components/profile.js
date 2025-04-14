@@ -29,9 +29,10 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
                 setUser(data)
             } else {
                 setActiveTab('none')
-                switch (res.status) {
-                    case 404: setError(404);
-                    case 401: setError(401);
+                if (res.status === 404) {
+                    setError(404)
+                } else if (res.status === 401) {
+                    setError(401)
                 }
             }
         } catch (error) {
@@ -92,7 +93,20 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         }
     };
 
-    if (error !== null && error === 404) {
+    if (user == {} || loading) {
+        return (
+            <div className="profile-header">
+                <div className="profile-cover-photo"></div>
+                <div className="profile-header-content">
+                    <div className="profile-info">
+                        <div className="profile-name-container"><h1>Loading</h1></div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (error === 404) {
         return (
             <div className="profile-header">
                 <div className="profile-cover-photo"></div>
@@ -105,7 +119,7 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         )
     }
 
-    if (error !== null && error === 401) {
+    if (error === 401) {
         return (
             <div className="private-profile-message">
                 <LockIcon size="3x" />
@@ -224,8 +238,12 @@ export const ProfilePost = ({ userEmail }) => {
         !loading && getUserPosts();
     }, [userEmail, loading]);
 
-    if (error !== null) {
-        return null
+    if (posts == [] || loading || error !== null) {
+        return (
+            <div className="profile-posts">
+                <h1>loading</h1>
+            </div>
+        )
     }
 
     return (
@@ -284,8 +302,12 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
         !loading && getUserFollowers();
     }, [userEmail, loading]);
 
-    if (error !== null) {
-        return null
+    if (users == [] || loading || error !== null) {
+        return (
+            <div className="profile-people-list">
+                <h1>loading</h1>
+            </div>
+        )
     }
 
     return (
