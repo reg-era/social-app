@@ -4,12 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"social/pkg/utils"
 )
-
-var dbMutex sync.Mutex
 
 type Note struct {
 	Id       int
@@ -57,53 +54,32 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
-func (api *API) AddNotification(notif *Note) error {
-	dbMutex.Lock()
-	defer dbMutex.Unlock()
-
+func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
 	var exists int
 	query := `
 	SELECT 1 FROM notifications 
 	WHERE user_id = ? AND related_id = ? AND type = ? AND group_id = ? LIMIT 1`
-	err := api.Read(query, notif.Receiver, notif.Sender, notif.Type, notif.GroupID).Scan(&exists)
+	err := tx.QueryRow(query, notif.Receiver, notif.Sender, notif.Type, notif.GroupID).Scan(&exists)
 	if err == nil {
 		return nil
 	} else if err != sql.ErrNoRows {
-		fmt.Println("error on checking notif existence: ", err)
+		fmt.Println("error on checking notif existence:", err)
 		return fmt.Errorf("operation failed")
 	}
 
-	_, err = api.Create(`
+	_, err = tx.Exec(`
 	INSERT INTO notifications (user_id, related_id, type, content, group_id)
 	VALUES (?, ?, ?, ?, ?)`,
 		notif.Receiver, notif.Sender, notif.Type, notif.Content, notif.GroupID)
 	if err != nil {
-		fmt.Println("error on adding notif: ", err)
+		fmt.Println("error on adding notif:", err)
 		return fmt.Errorf("operation failed")
 	}
-
-	api.HUB.Notification <- notif
-
 	return nil
 }
 
-func (api *API) SendGroupInviteNotification(inviterId int, invitedUserId int, groupId string, groupTitle string) error {
-	notification := &Note{
-		Type:     "group_invite",
-		Sender:   inviterId,
-		Receiver: invitedUserId,
-		Content:  fmt.Sprintf("You have been invited to join group '%s'", groupTitle),
-		GroupID:  groupId,
-	}
-	if err := api.AddNotification(notification); err != nil {
-		return fmt.Errorf("failed to send group invitation notification: %v", err)
-	}
-
-	return nil
-}
-
-func (a *API) sendEventNotifications(groupID string, eventTitle string, creatorId int) error {
-	rows, err := a.ReadAll(`
+func (a *API) sendEventNotifications(groupID string, eventTitle string, creatorId int, tx *sql.Tx) error {
+	rows, err := tx.Query(`
         SELECT user_id 
         FROM group_members 
         WHERE group_id = ? 
@@ -129,7 +105,7 @@ func (a *API) sendEventNotifications(groupID string, eventTitle string, creatorI
 			GroupID:  groupID,
 		}
 
-		if err := a.AddNotification(notification); err != nil {
+		if err := a.AddNotificationTx(notification, tx); err != nil {
 			fmt.Printf("failed to send notification to user %d: %v\n", memberId, err)
 		}
 	}

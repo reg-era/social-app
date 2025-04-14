@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"social/pkg/utils"
 	"strconv"
+
+	"social/pkg/utils"
 )
 
 type EventResponse struct {
@@ -50,8 +51,15 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx, err := a.DB.Begin()
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to start transaction"})
+		return
+	}
+	defer tx.Rollback()
+
 	var memberStatus string
-	err := a.Read(`SELECT status FROM group_members 
+	err = tx.QueryRow(`SELECT status FROM group_members 
 		WHERE group_id = ? AND user_id = ?`,
 		event.GroupID, userId).Scan(&memberStatus)
 	if err != nil || memberStatus != "accepted" {
@@ -60,24 +68,29 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventID, err := a.Create(
+	exec_res, err := tx.Exec(
 		`INSERT INTO events (title, description, event_date, group_id, creator_id)
 		VALUES (?, ?, ?, ?, ?)`,
 		event.Title, event.Description, event.EventDate, event.GroupID, userId,
 	)
 	if err != nil {
 		fmt.Println("Failed to create event:", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError,
-			map[string]string{"error": "Failed to create event"})
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create event"})
 		return
 	}
 
-	if err := a.sendEventNotifications(event.GroupID, event.Title, userId); err != nil {
+	lastID, err := exec_res.LastInsertId()
+	if err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "getting data"})
+		return
+	}
+
+	if err := a.sendEventNotifications(event.GroupID, event.Title, userId, tx); err != nil {
 		fmt.Println("Warning: Failed to send some notifications:", err)
 	}
 
 	fmt.Println("event created")
-	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(eventID), Response: "Event created successfully"})
+	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(lastID), Response: "Event created successfully"})
 }
 
 func (a *API) HandleGetEvents(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +143,6 @@ func (a *API) HandleGetEventDetails(w http.ResponseWriter, r *http.Request) {
 		&eventDetails.ID, &eventDetails.GroupID, &eventDetails.Title,
 		&eventDetails.Description, &eventDetails.CreatorID,
 		&eventDetails.EventDate, &eventDetails.CreatedAt)
-
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
@@ -208,7 +220,6 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 		VALUES (?, ?, ?)
 		ON CONFLICT(event_id, user_id) DO UPDATE SET response = ?`,
 		request.EventID, userID, request.Response, request.Response)
-
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to save response"})
@@ -218,4 +229,3 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK,
 		map[string]string{"message": "Response saved successfully"})
 }
-

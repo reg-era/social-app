@@ -23,23 +23,26 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		tx, err := a.DB.Begin()
+		if err != nil {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to start transaction"})
+			return
+		}
+		defer tx.Rollback()
+
 		exists := false
-		err := a.Read(`SELECT EXISTS(
+		err = tx.QueryRow(`SELECT EXISTS(
 			SELECT 1 FROM follows
 			WHERE follower_id =? AND following_id = (SELECT id FROM users WHERE email = ?) )`,
 			userId, userAction.Email).Scan(&exists)
 		if err != nil {
 			fmt.Println(err)
-			utils.RespondWithJSON(
-				w,
-				http.StatusInternalServerError,
-				map[string]string{"error": "status internal server error"},
-			)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
 		if exists {
-			_, err = a.Create(`DELETE FROM follows
+			_, err = tx.Exec(`DELETE FROM follows
 			WHERE follower_id =? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email)
 			if err != nil {
 				fmt.Println(err)
@@ -51,7 +54,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		public := false
-		err = a.Read(`SELECT is_public FROM users WHERE id = (SELECT id FROM users WHERE email = ?)`, userAction.Email).
+		err = tx.QueryRow(`SELECT is_public FROM users WHERE id = (SELECT id FROM users WHERE email = ?)`, userAction.Email).
 			Scan(&public)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
@@ -59,75 +62,63 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if public {
-			_, err = a.Create(
+			_, err = tx.Exec(
 				"INSERT INTO follows (follower_id, following_id) VALUES ( ? , (SELECT id FROM users WHERE email = ?) )",
 				userId,
 				userAction.Email,
 			)
 			if err != nil {
 				fmt.Println(err)
-				utils.RespondWithJSON(
-					w,
-					http.StatusInternalServerError,
-					map[string]string{"error": "internal server error"},
-				)
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 				return
 			}
 
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "followed"})
 		} else {
 			var requested int
-			err := a.Read(`SELECT COUNT(*) FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email).Scan(&requested)
+			err := tx.QueryRow(`SELECT COUNT(*) FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email).Scan(&requested)
 			if err != nil {
 				fmt.Println(err)
-				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "Could not check follow request",
-				})
+				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not check follow request"})
 				return
 			}
 
 			if requested > 0 {
-				_, err = a.Create(`DELETE FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email)
+				_, err = tx.Exec(`DELETE FROM follow_requests WHERE follower_id = ? AND following_id = (SELECT id FROM users WHERE email = ?)`, userId, userAction.Email)
 				if err != nil {
 					fmt.Println(err)
-					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-						"error": "Could not remove follow request",
-					})
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not remove follow request"})
 					return
 				}
 
 				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "unfollowed"})
 				return
 			} else {
-				id, err := a.Create(`INSERT INTO follow_requests (follower_id, following_id)
+				id, err := tx.Exec(`INSERT INTO follow_requests (follower_id, following_id)
 				VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
 				if err != nil {
 					fmt.Println(err)
-					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-						"error": "Could not follow user",
-					})
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not follow user"})
 					return
 				}
 
 				var receiver int
 				var actionerEmail string
-				if err := a.Read(`SELECT following_id, u.email FROM follow_requests f
+				if err := tx.QueryRow(`SELECT following_id, u.email FROM follow_requests f
 				JOIN users u ON f.follower_id = u.id WHERE f.id = ? ;`, id).Scan(&receiver, &actionerEmail); err != nil {
 					fmt.Println(err)
-					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{
-						"error": "Could not follow user",
-					})
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not follow user"})
 					return
 				}
 
 				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "pending"})
 
-				a.AddNotification(&Note{
+				a.AddNotificationTx(&Note{
 					Type:     "follow_request",
 					Sender:   userId,
 					Receiver: receiver,
 					Content:  fmt.Sprintf("%s Want to follow you", actionerEmail),
-				})
+				}, tx)
 			}
 		}
 
