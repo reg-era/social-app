@@ -89,6 +89,11 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Warning: Failed to send some notifications:", err)
 	}
 
+	if err := tx.Commit(); err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to commit transaction"})
+		return
+	}
+
 	fmt.Println("event created")
 	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(lastID), Response: "Event created successfully"})
 }
