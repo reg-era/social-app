@@ -55,26 +55,25 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
-	var exists int
-	query := `
-	SELECT 1 FROM notifications 
-	WHERE user_id = ? AND related_id = ? AND type = ? AND group_id = ? LIMIT 1`
-	err := tx.QueryRow(query, notif.Receiver, notif.Sender, notif.Type, notif.GroupID).Scan(&exists)
-	if err == nil {
-		return nil
-	} else if err != sql.ErrNoRows {
-		fmt.Println("error on checking notif existence:", err)
+	fmt.Printf("Attempting to add notification: %+v\n", notif)
+
+
+	result, err := tx.Exec(`
+	INSERT INTO notifications (user_id, related_id, type, content, group_id)
+	VALUES (?, ?, ?, ?, ?)`,
+		notif.Receiver, // user_id
+		notif.Sender,   // related_id
+		notif.Type,     // type
+		notif.Content,  // content
+		notif.GroupID)  // group_id
+
+	if err != nil {
+		fmt.Printf("Error inserting notification: %v\n", err)
 		return fmt.Errorf("operation failed")
 	}
 
-	_, err = tx.Exec(`
-	INSERT INTO notifications (user_id, related_id, type, content, group_id)
-	VALUES (?, ?, ?, ?, ?)`,
-		notif.Receiver, notif.Sender, notif.Type, notif.Content, notif.GroupID)
-	if err != nil {
-		fmt.Println("error on adding notif:", err)
-		return fmt.Errorf("operation failed")
-	}
+	id, _ := result.LastInsertId()
+	fmt.Printf("Successfully inserted notification with ID: %d\n", id)
 	return nil
 }
 
@@ -97,16 +96,17 @@ func (a *API) sendEventNotifications(groupID string, eventTitle string, creatorI
 			continue
 		}
 
-		notification := &Note{
-			Type:     "event_created",
-			Sender:   creatorId,
+		notif := &Note{
 			Receiver: memberId,
+			Sender:   creatorId,
+			Type:     "event_created",
 			Content:  fmt.Sprintf("A new event '%s' has been created", eventTitle),
 			GroupID:  groupID,
 		}
 
-		if err := a.AddNotificationTx(notification, tx); err != nil {
-			fmt.Printf("failed to send notification to user %d: %v\n", memberId, err)
+		if err := a.AddNotificationTx(notif, tx); err != nil {
+			fmt.Printf("Failed to create notification for user %d: %v\n", memberId, err)
+			return err
 		}
 	}
 
