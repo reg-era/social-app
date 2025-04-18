@@ -8,14 +8,17 @@ const Sidebar = () => {
     // Fetch groups on mount
     const fetchGroups = async () => {
         try {
-            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
+            const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/all`, {
                 headers: {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
                 method: "GET"
             });
             const data = await response.json();
-            setGroups(Array.isArray(data) ? data : []);
+            const acceptedGroups = Array.isArray(data) 
+                ? data.filter(group => group.status === 'accepted')
+                : [];
+            setGroups(acceptedGroups);
         } catch (error) {
             console.error('Error fetching groups:', error);
             setGroups([]);

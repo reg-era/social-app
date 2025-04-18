@@ -217,7 +217,6 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 		return
 	}
 
-	fmt.Println("group id when invitation sent", groupId)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation sent"})
 }
 
@@ -304,17 +303,13 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 		return
 	}
 
-	fmt.Println("invitation status and type:", status, invitationType, groupId, userId, action)
-
 	if status != "pending" {
-		fmt.Println("invitation not pending:", status, invitationType)
 		utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
 		return
 	}
 
 	switch invitationType {
 	case "invite":
-		fmt.Println("this is an invite inside accept reject")
 		tarUserID, _ := strconv.Atoi(targetUserID)
 		if userId != tarUserID {
 			fmt.Printf("unauthorized response attempt: user %d != target %d\n", userId, tarUserID)
@@ -356,6 +351,5 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 		return
 	}
 
-	fmt.Println("invitteeeeeeed")
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation " + newStatus})
 }

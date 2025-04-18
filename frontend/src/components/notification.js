@@ -29,13 +29,11 @@ const Notif = () => {
             let endpoint, body;
 
             if (notifType === 'group_invite') {
-                // Handle group invitations
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`;
                 body = new FormData();
                 body.append('group_id', actioner);
                 body.append('action', `${decision}`);
             } else {
-                // Handle follow requests
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`;
                 body = JSON.stringify({
                     noteId: notifID,
@@ -57,6 +55,17 @@ const Notif = () => {
                 throw new Error(errorData.error || 'Failed to process request');
             }
 
+            await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/consumed`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    notification_id: notifID
+                })
+            });
+            console.log('Notification consumed successfully id :', notifID);
             setNotif((allNote) => allNote.filter(notif => notif.Id !== notifID));
             getNotification();
         } catch (err) {
