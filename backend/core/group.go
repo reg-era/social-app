@@ -124,8 +124,6 @@ func (a *API) HandlePutGroup(w http.ResponseWriter, r *http.Request) {
 	case "accept", "reject":
 		fmt.Println("accept/reject admin")
 		a.HandleAcceptRejectAction(w, r, userId)
-	case "accept/invite", "reject/invite":
-		fmt.Println("accept/invite or reject/invite")
 	default:
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid action"})
 	}
@@ -133,6 +131,7 @@ func (a *API) HandlePutGroup(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId int) {
 	groupId := r.PostFormValue("group_id")
+	fmt.Println("0")
 	targetUserEmail := r.PostFormValue("user_id")
 
 	tx, err := a.DB.Begin()
@@ -217,13 +216,12 @@ func (a *API) HandleInviteAction(w http.ResponseWriter, r *http.Request, userId 
 		return
 	}
 
-	fmt.Println("group id when invitation sent", groupId)
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation sent"})
 }
 
 func (a *API) HandleRequestAction(w http.ResponseWriter, r *http.Request, userId int) {
 	groupId := r.PostFormValue("group_id")
-
+	fmt.Println("1")
 	tx, err := a.DB.Begin()
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to start transaction"})
@@ -248,7 +246,6 @@ func (a *API) HandleRequestAction(w http.ResponseWriter, r *http.Request, userId
 				groupId,
 				userId,
 			); err != nil {
-				fmt.Println("exec :", err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 				return
 			}
@@ -268,6 +265,39 @@ func (a *API) HandleRequestAction(w http.ResponseWriter, r *http.Request, userId
 		return
 	}
 
+	// Get user's email for notification content
+	var userEmail string
+	err = tx.QueryRow(`SELECT email FROM users WHERE id = ?`, userId).Scan(&userEmail)
+	if err != nil {
+		fmt.Println("failed to get user email:", err)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Database error"})
+		return
+	}
+
+	// Get group creator ID and group title
+	var creatorId int
+	var groupTitle string
+	err = tx.QueryRow(`SELECT creator_id, title FROM groups WHERE id = ?`, groupId).Scan(&creatorId, &groupTitle)
+	if err != nil {
+		fmt.Println("failed to get group details:", err)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Database error"})
+		return
+	}
+
+	// Create notification for group creator
+	notification := &Note{
+		Type:     "group_request",
+		Sender:   userId,
+		Receiver: creatorId,
+		Content:  fmt.Sprintf("%s wants to join your group '%s'", userEmail, groupTitle),
+		GroupID:  groupId,
+	}
+
+	if err := a.AddNotificationTx(notification, tx); err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to send notification"})
+		return
+	}
+
 	if err := tx.Commit(); err != nil {
 		fmt.Println("transaction commit failed:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Transaction failed"})
@@ -281,6 +311,13 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 	groupId := r.PostFormValue("group_id")
 	targetUserID := r.PostFormValue("user_id")
 	action := r.PostFormValue("action")
+
+	if action == "approve" {
+		action = "accept"
+	} else if action == "deny" {
+		action = "reject"
+	}
+
 	if targetUserID == "" {
 		targetUserID = strconv.Itoa(userId)
 	}
@@ -298,40 +335,29 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 		`SELECT invitation_type, status FROM group_members WHERE group_id = ? AND user_id = ?`,
 		groupId, targetUserID,
 	).Scan(&invitationType, &status)
-	if err != nil {
-		fmt.Println("no invitation found:", err)
-		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No invitation found"})
+	fmt.Println("these are the group id and user id ", groupId, userId)
+	if err != nil || status != "pending" {
+		fmt.Println("failed to find pending request:", err)
+		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "No pending request found"})
 		return
 	}
 
-	fmt.Println("invitation status and type:", status, invitationType, groupId, userId, action)
-
-	if status != "pending" {
-		fmt.Println("invitation not pending:", status, invitationType)
-		utils.RespondWithJSON(w, http.StatusConflict, map[string]string{"error": "Invitation not pending"})
-		return
-	}
-
-	switch invitationType {
-	case "invite":
-		fmt.Println("this is an invite inside accept reject")
-		tarUserID, _ := strconv.Atoi(targetUserID)
-		if userId != tarUserID {
-			fmt.Printf("unauthorized response attempt: user %d != target %d\n", userId, tarUserID)
-			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not authorized to respond"})
-			return
-		}
-	case "request":
+	// Check authorization
+	if invitationType == "request" {
 		var creatorId int
 		err := tx.QueryRow(`SELECT creator_id FROM groups WHERE id = ?`, groupId).Scan(&creatorId)
 		if err != nil || creatorId != userId {
-			fmt.Println("unauthorized request response:", err)
-			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not group creator"})
+			fmt.Println("unauthorized request handling:", err)
+			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Only group creator can handle join requests"})
 			return
 		}
-	default:
-		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid invitation type"})
-		return
+	} else if invitationType == "invite" {
+		targetIDInt, _ := strconv.Atoi(targetUserID)
+		if userId != targetIDInt {
+			fmt.Println("unauthorized invite handling:", err)
+			utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not authorized to respond"})
+			return
+		}
 	}
 
 	newStatus := "accepted"
@@ -339,23 +365,35 @@ func (a *API) HandleAcceptRejectAction(w http.ResponseWriter, r *http.Request, u
 		newStatus = "declined"
 	}
 
+	// Update status
 	_, err = tx.Exec(
 		`UPDATE group_members SET status = ? WHERE group_id = ? AND user_id = ?`,
 		newStatus, groupId, targetUserID,
 	)
 	if err != nil {
-		fmt.Println("status update failed:", err)
+		fmt.Println("failed to update status:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to update status"})
 		return
 	}
 
-	// Commit changes
+	// Delete related notification
+	_, err = tx.Exec(
+		`DELETE FROM notifications 
+        WHERE (type = 'group_invite' OR type = 'group_request')
+        AND group_id = ? AND (user_id = ? OR related_id = ?)`,
+		groupId, targetUserID, targetUserID,
+	)
+	if err != nil {
+		fmt.Println("failed to delete notification:", err)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to cleanup notification"})
+		return
+	}
+
 	if err := tx.Commit(); err != nil {
 		fmt.Println("transaction commit failed:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Transaction failed"})
 		return
 	}
 
-	fmt.Println("invitteeeeeeed")
-	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"success": "Invitation " + newStatus})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Request processed successfully"})
 }

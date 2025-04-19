@@ -28,14 +28,16 @@ const Notif = () => {
         try {
             let endpoint, body;
 
-            if (notifType === 'group_invite') {
-                // Handle group invitations
+            if (notifType === 'group_invite' || notifType === 'group_request') {
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`;
                 body = new FormData();
                 body.append('group_id', actioner);
-                body.append('action', `${decision}`);
+                body.append('action', decision);
+                if (notifType === 'group_request') {
+                    const requestingUser = notifications.find(n => n.Id === notifID)?.sender;
+                    body.append('user_id', requestingUser);
+                }
             } else {
-                // Handle follow requests
                 endpoint = `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`;
                 body = JSON.stringify({
                     noteId: notifID,
@@ -57,6 +59,17 @@ const Notif = () => {
                 throw new Error(errorData.error || 'Failed to process request');
             }
 
+            await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/consumed`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    notification_id: notifID
+                })
+            });
+            console.log('Notification consumed successfully id :', notifID);
             setNotif((allNote) => allNote.filter(notif => notif.Id !== notifID));
             getNotification();
         } catch (err) {
@@ -76,27 +89,14 @@ const Notif = () => {
                     notifications.map((notif, index) => (
                         <div className="notification" key={index}>
                             <p>{notif.content}</p>
-                            {notif.type !== 'event_created' && (
+                            {(notif.type === 'group_invite' || notif.type === 'group_request') && (
                                 <div className="user-action">
-                                    {notif.type === 'group_invite' ? (
-                                        <>
-                                            <button onClick={() => sendResponse('accept', notif.group_id, notif.Id, notif.type)}>
-                                                Accept
-                                            </button>
-                                            <button onClick={() => sendResponse('reject', notif.group_id, notif.Id, notif.type)}>
-                                                Decline
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button onClick={() => sendResponse('accept', notif.sender, notif.Id, notif.type)}>
-                                                Yes
-                                            </button>
-                                            <button onClick={() => sendResponse('decline', notif.sender, notif.Id, notif.type)}>
-                                                No
-                                            </button>
-                                        </>
-                                    )}
+                                    <button onClick={() => sendResponse('accept', notif.group_id, notif.Id, notif.type)}>
+                                        Accept
+                                    </button>
+                                    <button onClick={() => sendResponse('reject', notif.group_id, notif.Id, notif.type)}>
+                                        Decline
+                                    </button>
                                 </div>
                             )}
                         </div>

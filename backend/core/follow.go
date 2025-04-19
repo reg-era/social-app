@@ -10,7 +10,6 @@ import (
 
 func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value("userID").(int)
-
 	var userAction User
 	switch r.Method {
 	case http.MethodPost:
@@ -72,7 +71,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 				return
 			}
-
+			fmt.Println("Followed user successfully")
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "followed"})
 		} else {
 			var requested int
@@ -94,7 +93,7 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "unfollowed"})
 				return
 			} else {
-				id, err := tx.Exec(`INSERT INTO follow_requests (follower_id, following_id)
+				result, err := tx.Exec(`INSERT INTO follow_requests (follower_id, following_id)
 				VALUES( ? , (SELECT id FROM users WHERE email = ?) )`, userId, userAction.Email)
 				if err != nil {
 					fmt.Println(err)
@@ -102,23 +101,44 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
+				requestId, err := result.LastInsertId()
+				if err != nil {
+					fmt.Println(err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not get request ID"})
+					return
+				}
+
 				var receiver int
 				var actionerEmail string
 				if err := tx.QueryRow(`SELECT following_id, u.email FROM follow_requests f
-				JOIN users u ON f.follower_id = u.id WHERE f.id = ? ;`, id).Scan(&receiver, &actionerEmail); err != nil {
+				JOIN users u ON f.follower_id = u.id WHERE f.id = ?`, requestId).Scan(&receiver, &actionerEmail); err != nil {
 					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not follow user"})
 					return
 				}
 
-				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "pending"})
-
-				a.AddNotificationTx(&Note{
+				// Add notification before committing transaction
+				err = a.AddNotificationTx(&Note{
 					Type:     "follow_request",
 					Sender:   userId,
 					Receiver: receiver,
 					Content:  fmt.Sprintf("%s Want to follow you", actionerEmail),
 				}, tx)
+
+				if err != nil {
+					fmt.Println("Failed to add notification:", err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not create notification"})
+					return
+				}
+
+				// Commit the transaction
+				if err = tx.Commit(); err != nil {
+					fmt.Println("Failed to commit transaction:", err)
+					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not complete follow request"})
+					return
+				}
+
+				utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "pending"})
 			}
 		}
 

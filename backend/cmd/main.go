@@ -74,6 +74,7 @@ func main() {
 	router.Handle("/api/event/respond", mw.AuthMiddleware(http.HandlerFunc(api.HandleRespondToEvent)))
 
 	router.Handle("GET /api/notif", mw.AuthMiddleware(http.HandlerFunc(api.HandleNotif)))
+	router.Handle("PUT /api/consumed", mw.AuthMiddleware(http.HandlerFunc(api.Consumed)))
 	router.Handle("POST /api/change-vis", mw.AuthMiddleware(http.HandlerFunc(api.HandleVisibilityChange)))
 
 	go api.HUB.RunHubListner()
