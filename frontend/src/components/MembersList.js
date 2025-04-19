@@ -46,7 +46,9 @@ const MembersList = ({ groupId, isGroupCreator }) => {
                         <div className="member-card" key={member.userId}>
                             <div className="member-card-avatar"></div>
                             <div className="member-card-name">{member.userName}</div>
-                            <div className="member-card-role">{member.status}</div>
+                            <div className="member-card-role">
+                                {member.status === "accepted" ? "Member" : "Pending"}
+                            </div>
                         </div>
                     ))
                 ) : (

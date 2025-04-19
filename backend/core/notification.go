@@ -25,13 +25,17 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := api.ReadAll(`
-		SELECT id, related_id, type, content, 
+		SELECT n.id, n.related_id, n.type, n.content, 
 		CASE 
-			WHEN type LIKE 'group_%' THEN group_id 
+			WHEN n.type LIKE 'group_%' THEN n.group_id 
 			ELSE '' 
 		END as group_id 
-		FROM notifications 
-		WHERE user_id = ?`, userId)
+		FROM notifications n
+		LEFT JOIN groups g ON n.group_id = g.id
+		WHERE n.user_id = ? AND (
+			n.type != 'group_request' OR 
+			(n.type = 'group_request' AND g.creator_id = ?)
+		)`, userId, userId)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Status Internal Server Error"})
@@ -56,7 +60,6 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
 	fmt.Printf("Attempting to add notification: %+v\n", notif)
-
 
 	result, err := tx.Exec(`
 	INSERT INTO notifications (user_id, related_id, type, content, group_id)
