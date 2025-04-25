@@ -28,7 +28,7 @@ export default function Login() {
 
       if (res.ok) {
         const auth = res.headers.get('Authorization');
-        document.cookie = `auth_session=${auth}; path=/;`;
+        document.cookie = `auth_session=${auth}; path=/; max-age=315360000;`;
         window.location.href = '/';
       } else {
         throw new Error('faild to singin');

@@ -42,15 +42,17 @@ const MembersList = ({ groupId, isGroupCreator }) => {
             </div>
             <div className="members-grid">
                 {members.length > 0 ? (
-                    members.map(member => (
-                        <div className="member-card" key={member.userId}>
-                            <div className="member-card-avatar"></div>
-                            <div className="member-card-name">{member.userName}</div>
-                            <div className="member-card-role">
-                                {member.status === "accepted" ? "Member" : "Pending"}
-                            </div>
-                        </div>
-                    ))
+                    members.map(member => {
+                        if (member.status === "accepted") {
+                            return (
+                                <div className="member-card" key={member.userId}>
+                                    <div className="member-card-avatar"></div>
+                                    <div className="member-card-name">{member.userName}</div>
+                                    <div className="member-card-role">Member</div>
+                                </div>
+                            )
+                        }
+                    })
                 ) : (
                     <div className="no-members">
                         <p>No members in this group yet.</p>

@@ -211,7 +211,7 @@ const GroupDetailPage = () => {
                                 className={`nav-tab ${activeTab === 'discussion' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('discussion')}
                             >
-                                Discussion
+                                Posts
                             </button>
                             <button
                                 className={`nav-tab ${activeTab === 'members' ? 'active' : ''}`}
