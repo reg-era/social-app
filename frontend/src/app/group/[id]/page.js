@@ -17,7 +17,8 @@ import MembersList from '@/components/MembersList';
 import GroupChat from '@/components/group_chat';
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { searchUsers } from '@/utils/api';
 
 const GroupDetailPage = () => {
     const [activeTab, setActiveTab] = useState('discussion');
@@ -30,6 +31,9 @@ const GroupDetailPage = () => {
     const [inviteEmail, setInviteEmail] = useState('');
     const [pendingInvitations, setPendingInvitations] = useState([]);
     const [currentUserID, setCurrentUserID] = useState('');
+    const [inviteSearchResults, setInviteSearchResults] = useState([]);
+    const [showInviteSearchResults, setShowInviteSearchResults] = useState(false);
+    const inviteSearchTimeout = useRef(null);
 
     const params = useParams();
     const groupId = params.id;
@@ -159,6 +163,17 @@ const GroupDetailPage = () => {
 
     const handleCreateEvent = async () => {
         await fetchEvents();
+    };
+
+    const handleInviteSearch = async (e) => {
+        const query = e.target.value;
+        setInviteEmail(query);
+        if (inviteSearchTimeout.current) {
+            clearTimeout(inviteSearchTimeout.current);
+        }
+        inviteSearchTimeout.current = setTimeout(() => {
+            searchUsers(query, document.cookie.slice('auth_session='.length), setInviteSearchResults, setShowInviteSearchResults);
+        }, 300);
     };
 
     if (isLoading) {
@@ -295,9 +310,23 @@ const GroupDetailPage = () => {
                                 type="email"
                                 placeholder="Enter email address"
                                 value={inviteEmail}
-                                onChange={(e) => setInviteEmail(e.target.value)}
+                                onChange={handleInviteSearch}
                                 required
                             />
+                            {showInviteSearchResults && (
+                                <div className="invite-search-dropdown">
+                                    {inviteSearchResults.length > 0 ? (
+                                        inviteSearchResults.map((user, index) => (
+                                            <div key={index} className="invite-search-item" onClick={() => setInviteEmail(user.email)}>
+                                                <p>{user.email}</p>
+                                                <span>{user.firstName} {user.lastName}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="no-results">No results found</p>
+                                    )}
+                                </div>
+                            )}
                             <button type="submit" className="submit-btn">Send Invite</button>
                         </form>
                     </div>

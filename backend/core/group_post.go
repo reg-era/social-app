@@ -43,9 +43,8 @@ func (a *API) HandleGroupPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
 		if imagePath != "" {
-			imagePath = path.Join("api/group/", imagePath)
+			imagePath = path.Join("api/global/", imagePath) // Ensure correct path
 		}
 
 		postId, err := a.Create(`INSERT INTO group_posts (group_id, user_id, content, image_url, visibility) VALUES (?, ?, ?, ?, ?)`, groupId, userId, content, imagePath, visibility)
@@ -56,11 +55,11 @@ func (a *API) HandleGroupPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resPost := a.Read(`
-		SELECT users.firstname, users.lastname, users.email, users.avatarUrl, group_posts.id, group_posts.content, group_posts.image_url, group_posts.created_at 
-		FROM group_posts 
-		JOIN users ON group_posts.user_id = users.id 
-		WHERE group_posts.id = ?
-		`, postId)
+SELECT users.firstname, users.lastname, users.email, users.avatarUrl, group_posts.id, group_posts.content, group_posts.image_url, group_posts.created_at 
+FROM group_posts 
+JOIN users ON group_posts.user_id = users.id 
+WHERE group_posts.id = ?
+`, postId)
 
 		var post GroupPost
 		if err := resPost.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {

@@ -134,13 +134,13 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 		var query string
 		var args any
 		if targetEmail != "" {
-			query = `SELECT users.firstname, users.lastname,users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
+			query = `SELECT users.firstname, users.lastname, users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
 			JOIN users ON posts.user_id = users.id 
 			WHERE users.email = ? 
 			ORDER BY posts.created_at DESC `
 			args = targetEmail
 		} else {
-			query = `SELECT users.firstname, users.lastname,users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
+			query = `SELECT users.firstname, users.lastname, users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
 			JOIN users ON posts.user_id = users.id 
 			WHERE users.id = ? 
 			ORDER BY posts.created_at DESC `
