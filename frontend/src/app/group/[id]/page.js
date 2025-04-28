@@ -30,6 +30,7 @@ const GroupDetailPage = () => {
     const [inviteEmail, setInviteEmail] = useState('');
     const [pendingInvitations, setPendingInvitations] = useState([]);
     const [currentUserID, setCurrentUserID] = useState('');
+    const [error, setError] = useState(null);
 
     const params = useParams();
     const groupId = params.id;
@@ -48,6 +49,10 @@ const GroupDetailPage = () => {
                 },
                 method: "GET"
             });
+            if (response.status === 400 || response.status === 403) {
+                setError(response.status)
+                throw new Error('Failed to fetch group data');
+            }
 
             if (!response.ok) {
                 throw new Error('Failed to fetch group data');
@@ -164,14 +169,35 @@ const GroupDetailPage = () => {
     if (isLoading) {
         return <div className="loading">Loading group data...</div>;
     }
-
+    if (error === 400 || error === 403) {
+        return (
+            <div>
+                <Navigation />
+                <div className="main-container">
+                    <Sidebar />
+                    <div className="content-area">
+                        <div className="error-container">
+                            <h2>Group Not Available</h2>
+                            <p>
+                                {error === 400
+                                    ? "This group doesn't exist or has been removed."
+                                    : "You don't have permission to view this group."}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     return (
         <div>
             <Navigation />
             <div className="main-container">
                 <Sidebar />
 
-                <div className="content-area">
+                <div className="content-area">{
+
+                }
                     <div className="group-detail-container">
                         {/* Group Header */}
                         <div>
