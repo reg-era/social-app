@@ -86,7 +86,9 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.sendEventNotifications(event.GroupID, event.Title, userId, tx); err != nil {
-		fmt.Println("Warning: Failed to send some notifications:", err)
+		fmt.Println("Warning: Failed to send notifications:", err)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create notifications"})
+		return
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -94,7 +96,7 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("event created")
+	fmt.Println("event and notifications created")
 	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(lastID), Response: "Event created successfully"})
 }
 
