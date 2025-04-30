@@ -3,11 +3,13 @@ import { useState, useRef, useEffect, } from 'react';
 
 import { BellIcon, CommentIcon, LogOutIcon } from '@/utils/icons';
 import Notif from './notification';
-import { handleLogout, getDownloadImage } from '@/utils/helper';
+import { getDownloadImage } from '@/utils/helper';
 import { useAuth } from '@/context/auth_context';
 import { useWebSocket } from '@/context/ws_context';
+import { useRouter } from 'next/router';
 
 const Navigation = () => {
+    const router = useRouter();
     const { token, loading } = useAuth();
     const { websocket, connected } = useWebSocket();
 
@@ -49,6 +51,27 @@ const Navigation = () => {
         }, 300);
     };
 
+    const handleLogout = async (e) => {
+        try {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/logout`, {
+                headers: {
+                    'Authorization': document.cookie.slice('auth_session='.length),
+                },
+            });
+            if (res.ok) {
+                console.log("logout");
+
+                document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                if (connected && websocket) {
+                    websocket.close()
+                }
+                router.push('/login');
+
+            }
+        } catch (err) {
+            console.error("Error: ", err);
+        }
+    }
     const getNotifications = async () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
@@ -90,7 +113,7 @@ const Navigation = () => {
             const data = JSON.parse(event.data);
             if (data.type === 'follow_request') {
                 setNewNotif(true);
-            } 
+            }
         };
 
         websocket.addEventListener('message', handleNewNotif);
