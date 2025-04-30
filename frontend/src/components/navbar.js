@@ -6,7 +6,7 @@ import Notif from './notification';
 import { getDownloadImage } from '@/utils/helper';
 import { useAuth } from '@/context/auth_context';
 import { useWebSocket } from '@/context/ws_context';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 const Navigation = () => {
     const router = useRouter();
@@ -59,12 +59,11 @@ const Navigation = () => {
                 },
             });
             if (res.ok) {
-                console.log("logout");
-
                 document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 if (connected && websocket) {
                     websocket.close()
                 }
+                
                 router.push('/login');
 
             }
