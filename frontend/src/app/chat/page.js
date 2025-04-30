@@ -37,7 +37,7 @@ const ChatPage = () => {
         }
     }
 
-
+console.log("users: ", users);
     useEffect(() => {
         !loading && getConversations()
     }, [loading])

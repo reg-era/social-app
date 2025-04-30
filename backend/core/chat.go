@@ -117,7 +117,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			UNION
 			SELECT id, nickname, firstname, lastname, email, avatarUrl 
 			FROM users 
-			WHERE is_public = 1 AND id != $1;`, userId)
+			WHERE is_public = true AND id NOT IN (
+				SELECT follower_id FROM follows WHERE following_id = $1
+				UNION
+				SELECT following_id FROM follows WHERE follower_id = $1
+			) AND id != $1;`, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
 				return
@@ -132,7 +136,7 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				}
 				contact = append(contact, user)
 			}
-
+			fmt.Print(contact)
 			utils.RespondWithJSON(w, http.StatusOK, contact)
 		}
 	case http.MethodPost:
