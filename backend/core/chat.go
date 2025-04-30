@@ -103,15 +103,9 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		} else {
 			contact := []User{}
 			data, err := api.ReadAll(`
-			SELECT DISTINCT
-			follower_id , u.nickname, u.firstname, u.lastname, u.email, u.avatarUrl FROM follows
-			JOIN users u on u.id = follower_id
-			WHERE following_id = $1 AND follower_id != $1
-			UNION
-			SELECT DISTINCT
-			following_id , u.nickname, u.firstname, u.lastname, u.email, u.avatarUrl FROM follows
-			JOIN users u on u.id = following_id
-			WHERE follower_id = $1 AND following_id != $1
+			SELECT id, nickname, firstname, lastname, email, avatarUrl 
+			FROM users 
+			WHERE is_public = 1 AND id != $1
 			`, userId)
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Status Internal Server Error"})
