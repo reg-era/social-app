@@ -859,6 +859,21 @@ textarea {
     background: var(--primary-hover);
 }
 
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    margin: 2rem auto;
+     max-width: 600px;
+    text-align: center;
+}
+
+.error-container h2 {
+    margin-bottom: 1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .group-chat-popup {

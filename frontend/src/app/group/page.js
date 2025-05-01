@@ -33,7 +33,8 @@ const GroupsPage = () => {
         },
         method: "GET"
       });
-      const data = await response.json();
+      
+       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
       console.log(data)
     } catch (error) {
