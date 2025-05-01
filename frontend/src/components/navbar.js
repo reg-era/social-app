@@ -89,7 +89,8 @@ const Navigation = () => {
                     <div className="search-dropdown">
                         {searchResults.length > 0 ? (
                             searchResults.map((user, index) => (
-                                <ResultCard key={index} token={token} email={user.email} firstName={user.firstName} lastName={user.lastName} avatar={user.avatarUrl} />
+                                <ResultCard key={index} token={token} email={user.email} firstName={user.firstName} lastName={user.lastName} avatar={user.avatarUrl} 
+                                />
                             ))
                         ) : (
                             <p className="no-results">No results found</p>
@@ -126,7 +127,7 @@ const ResultCard = ({ token, email, firstName, lastName, nickname, avatar }) => 
         }
         getImage()
     }, [])
-
+    console.log("this is the user that is being searched", email, firstName, lastName, nickname, avatar)
     return (
         <Link href={`/profile/${email}`} className="search-item">
             <img src={image} alt={firstName} className="search-avatar" />
