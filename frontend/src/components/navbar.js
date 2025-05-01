@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useState, useRef, useEffect, } from 'react';
+import { useState, useRef, useEffect, useCallback} from 'react';
 
 import { BellIcon, CommentIcon, LogOutIcon } from '@/utils/icons';
 import Notif from './notification';
@@ -32,7 +32,7 @@ const Navigation = () => {
         }, 300);
     };
 
-    const getNotifications = async () => {
+    const getNotifications = useCallback(async () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
                 headers: {
@@ -46,11 +46,13 @@ const Navigation = () => {
         } catch (err) {
             console.error("Error fetching notifications:", err);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
-        !loading && getNotifications();
-    }, [loading]);
+        if (!loading) {
+            getNotifications();
+        }
+    }, [loading, getNotifications]);
 
     const handleClickOutside = (event) => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {

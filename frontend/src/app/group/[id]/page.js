@@ -17,7 +17,7 @@ import MembersList from '@/components/MembersList';
 import GroupChat from '@/components/group_chat';
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { searchUsers } from '@/utils/api';
 
 const GroupDetailPage = () => {
@@ -44,7 +44,7 @@ const GroupDetailPage = () => {
         setChatOpen(!chatOpen);
     };
 
-    const fetchGroupData = async () => {
+    const fetchGroupData = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/info?group_id=${groupId}`, {
@@ -82,9 +82,9 @@ const GroupDetailPage = () => {
             console.error('Error fetching group data:', error);
             setIsLoading(false);
         }
-    };
+    }, [groupId]);
 
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/events?group_id=${groupId}`, {
                 headers: {
@@ -98,15 +98,15 @@ const GroupDetailPage = () => {
         } catch (error) {
             console.error('Error fetching events:', error);
         }
-    };
+    }, [groupId]);
 
     useEffect(() => {
         fetchGroupData();
-    }, [groupId]);
+    }, [groupId, fetchGroupData]);
 
     useEffect(() => {
         fetchEvents();
-    }, [groupId]);
+    }, [groupId, fetchEvents]);
 
     useEffect(() => {
         const fetchCurrentID = async () => {
