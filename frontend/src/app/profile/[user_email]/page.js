@@ -20,6 +20,9 @@ const ForeingProfile = ({ params }) => {
         }
     }, [params]);
 
+    if (!userEmail) {
+        return <div>Loading...</div>;
+    }
     return (
         <div>
             <Navigation />
