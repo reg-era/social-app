@@ -10,6 +10,7 @@ import { getDownloadImage } from "@/utils/helper.js";
 
 export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     const { token, loading } = useAuth();
+    console.log("email", userEmail);
 
     const [isOwnProfile, setIsOwner] = useState(false)
     const [user, setUser] = useState({})
@@ -25,6 +26,8 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 
             if (res.ok) {
                 const data = await res.json();
+                // console.log(data);
+
                 data.avatarUrl = await getDownloadImage(data.avatarUrl, token)
                 setUser(data)
             } else {
@@ -44,8 +47,10 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
         if (typeof window !== undefined) {
             setIsOwner(window.location.pathname === '/profile');
         }
+        console.log("test", userEmail, loading);
+
         !loading && getUserInfo();
-    }, [userEmail, loading]);
+    }, []);
 
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
     const togglePrivacy = async () => {
@@ -231,12 +236,12 @@ export const ProfilePost = ({ userEmail }) => {
         }
     };
 
-    useEffect(() => {
-        if (typeof window !== undefined) {
-            setIsOwner(window.location.pathname === '/profile');
-        }
-        !loading && getUserPosts();
-    }, [userEmail, loading]);
+    // useEffect(() => {
+    //     if (typeof window !== undefined) {
+    //         setIsOwner(window.location.pathname === '/profile');
+    //     }
+    //     !loading && getUserPosts();
+    // }, [userEmail, loading]);
 
     if (posts == [] || loading || error !== null) {
         return (
@@ -295,12 +300,12 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
         }
     };
 
-    useEffect(() => {
-        if (typeof window !== undefined) {
-            setIsOwner(window.location.pathname === '/profile');
-        }
-        !loading && getUserFollowers();
-    }, [userEmail, loading]);
+    // useEffect(() => {
+    //     if (typeof window !== undefined) {
+    //         setIsOwner(window.location.pathname === '/profile');
+    //     }
+    //     !loading && getUserFollowers();
+    // }, [userEmail, loading]);
 
     if (users == [] || loading || error !== null) {
         return (
