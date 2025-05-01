@@ -22,6 +22,7 @@ type Event struct {
 	CreatorID   int    `json:"creator_id"`
 	EventDate   string `json:"event_date"`
 	CreatedAt   string `json:"created_at"`
+	IsPassed    bool   `json:"is_passed"`
 }
 
 type EventDetails struct {
@@ -35,6 +36,7 @@ type EventDetails struct {
 	GoingCount    int    `json:"going_count"`
 	NotGoingCount int    `json:"not_going_count"`
 	UserResponse  string `json:"user_response"`
+	IsPassed      bool   `json:"is_passed"`
 }
 
 func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +111,8 @@ func (a *API) HandleGetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := a.ReadAll(`
-		SELECT id, group_id, title, description, creator_id, event_date, created_at 
+		SELECT id, group_id, title, description, creator_id, event_date, created_at,
+		CASE WHEN event_date < datetime('now') THEN 1 ELSE 0 END AS is_passed
 		FROM events 
 		WHERE group_id = ?`, groupID)
 	if err != nil {
@@ -121,11 +124,13 @@ func (a *API) HandleGetEvents(w http.ResponseWriter, r *http.Request) {
 	var events []Event
 	for rows.Next() {
 		var event Event
+		var isPassed int
 		if err := rows.Scan(&event.ID, &event.GroupID, &event.Title, &event.Description,
-			&event.CreatorID, &event.EventDate, &event.CreatedAt); err != nil {
+			&event.CreatorID, &event.EventDate, &event.CreatedAt, &isPassed); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to scan event"})
 			return
 		}
+		event.IsPassed = isPassed == 1
 		events = append(events, event)
 	}
 
@@ -144,12 +149,13 @@ func (a *API) HandleGetEventDetails(w http.ResponseWriter, r *http.Request) {
 
 	var eventDetails EventDetails
 	err = a.Read(`
-		SELECT id, group_id, title, description, creator_id, event_date, created_at
+		SELECT id, group_id, title, description, creator_id, event_date, created_at,
+		CASE WHEN event_date < datetime('now') THEN 1 ELSE 0 END AS is_passed
 		FROM events
 		WHERE id = ?`, eventID).Scan(
 		&eventDetails.ID, &eventDetails.GroupID, &eventDetails.Title,
 		&eventDetails.Description, &eventDetails.CreatorID,
-		&eventDetails.EventDate, &eventDetails.CreatedAt)
+		&eventDetails.EventDate, &eventDetails.CreatedAt, &eventDetails.IsPassed)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
@@ -219,6 +225,13 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil || memberStatus != "accepted" {
 		utils.RespondWithJSON(w, http.StatusForbidden,
 			map[string]string{"error": "Not a group member"})
+		return
+	}
+
+	var isPassed bool
+	err = a.Read(`SELECT event_date < datetime('now') FROM events WHERE id = ?`, request.EventID).Scan(&isPassed)
+	if err != nil || isPassed {
+		utils.RespondWithJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot respond to a passed event"})
 		return
 	}
 

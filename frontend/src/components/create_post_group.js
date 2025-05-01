@@ -11,13 +11,15 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
+    const [imagePreview, setImagePreview] = useState(''); // Add state for image preview
+    const [fileName, setFileName] = useState(''); // Add state for file name
 
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef(null);
 
     const importFile = (e) => {
-        e.preventDefault()
-        document.getElementById('fileInputPost').click()
+        e.preventDefault();
+        document.getElementById('fileInputPost').click();
     };
 
     const toggleEmojiPicker = () => {
@@ -32,14 +34,18 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     const handlePost = async (e) => {
         e.preventDefault();
         try {
-            const post = e.target.post.value
-            if (post.length <= 0) {
-                return
+            const form = new FormData();
+            form.append("post", newPost);
+            form.append("group_id", groupId);
+
+            if (e.target.fileInputPost.files[0]) {
+                const file = e.target.fileInputPost.files[0];
+                form.append("image", file);
+
+                // Generate a preview URL for the image
+                const previewUrl = URL.createObjectURL(file);
+                setImagePreview(previewUrl);
             }
-            const form = new FormData()
-            form.append("post", post)
-            form.append('image', e.target.fileInputPost.files[0])
-            form.append("group_id", groupId)
 
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/post`, {
                 method: 'POST',
@@ -47,21 +53,32 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                     'Authorization': document.cookie.slice('auth_session='.length),
                 },
                 body: form,
-            })
+            });
 
             if (res.ok) {
-                const data = await res.json()
+                const data = await res.json();
                 onCreatePost(data);
                 setNewPost('');
-                setFile('')
+                setFile('');
+                setImagePreview(''); // Clear the image preview after successful post
+                setFileName(''); // Clear the file name after successful post
+                e.target.fileInputPost.value = ''; // Clear the file input
             } else {
                 throw new Error('Failed to create group post');
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
             setError('Failed to submit the Post. Please try again.');
         }
     }
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFileName(file.name); // Set the file name
+            setFile(URL.createObjectURL(file)); // Update file state
+        }
+    };
 
     return (
         <form className="create-post-card" onSubmit={handlePost}>
@@ -72,11 +89,22 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                             <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="Write something to the group..." />
                         </div>
 
-                        <input id="fileInputPost" type="file" value={file} onChange={(e) => setFile(e.target.value)} style={{ display: 'none' }} />
+                        <input
+                            id="fileInputPost"
+                            type="file"
+                            style={{ display: 'none' }}
+                            onChange={handleFileChange} // Use the new handler
+                        />
                         <button className="photo-action" onClick={importFile}>
                             <span>Photo</span>
                         </button>
 
+                        {imagePreview && (
+                            <div className="image-preview">
+                                <img src={imagePreview} alt="Preview" />
+                            </div>
+                        )}
+                        {/* Add image preview */}
                         <button type="button" className="emoji-action" onClick={toggleEmojiPicker}>
                             <FontAwesomeIcon icon={faSmile} />
                             <span>Emoji</span>
@@ -103,6 +131,11 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                     <button type="submit" className="submit-button">Post</button>
                 </div>
             </div>
+            {fileName && (
+                <div className="file-name-indicator">
+                    <span>Selected file: {fileName}</span>
+                </div>
+            )}
         </form>
     );
 };

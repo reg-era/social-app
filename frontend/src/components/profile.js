@@ -211,9 +211,9 @@ export const ProfilePost = ({ userEmail }) => {
 
     const getUserPosts = async () => {
         try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=post${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=post${userEmail ? `&user=${userEmail}` : ''}`, {
                 headers: {
-                    'Authorization': token,
+                    Authorization: token,
                 },
             });
 
@@ -222,12 +222,18 @@ export const ProfilePost = ({ userEmail }) => {
                 setPosts(data);
             } else {
                 switch (res.status) {
-                    case 401: setError(401);
-                    case 404: setError(404);
+                    case 401:
+                        setError(401);
+                        break;
+                    case 404:
+                        setError(404);
+                        break;
+                    default:
+                        setError(500);
                 }
             }
         } catch (error) {
-            setError(500)
+            setError(500);
         }
     };
 
@@ -326,4 +332,4 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
             ))}
         </div>
     )
-} 
+}

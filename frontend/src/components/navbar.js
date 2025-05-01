@@ -6,6 +6,7 @@ import Notif from './notification';
 import { handleLogout, getDownloadImage } from '@/utils/helper';
 import { useAuth } from '@/context/auth_context';
 import { useWebSocket } from '@/context/ws_context';
+import { searchUsers } from '@/utils/api';
 
 const Navigation = () => {
     const { token, loading } = useAuth();
@@ -26,26 +27,8 @@ const Navigation = () => {
         if (typingTimeout.current) {
             clearTimeout(typingTimeout.current);
         }
-        typingTimeout.current = setTimeout(async () => {
-            if (!e.target.value.trim()) {
-                setSearchResults([]);
-                setDisplayResult(false);
-                return;
-            }
-            try {
-                const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=${e.target.value}`, {
-                    headers: {
-                        'Authorization': token,
-                    },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setSearchResults(data);
-                    setDisplayResult(true);
-                }
-            } catch (err) {
-                console.error("Error: ", err);
-            }
+        typingTimeout.current = setTimeout(() => {
+            searchUsers(e.target.value, token, setSearchResults, setDisplayResult);
         }, 300);
     };
 

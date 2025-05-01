@@ -25,9 +25,9 @@ const EventCard = ({ event }) => {
         fetchEventDetails();
     }, [event.id]);
 
-
     const handleResponseChange = (newResponse) => {
-        if (eventDetails) {
+        console.log("is passed", eventDetails.is_passed)
+        if (eventDetails && !eventDetails.is_passed) {
             let newDetails = { ...eventDetails };
             
             if (eventDetails.user_response === "going") {
@@ -55,9 +55,19 @@ const EventCard = ({ event }) => {
             <p><strong>Created By:</strong> {event.creator_id}</p>
             {eventDetails && (
                 <>
-                    <p><strong>Going:</strong> {eventDetails.going_count}</p>
-                    <p><strong>Not Going:</strong> {eventDetails.not_going_count}</p>
-                    <EventResponseButtons eventId={event.id} userResponse={eventDetails.user_response} onResponseChange={handleResponseChange} />
+                    {eventDetails.is_passed ? (
+                        <p className="event-status">This event has passed.</p>
+                    ) : (
+                        <>
+                            <p><strong>Going:</strong> {eventDetails.going_count}</p>
+                            <p><strong>Not Going:</strong> {eventDetails.not_going_count}</p>
+                            <EventResponseButtons
+                                eventId={event.id}
+                                userResponse={eventDetails.user_response}
+                                onResponseChange={handleResponseChange}
+                            />
+                        </>
+                    )}
                 </>
             )}
         </div>

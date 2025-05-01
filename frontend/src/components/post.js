@@ -1,4 +1,3 @@
-
 "use client"
 
 import CreateCommentCard from "./comment.js";
@@ -29,9 +28,13 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
     };
 
     useEffect(() => {
-        imagePostUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imagePostUrl}`, true);
-        imageProfileUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
-    }, []);
+        if (imagePostUrl !== '') {
+            getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imagePostUrl}`, true); // Correct URL for group posts
+        }
+        if (imageProfileUrl !== '') {
+            getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imageProfileUrl}`, false);
+        }
+    }, [imagePostUrl, imageProfileUrl]); // Add dependencies
 
     return (
         <div className="post-card">
