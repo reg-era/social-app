@@ -54,6 +54,7 @@ const Navigation = () => {
             console.error("Error: ", err);
         }
     }
+
     const getNotifications = async () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/notif`, {
@@ -68,7 +69,7 @@ const Navigation = () => {
         } catch (err) {
             console.error("Error fetching notifications:", err);
         }
-    }, [token]);
+    };
 
     useEffect(() => {
         if (!loading) {
