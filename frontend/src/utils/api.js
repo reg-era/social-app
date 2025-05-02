@@ -1,4 +1,6 @@
 export const searchUsers = async (query, token, setResults, setDisplayResult) => {
+    console.log(query, token, setResults, setDisplayResult);
+    
     if (!query.trim()) {
         setResults([]);
         setDisplayResult(false);

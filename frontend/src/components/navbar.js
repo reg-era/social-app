@@ -75,7 +75,8 @@ const Navigation = () => {
         if (!loading) {
             getNotifications();
         }
-    }, [loading, getNotifications]);
+        //here i made a change in dependency array
+    }, [loading]);
 
     const handleClickOutside = (event) => {
         if (searchRef.current && !searchRef.current.contains(event.target)) {

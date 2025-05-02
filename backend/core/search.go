@@ -16,6 +16,8 @@ func (a *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 
 	target := r.URL.Query().Get("target")
 	nich := r.URL.Query().Get("nich")
+	fmt.Println("target: ", target)
+	fmt.Println("nich: ", nich)
 	if target != "" {
 		query := ""
 		var values []any
@@ -26,9 +28,10 @@ func (a *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 			WHERE following_id =$1 ;`
 			values = []any{userId}
 		} else {
-			query = `SELECT  email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
-			FROM users WHERE firstname LIKE $1 OR lastname LIKE $1 OR email LIKE $1 ;`
-			values = []any{target + "%"}
+			query = `SELECT email, firstname, lastname, birthdate, avatarUrl, nickname, about, is_public
+					FROM users
+					WHERE (firstname LIKE $1 OR lastname LIKE $1 OR email LIKE $1) AND id != $2;`
+			values = []any{target + "%", userId}
 		}
 
 		data, err := a.ReadAll(query, values...)
