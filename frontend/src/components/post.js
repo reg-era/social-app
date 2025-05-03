@@ -4,8 +4,11 @@ import CreateCommentCard from "./comment.js";
 import CreateCommentCardGroup from "./create_comment_card_group.js";
 import { useEffect, useState } from "react";
 import { CommentIcon } from '@/utils/icons.js';
+import { useAuth } from "@/context/auth_context.js";
 
 const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl, groupId, isGroupPost }) => {
+    const { token, loading } = useAuth();
+    
     const [showComments, setShowComments] = useState(false);
     const [newImageURL, setImageURL] = useState('');
     const [profileImage, setProfileImage] = useState('/default_profile.jpg');
@@ -15,7 +18,7 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
             if (link !== '') {
                 const res = await fetch(link, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 const image = await res.blob();

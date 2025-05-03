@@ -38,7 +38,7 @@ const Navigation = () => {
         try {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/logout`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (res.ok) {

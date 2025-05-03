@@ -6,8 +6,12 @@ import { faSmile } from '@fortawesome/free-solid-svg-icons';
 
 import { EMOJI_CATEGORIES } from "@/utils/emoji";
 import { useState, useRef } from "react";
+import { useAuth } from '@/context/auth_context';
 
 const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
+    const { token, loading } = useAuth();
+
+
     const [newPost, setNewPost] = useState('');
     const [error, setError] = useState('');
     const [file, setFile] = useState('')
@@ -50,7 +54,7 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/post`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: form,
             });

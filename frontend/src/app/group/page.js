@@ -13,8 +13,11 @@ import Link from 'next/link';
 // Import existing components
 import Navigation from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
+import { useAuth } from '@/context/auth_context';
 
 const GroupsPage = () => {
+  const { token, loading } = useAuth();
+
   // State variables
   const [groups, setGroups] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,7 +33,7 @@ const GroupsPage = () => {
     try {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/all`, {
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,
         },
         method: "GET"
       });
@@ -60,7 +63,7 @@ const GroupsPage = () => {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/create`, {
         method: 'POST',
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,
         },
         body: formData
       });
@@ -77,7 +80,7 @@ const GroupsPage = () => {
           await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group`, {
             method: 'PUT',
             headers: {
-              'Authorization': document.cookie.slice('auth_session='.length),
+              'Authorization': token,
             },
             body: inviteFormData
           });
@@ -116,7 +119,7 @@ const GroupsPage = () => {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`, {
         method: 'PUT',
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,
         },
         body: new URLSearchParams({
           group_id: groupId,
@@ -139,7 +142,7 @@ const GroupsPage = () => {
     <div>
       <Navigation />
       <div className="main-container">
-        <Sidebar />
+        <Sidebar ishome={false} />
 
         {/* Groups Content */}
         <div className="content-area">

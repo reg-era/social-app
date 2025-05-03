@@ -1,12 +1,16 @@
+import { useAuth } from '@/context/auth_context';
 import React, { useState, useEffect } from 'react';
 
 const CreateCommentCardGroup = ({ postId, groupID }) => {
+    const { token, loading } = useAuth();
+
+
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
 
     const getComments = async () => {
         try {
-            const authToken = document.cookie.slice('auth_session='.length);
+            const authToken = token;
             if (!authToken) {
                 console.error("Authorization token not found");
                 return;
@@ -44,7 +48,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: formData
             });

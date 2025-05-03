@@ -4,8 +4,11 @@ import { faImage, faSmile } from '@fortawesome/free-solid-svg-icons';
 import { EMOJI_CATEGORIES } from "@/utils/emoji";
 
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/auth_context';
 
 const CreateCommentCard = ({ postId }) => {
+    const { token, loading } = useAuth();
+
     const [page, setPage] = useState(0);
     const [comments, setComments] = useState(new Map());
     const [NewComment, setNewComment] = useState('');
@@ -32,7 +35,7 @@ const CreateCommentCard = ({ postId }) => {
 
     const getComments = async () => {
         try {
-            const authToken = document.cookie.slice('auth_session='.length);
+            const authToken = token;
             if (!authToken) {
                 console.error("Authorization token not found");
                 return;
@@ -85,7 +88,7 @@ const CreateCommentCard = ({ postId }) => {
             const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/comment`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: form,
             })
@@ -168,12 +171,15 @@ const CommentCard = ({ userName, content, imageUrl }) => {
     const [newImageURL, setImageURL] = useState('');
     const [profileImage, setProfileImage] = useState('/default_profile.jpg');
 
+    const { token, loading } = useAuth();
+
+
     const getDownloadImage = async (link, iscomment) => {
         try {
             if (link !== '') {
                 const res = await fetch(link, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 const image = await res.blob();

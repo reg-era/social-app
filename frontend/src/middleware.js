@@ -7,16 +7,18 @@ export async function middleware(req) {
     const path = req.nextUrl.pathname
 
     const isDynamicRoute = /^(\/profile|\/group)\/[^/]+$/.test(path);
-    const isKnownRoute =
-        path.startsWith('/_next') || // Static assets (e.g., JS bundles)
-        path.startsWith('/api') || // API routes
-        path === '/404' ||// 404 page
-        publicRoutes.includes(path) ||
-        privateRoutes.includes(path) ||
-        isDynamicRoute;
-    if (!isKnownRoute) {
-        return NextResponse.redirect(new URL('/404', req.nextUrl));
-    }
+    // const isKnownRoute =
+    // path.startsWith('/_next') || // Static assets (e.g., JS bundles)
+    // path.startsWith('/api') || // API routes
+    // path === '/404' ||// 404 page
+    // publicRoutes.includes(path) ||
+    // privateRoutes.includes(path) ||
+    // isDynamicRoute;
+    // 
+    // if (!isKnownRoute) {
+    // return NextResponse.rewrite(new URL('/not-found', request.url));
+    // }
+
     const authorized = await checkAuthentication(req.cookies.get('auth_session')?.value)
     // Redirect unknown paths to 404 page
 

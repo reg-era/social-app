@@ -22,7 +22,7 @@ const Home = () => {
     try {
       const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user`, {
         headers: {
-          'Authorization': document.cookie.slice('auth_session='.length),
+          'Authorization': token,
         },
       });
 
@@ -91,7 +91,7 @@ const Home = () => {
     <div>
       <Navigation />
       <div className="main-container">
-        <Sidebar />
+        <Sidebar ishome={true} />
         <div className="content-area">
           <CreatePostCard onCreatePost={(data) => {
             const newMap = new Map()

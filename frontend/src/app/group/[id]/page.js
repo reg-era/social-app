@@ -19,17 +19,18 @@ import GroupChat from '@/components/group_chat';
 import { useParams } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { searchUsers } from '@/utils/api';
+import { useAuth } from '@/context/auth_context';
 
 const GroupDetailPage = () => {
+    const { token, loading } = useAuth();
+
     const [activeTab, setActiveTab] = useState('discussion');
     const [groupData, setGroupData] = useState(null);
     const [posts, setPosts] = useState([]);
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [attendingStatus, setAttendingStatus] = useState({});
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    const [pendingInvitations, setPendingInvitations] = useState([]);
     const [currentUserID, setCurrentUserID] = useState('');
     const [inviteSearchResults, setInviteSearchResults] = useState([]);
     const [showInviteSearchResults, setShowInviteSearchResults] = useState(false);
@@ -44,12 +45,12 @@ const GroupDetailPage = () => {
         setChatOpen(!chatOpen);
     };
 
-    const fetchGroupData = useCallback(async () => {
+    const fetchGroupData = async () => {
         try {
             setIsLoading(true);
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/info?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 method: "GET"
             });
@@ -59,7 +60,9 @@ const GroupDetailPage = () => {
             }
 
             if (!response.ok) {
+                console.log(response.status);
                 throw new Error('Failed to fetch group data');
+
             }
 
             const data = await response.json();
@@ -67,7 +70,7 @@ const GroupDetailPage = () => {
 
             const postsResponse = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/post?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 method: "GET"
             });
@@ -82,13 +85,13 @@ const GroupDetailPage = () => {
             console.error('Error fetching group data:', error);
             setIsLoading(false);
         }
-    }, [groupId]);
+    }
 
-    const fetchEvents = useCallback(async () => {
+    const fetchEvents = async () => {
         try {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/events?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (response.ok) {
@@ -98,22 +101,14 @@ const GroupDetailPage = () => {
         } catch (error) {
             console.error('Error fetching events:', error);
         }
-    }, [groupId]);
-
-    useEffect(() => {
-        fetchGroupData();
-    }, [groupId, fetchGroupData]);
-
-    useEffect(() => {
-        fetchEvents();
-    }, [groupId, fetchEvents]);
+    }
 
     useEffect(() => {
         const fetchCurrentID = async () => {
             try {
                 const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user`, {
                     headers: {
-                        'Authorization': document.cookie.slice('auth_session='.length),
+                        'Authorization': token,
                     },
                 });
                 if (response.ok) {
@@ -125,15 +120,12 @@ const GroupDetailPage = () => {
             }
         };
 
-        fetchCurrentID();
-    }, []);
-
-    const toggleAttending = (eventId) => {
-        setAttendingStatus({
-            ...attendingStatus,
-            [eventId]: !attendingStatus[eventId]
-        });
-    };
+        if (token) {
+            fetchCurrentID();
+            fetchGroupData();
+            fetchEvents();
+        }
+    }, [groupId, token, loading]);
 
     const handleInvite = async (e) => {
         e.preventDefault();
@@ -146,7 +138,7 @@ const GroupDetailPage = () => {
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/invitation`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
                 body: formData
             });
@@ -177,19 +169,20 @@ const GroupDetailPage = () => {
             clearTimeout(inviteSearchTimeout.current);
         }
         inviteSearchTimeout.current = setTimeout(() => {
-            searchUsers(query, document.cookie.slice('auth_session='.length), setInviteSearchResults, setShowInviteSearchResults);
+            searchUsers(query, token, setInviteSearchResults, setShowInviteSearchResults);
         }, 300);
     };
 
     if (isLoading) {
         return <div className="loading">Loading group data...</div>;
     }
+
     if (error === 400 || error === 403) {
         return (
             <div>
                 <Navigation />
                 <div className="main-container">
-                    <Sidebar />
+                    <Sidebar ishome={false} />
                     <div className="content-area">
                         <div className="error-container">
                             <h2>Group Not Available</h2>
@@ -208,7 +201,7 @@ const GroupDetailPage = () => {
         <div>
             <Navigation />
             <div className="main-container">
-                <Sidebar />
+                <Sidebar ishome={false} />
 
                 <div className="content-area">{
 

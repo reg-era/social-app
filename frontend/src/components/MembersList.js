@@ -1,8 +1,12 @@
 "use client";
 
+import { useAuth } from '@/context/auth_context';
 import React, { useEffect, useState } from 'react';
 
 const MembersList = ({ groupId, isGroupCreator }) => {
+    const { token, tockenLoading } = useAuth();
+
+
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -10,7 +14,7 @@ const MembersList = ({ groupId, isGroupCreator }) => {
         try {
             const response = await fetch(`http://127.0.0.1:8080/api/group/members?group_id=${groupId}`, {
                 headers: {
-                    'Authorization': document.cookie.slice('auth_session='.length),
+                    'Authorization': token,
                 },
             });
             if (response.ok) {
