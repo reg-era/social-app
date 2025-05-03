@@ -23,6 +23,7 @@ const GroupsPage = () => {
   const [newGroupType, setNewGroupType] = useState('public');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteList, setInviteList] = useState([]);
+  const [errorMessge, setErrorMessage] = useState('');
 
   // Fetch groups on mount
   const fetchGroups = async () => {
@@ -33,8 +34,8 @@ const GroupsPage = () => {
         },
         method: "GET"
       });
-      
-       const data = await response.json();
+
+      const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
       console.log(data)
     } catch (error) {
@@ -89,7 +90,8 @@ const GroupsPage = () => {
         setNewGroupType('public');
         setInviteList([]);
       } else {
-        console.error('Failed to create group');
+        // console.error('Failed to create group');
+        setErrorMessage('Failed to create group try onother name');
       }
     } catch (error) {
       console.error('Error creating group:', error);
@@ -168,7 +170,7 @@ const GroupsPage = () => {
                     <div className="group-footer">
                       <div className="group-meta">
                         <span>Members: {group.member_count || 0}</span>
-                        <span></span><br/>
+                        <span></span><br />
                         <span>Created by: {group.creator_email}</span>
                       </div>
                       {group.status === 'accepted' ? (
@@ -225,6 +227,7 @@ const GroupsPage = () => {
                   required
                 />
               </div>
+              <div className='error-message'>{errorMessge}</div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowCreateModal(false)}>
                   Cancel

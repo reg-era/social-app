@@ -102,7 +102,8 @@
   margin-top: 20px;
 }
 
-.join-btn, .open-btn {
+.join-btn,
+.open-btn {
   background: var(--primary-color);
   color: white;
   border: none;
@@ -113,7 +114,8 @@
   transition: all 0.2s ease;
 }
 
-.join-btn:hover, .open-btn:hover {
+.join-btn:hover,
+.open-btn:hover {
   background: var(--primary-hover);
 }
 
@@ -236,6 +238,13 @@
   padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
