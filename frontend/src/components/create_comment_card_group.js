@@ -165,7 +165,7 @@ const CommentCard = ({ userName, content, image }) => {
                 <div className="comment-author">{userName}</div>
                 <div className="comment-text">{content}</div>
                 {image && (
-                    <div className="comment-image"
+                    <div className="post-image"
                         style={{
                                 backgroundImage: `url(${newImage})`,
                                 backgroundSize: 'cover'
