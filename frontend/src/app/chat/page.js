@@ -9,7 +9,7 @@ import BackHome from '@/components/back_home';
 import { useEffect, useState } from 'react';
 import Conversation from '@/components/conversation';
 import { useAuth } from '@/context/auth_context';
-import { getDownloadImage } from '@/utils/helper';
+import { getDownloadImage, timeAgo } from '@/utils/helper';
 
 const ChatPage = () => {
     const { token, loading } = useAuth();
@@ -57,7 +57,7 @@ console.log("users: ", users);
                                 <div className="chat-user-info">
                                     <div className="chat-user-top">
                                         <div className="chat-user-name">{`${user.firstName} ${user.lastName}`}</div>
-                                        <div className="chat-message-time">{user.time}</div>
+                                        <div className="chat-message-time">{timeAgo(user.time)}</div>
                                     </div>
                                     <div className="chat-user-bottom">
                                         <div className="chat-last-message">{user.lastMessage}</div>

@@ -661,8 +661,10 @@ body {
     height: 30px;
     display: flex;
     align-items: center;
-    justify-content: center;
     border-radius: 50%;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 10px;
 }
 
 .post-options:hover {
@@ -1230,13 +1232,7 @@ body {
     margin: 0;
 }
 
-.post-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-    gap: 10px;
-}
+
 
 .privacy-selector,
 .tag-friends {

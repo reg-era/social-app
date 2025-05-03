@@ -5,6 +5,7 @@ import { useAuth } from '@/context/auth_context';
 import { useWebSocket } from '@/context/ws_context';
 
 import { useState, useEffect, useRef } from 'react';
+import { timeAgo } from '@/utils/helper';
 
 const GroupChat = ({ groupId, userId }) => {
     const { token, loading } = useAuth();
@@ -162,7 +163,7 @@ const GroupChat = ({ groupId, userId }) => {
                             <div className="message-sender">{message.sender === userId ? 'You' : message.email_sender}</div>
                             <div className="message-content">
                                 <div className="message-text">{message.content}</div>
-                                <div className="message-time">{message.create_at}</div>
+                                <div className="message-time">{timeAgo(message.create_at)}</div>
                             </div>
                         </div>
                     ))}
