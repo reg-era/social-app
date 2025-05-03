@@ -21,7 +21,6 @@ body {
     display: flex;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 20px;
     gap: 20px;
 }
 
@@ -320,7 +319,6 @@ body {
 @media (max-width: 768px) {
     .main-container {
         flex-direction: column;
-        padding: 10px;
     }
 
     .group-header-banner {
