@@ -100,14 +100,14 @@ const Notif = () => {
                                 </div>
                             )}
                             {(notif.type === 'follow_request') && (
-                                <>
+                                <div className="follow-action">
                                     <button onClick={() => sendResponse('accept', notif.sender, notif.Id, notif.type)}>
                                         Yes
                                     </button>
                                     <button onClick={() => sendResponse('decline', notif.sender, notif.Id, notif.type)}>
                                         No
                                     </button>
-                                </>
+                                </div>
                             )}
 
 
