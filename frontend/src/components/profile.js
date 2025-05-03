@@ -22,7 +22,6 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
                     'Authorization': token,
                 },
             });
-            console.log("this how i fetch user info", `http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`)
             if (res.ok) {
                 const data = await res.json();
                 data.avatarUrl = await getDownloadImage(data.avatarUrl, token)

@@ -29,7 +29,6 @@ const EventCard = ({ event }) => {
     }, [event.id]);
 
     const handleResponseChange = (newResponse) => {
-        console.log("is passed", eventDetails.is_passed)
         if (eventDetails && !eventDetails.is_passed) {
             let newDetails = { ...eventDetails };
 

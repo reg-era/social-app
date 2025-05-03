@@ -1,12 +1,15 @@
 import { useAuth } from '@/context/auth_context';
-import React, { useState, useEffect } from 'react';
+import { getDownloadImage } from '@/utils/helper';
+import React, { useState, useEffect, use } from 'react';
 
 const CreateCommentCardGroup = ({ postId, groupID }) => {
     const { token, loading } = useAuth();
 
-
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
+    const [file, setFile] = useState('');
+    const [imagePreview, setImagePreview] = useState('');
+    const [fileName, setFileName] = useState('');
 
     const getComments = async () => {
         try {
@@ -16,7 +19,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                 return;
             }
 
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment?post_id=${postId}`, {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment?postID=${postId}&groupID=${groupID}`, {
                 headers: {
                     'Authorization': authToken,
                 },
@@ -37,13 +40,18 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
 
     const handleCreateComment = async (e) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!newComment.trim() && !e.target.fileInputComment.files[0]) return;
 
         try {
             const formData = new FormData();
-            formData.append('group_id', groupID);
-            formData.append('post_id', postId);
+            formData.append('groupID', groupID);
+            formData.append('postID', postId);
             formData.append('comment', newComment);
+
+            if (e.target.fileInputComment.files[0]) {
+                const file = e.target.fileInputComment.files[0];
+                formData.append('image', file);
+            }
 
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment`, {
                 method: 'POST',
@@ -57,11 +65,30 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                 const newCommentData = await response.json();
                 setComments(prevComments => [...prevComments, newCommentData]);
                 setNewComment('');
+                setFile('');
+                setImagePreview('');
+                setFileName('');
+                e.target.fileInputComment.value = '';
             } else {
-                console.error('Failed to create comment');
+                const errorData = await response.json();
+                console.error('Failed to create comment:', errorData);
             }
         } catch (error) {
             console.error('Error creating comment:', error);
+        }
+    };
+
+    const importFile = (e) => {
+        e.preventDefault();
+        document.getElementById('fileInputComment').click();
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFileName(file.name);
+            setFile(URL.createObjectURL(file));
+            setImagePreview(URL.createObjectURL(file));
         }
     };
 
@@ -73,32 +100,75 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
         <div className="post-comments">
             {comments.map((comment) => (
                 <CommentCard
-                    key={comment.CommentId}
-                    userName={`${comment.user.firstName} ${comment.user.lastName}`}
-                    content={comment.commentText}
+                    key={comment.comment_id}
+                    userName={`${comment.author_name}`}
+                    content={comment.content}
+                    image={comment.image_url}
                 />
             ))}
             <form className="add-comment" onSubmit={handleCreateComment}>
                 <div className="comment-avatar"></div>
-                <input 
-                    type="text" 
-                    placeholder="Write a comment..." 
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                />
-                <button type="submit" ></button>
+                <div className="comment-input-container">
+                    <input 
+                        type="text" 
+                        placeholder="Write a comment..." 
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                    />
+                    <input
+                        id="fileInputComment"
+                        type="file"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                    />
+                    <button type="button" className="photo-action" onClick={importFile}>
+                        <span>Photo</span>
+                    </button>
+                    {imagePreview && (
+                        <div className="image-preview">
+                            <img src={imagePreview} alt="Preview" />
+                        </div>
+                    )}
+                    {fileName && (
+                        <div className="file-name-indicator">
+                            <span>Selected file: {fileName}</span>
+                        </div>
+                    )}
+                    <button type="submit">Send</button>
+                </div>
             </form>
         </div>
     );
 };
 
-const CommentCard = ({ userName, content }) => {
+const CommentCard = ({ userName, content, image }) => {
+    const { token, loading } = useAuth();
+
+    useEffect(() => {
+        let fetchImage = async () => {
+            if (image ) {
+                const newImage = await getDownloadImage(image, token);
+                setNewImage(newImage);
+            }
+        };
+        fetchImage();
+    }, [image, token, loading]);
+    const [newImage, setNewImage] = useState('');
+
     return (
         <div className="comment-item">
             <div className="comment-avatar"></div>
             <div className="comment-content">
                 <div className="comment-author">{userName}</div>
                 <div className="comment-text">{content}</div>
+                {image && (
+                    <div className="post-image"
+                        style={{
+                                backgroundImage: `url(${newImage})`,
+                                backgroundSize: 'cover'
+                            }}>
+                    </div>
+                )}
             </div>
         </div>
     );
