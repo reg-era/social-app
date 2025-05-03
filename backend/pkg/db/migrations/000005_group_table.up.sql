@@ -32,10 +32,10 @@ CREATE TABLE group_posts (
 );
 
 CREATE TABLE group_comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    group_id INT NOT NULL,
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     image_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

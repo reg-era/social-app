@@ -25,17 +25,19 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
-
+	fmt.Println("group comments fetched")
 	switch r.Method {
 	case http.MethodPost:
-		groupId, err := strconv.Atoi(r.FormValue("groupID"))
+		groupId, err := strconv.Atoi(r.FormValue("group_id"))
 		if err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"failed": "Invalid group_id"})
 			return
 		}
 
-		postId, err := strconv.Atoi(r.FormValue("postID"))
+		postId, err := strconv.Atoi(r.FormValue("post_id"))
 		if err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"failed": "Invalid post_id"})
 			return
 		}
@@ -44,8 +46,10 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 		file, handler, err := r.FormFile("image")
 		var imagePath string
 		if err == nil {
+			fmt.Println(err)
 			imagePath, err = utils.UploadFileData(file, handler)
 			if err != nil {
+				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{
 					"error": err.Error(),
 				})
@@ -66,6 +70,7 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 			imagePath,
 		)
 		if err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(
 				w,
 				http.StatusInternalServerError,
@@ -82,6 +87,7 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 		var comment GroupComment
 		var first, last string
 		if err := resComment.Scan(&first, &last, &comment.ID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(
 				w,
 				http.StatusInternalServerError,
@@ -101,6 +107,7 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 
 		postId, err := strconv.Atoi(r.URL.Query().Get("postID"))
 		if postId == 0 || err != nil {
+			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid post_id"})
 			return
 		}
@@ -109,6 +116,7 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 		if param := r.URL.Query().Get("page"); param != "" {
 			page, err = strconv.Atoi(param)
 			if err != nil {
+				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid page number"})
 				return
 			}

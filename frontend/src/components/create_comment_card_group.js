@@ -7,6 +7,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
 
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
+    const [file, setFile] = useState(null); // Add this line
 
     const getComments = async () => {
         try {
@@ -44,6 +45,9 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
             formData.append('group_id', groupID);
             formData.append('post_id', postId);
             formData.append('comment', newComment);
+            if (file) {
+                formData.append('image', file); // Add the image file
+            }
 
             const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/comment`, {
                 method: 'POST',
@@ -57,6 +61,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                 const newCommentData = await response.json();
                 setComments(prevComments => [...prevComments, newCommentData]);
                 setNewComment('');
+                setFile(null); // Reset the file input
             } else {
                 console.error('Failed to create comment');
             }
@@ -66,33 +71,43 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
     };
 
     useEffect(() => {
+        if (!loading) return;
         getComments();
-    }, []);
+    }, [loading]);
 
     return (
         <div className="post-comments">
-            {comments.map((comment) => (
+            {comments.map((comment, index) => (
+                console.log("this is the comment content", comment.author_name
+                ),
                 <CommentCard
-                    key={comment.CommentId}
-                    userName={`${comment.user.firstName} ${comment.user.lastName}`}
-                    content={comment.commentText}
+                    key={index}
+                    userName={comment.author_name}
+                    content={comment.content}
                 />
             ))}
             <form className="add-comment" onSubmit={handleCreateComment}>
                 <div className="comment-avatar"></div>
-                <input 
-                    type="text" 
-                    placeholder="Write a comment..." 
+                <input
+                    type="text"
+                    placeholder="Write a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                 />
-                <button type="submit" ></button>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFile(e.target.files[0])}
+                />
+                <button type="submit">Post</button>
             </form>
         </div>
     );
 };
 
 const CommentCard = ({ userName, content }) => {
+    console.log("dfsdf", userName, content);
+
     return (
         <div className="comment-item">
             <div className="comment-avatar"></div>
