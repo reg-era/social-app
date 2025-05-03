@@ -247,6 +247,55 @@
   text-align: center;
 }
 
+.comment-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.image-preview {
+  max-width: 200px;
+  margin-top: 8px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.comment-image {
+  margin-top: 8px;
+  max-width: 200px;
+}
+
+.comment-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.file-name-indicator {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.photo-action {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.photo-action:hover {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
 @media (max-width: 768px) {
   .groups-grid {
     grid-template-columns: 1fr;
