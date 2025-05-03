@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -145,8 +146,8 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 
 		if group_param != "" {
 			isGroupMsg = true
-			query = `INSERT INTO messages ( sender_id, group_id, content) VALUES( ?, ?, ? );`
-			params = []any{userId, msg.Group_id, msg.Content}
+			query = `INSERT INTO messages ( sender_id, group_id, content,created_at) VALUES( ?, ?, ?, ? );`
+			params = []any{userId, msg.Group_id, msg.Content, time.Now().UTC(),}
 
 			allMembers, err := api.ReadAll("SELECT user_id FROM group_members WHERE group_id = ? AND status = 'accepted';", msg.Group_id)
 			if err != nil {
@@ -166,9 +167,9 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				msg.Group_members = append(msg.Group_members, member_id)
 			}
 		} else {
-			query = `INSERT INTO messages ( sender_id, receiver_id, content)
-					VALUES(?, (SELECT id FROM users WHERE email = ?), ?);`
-			params = []any{userId, msg.EmailReceiver, msg.Content}
+			query = `INSERT INTO messages ( sender_id, receiver_id, content, created_at)
+					VALUES(?, (SELECT id FROM users WHERE email = ?), ?, ?);`
+			params = []any{userId, msg.EmailReceiver, msg.Content, time.Now().UTC(),}
 		}
 
 		msgID, err := api.Create(query, params...)

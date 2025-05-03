@@ -8,6 +8,16 @@
   margin-bottom: 20px;
 }
 
+button.pending-btn {
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 15px;
+  font-weight: 600;
+  transition: all .2s;
+}
+
 .groups-icon {
   background: var(--primary-color);
   width: 40px;

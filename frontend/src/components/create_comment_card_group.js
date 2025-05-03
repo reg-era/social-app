@@ -106,37 +106,63 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                     image={comment.image_url}
                 />
             ))}
-            <form className="add-comment" onSubmit={handleCreateComment}>
-                <div className="comment-avatar"></div>
-                <div className="comment-input-container">
-                    <input 
-                        type="text" 
-                        placeholder="Write a comment..." 
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                    />
-                    <input
-                        id="fileInputComment"
-                        type="file"
-                        style={{ display: 'none' }}
-                        onChange={handleFileChange}
-                    />
-                    <button type="button" className="photo-action" onClick={importFile}>
-                        <span>Photo</span>
-                    </button>
-                    {imagePreview && (
-                        <div className="image-preview">
-                            <img src={imagePreview} alt="Preview" />
-                        </div>
-                    )}
-                    {fileName && (
-                        <div className="file-name-indicator">
-                            <span>Selected file: {fileName}</span>
-                        </div>
-                    )}
-                    <button type="submit">Send</button>
-                </div>
-            </form>
+            <div className="add-comment">
+    <form className="messageBox" onSubmit={handleCreateComment}>
+        <div className="fileUploadWrapper">
+            <label htmlFor="file">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 337 337">
+                    <circle strokeWidth="20" stroke="#6c6c6c" fill="none" r="158.5" cy="168.5" cx="168.5"></circle>
+                    <path strokeLinecap="round" strokeWidth="25" stroke="#6c6c6c" d="M167.759 79V259"></path>
+                    <path strokeLinecap="round" strokeWidth="25" stroke="#6c6c6c" d="M79 167.138H259"></path>
+                </svg>
+                <span className="tooltip">Add an image</span>
+            </label>
+            <input
+                id="fileInputComment"
+                type="file"
+                name="fileInputComment"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+            />
+            <button
+                type="button"
+                id="file"
+                name="file"
+                className="photo-action"
+                onClick={importFile}
+            ></button>
+        </div>
+
+        <input
+            required
+            id="messageInput"
+            name="comment"
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Write a comment..."
+        />
+
+        <button type="submit" id="sendButton">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 664 663">
+                <path fill="none" d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"></path>
+                <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="33.67" stroke="#6c6c6c" d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"></path>
+            </svg>
+        </button>
+
+        {imagePreview && (
+            <div className="image-preview">
+                <img src={imagePreview} alt="Preview" />
+            </div>
+        )}
+        {fileName && (
+            <div className="file-name-indicator">
+                <span>Selected file: {fileName}</span>
+            </div>
+        )}
+    </form>
+</div>
+
         </div>
     );
 };
