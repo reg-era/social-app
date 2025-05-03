@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -67,12 +68,14 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 			defer trx.Rollback()
 
 			detai, err := trx.Exec(
-				`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`,
+				`INSERT INTO posts (user_id, content, image_url, visibility, created_at) VALUES (?, ?, ?, ?, ?)`,
 				userId,
 				content,
 				imagePath,
 				visibility,
+				time.Now().UTC(),
 			)
+			
 			if err != nil {
 				utils.RespondWithJSON(
 					w,
@@ -116,8 +119,14 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 		} else {
 			var err error
 			postId, err = a.Create(
-				`INSERT INTO posts (user_id, content, image_url, visibility) VALUES (?, ?, ?, ?)`, userId, content, imagePath, visibility,
+				`INSERT INTO posts (user_id, content, image_url, visibility, created_at) VALUES (?, ?, ?, ?, ?)`,
+				userId,
+				content,
+				imagePath,
+				visibility,
+				time.Now().UTC(),
 			)
+			
 			if err != nil {
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 				return
