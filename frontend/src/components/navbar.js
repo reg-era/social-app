@@ -153,7 +153,6 @@ const ResultCard = ({ token, email, firstName, lastName, nickname, avatar }) => 
         }
         getImage()
     }, [])
-    console.log("this is the user that is being searched", email, firstName, lastName, nickname, avatar)
     return (
         <Link href={`/profile/${email}`} className="search-item">
             <img src={image} alt={firstName} className="search-avatar" />

@@ -69,7 +69,6 @@ const Notif = () => {
                     notification_id: notifID
                 })
             });
-            console.log('Notification consumed successfully id :', notifID);
             setNotif((allNote) => allNote.filter(notif => notif.Id !== notifID));
             getNotification();
         } catch (err) {

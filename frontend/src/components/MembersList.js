@@ -19,7 +19,6 @@ const MembersList = ({ groupId, isGroupCreator }) => {
             });
             if (response.ok) {
                 const data = await response.json();
-                console.log("this is the group members", data.members);
                 setMembers(data.members || []);
             } else {
                 throw new Error('Failed to fetch members');

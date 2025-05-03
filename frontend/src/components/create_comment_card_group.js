@@ -63,7 +63,6 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
 
             if (response.ok) {
                 const newCommentData = await response.json();
-                console.log('New comment data:', newCommentData); // Debug log
                 setComments(prevComments => [...prevComments, newCommentData]);
                 setNewComment('');
                 setFile('');
@@ -100,13 +99,11 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
     return (
         <div className="post-comments">
             {comments.map((comment) => (
-                console.log("this is comment data" , comment),
                 <CommentCard
-                    key={comment.CommentId}
-                    userName={`${comment.author_name} `}
+                    key={comment.comment_id}
+                    userName={`${comment.author_name}`}
                     content={comment.content}
-                    image={comment.image_url} 
-
+                    image={comment.image_url}
                 />
             ))}
             <form className="add-comment" onSubmit={handleCreateComment}>
