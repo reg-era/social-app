@@ -5,10 +5,11 @@ import CreateCommentCardGroup from "./create_comment_card_group.js";
 import { useEffect, useState } from "react";
 import { CommentIcon } from '@/utils/icons.js';
 import { useAuth } from "@/context/auth_context.js";
+import { timeAgo } from "@/utils/helper.js";
 
 const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, imagePostUrl, groupId, isGroupPost }) => {
     const { token, loading } = useAuth();
-    
+
     const [showComments, setShowComments] = useState(false);
     const [newImageURL, setImageURL] = useState('');
     const [profileImage, setProfileImage] = useState('/default_profile.jpg');
@@ -37,7 +38,7 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
         if (imageProfileUrl !== '') {
             getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imageProfileUrl}`, false);
         }
-    }, [imagePostUrl, imageProfileUrl]); // Add dependencies
+    }, [imagePostUrl, loading, imageProfileUrl]); // Add dependencies
 
     return (
         <div className="post-card">
@@ -48,7 +49,7 @@ const PostCard = ({ PostId, authorName, imageProfileUrl, postTime, postText, ima
                 }}></div>
                 <div className="post-info">
                     <div className="post-author-name">{authorName}</div>
-                    <div className="post-time">{postTime}</div>
+                    <div className="post-time">{timeAgo(postTime)}</div>
                 </div>
             </div>
             <div className="post-content">

@@ -8,6 +8,7 @@ import '../style/home.css';
 export default function Layout({ children }) {
     const router = useRouter();
 
+    console.log('ldoododo: ', router.pathname); // why this is always undifned
     if (router.pathname === '/login' || router.pathname === '/signup') {
         return (
             <html>

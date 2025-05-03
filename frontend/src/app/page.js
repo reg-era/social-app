@@ -8,7 +8,6 @@ import Sidebar from '@/components/sidebar.js';
 import CreatePostCard from '@/components/create_post.js';
 import PostCard from '@/components/post.js';
 import { useAuth } from '@/context/auth_context';
-import { getDownloadImage } from '@/utils/helper';
 
 const Home = () => {
   const { token, loading } = useAuth();
@@ -16,28 +15,10 @@ const Home = () => {
   const [posts, setPosts] = useState(new Map());
   const [page, setPage] = useState(0);
   const [isThrottling, setIsThrottling] = useState(false);
-
-  const saveUserInfos = async () => {
-    console.log('saving data');
-    try {
-      const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user`, {
-        headers: {
-          'Authorization': token,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const downloaded = await getDownloadImage(user.avatarUrl, token)
-        data.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
-        localStorage.setItem('user_info', JSON.stringify(data))
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  const [isFinale, setFinale] = useState(false)
 
   const getPosts = async () => {
+    if (isFinale) return;
     const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/post${`?page=${page}`}`, {
       headers: {
         'Authorization': token,
@@ -46,6 +27,9 @@ const Home = () => {
 
     if (res.ok) {
       const data = await res.json();
+      if (data.length < 3) {
+        setFinale(true)
+      }
       setPosts(prevPosts => {
         const newPosts = new Map(prevPosts);
         data.forEach(newPost => {

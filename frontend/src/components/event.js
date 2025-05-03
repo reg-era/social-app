@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from "react";
 import EventResponseButtons from "./event_buttons";
+import { useAuth } from "@/context/auth_context";
 
 const EventCard = ({ event }) => {
+    const { token, loading } = useAuth();
+
     const [eventDetails, setEventDetails] = useState(null);
 
     useEffect(() => {
         const fetchEventDetails = async () => {
             try {
                 const res = await fetch(`http://127.0.0.1:8080/api/event/details?event_id=${event.id}`, {
-                    headers: { "Authorization": document.cookie.slice("auth_session=".length) },
+                    headers: { "Authorization": token },
                 });
 
                 if (res.ok) {
@@ -29,7 +32,7 @@ const EventCard = ({ event }) => {
         console.log("is passed", eventDetails.is_passed)
         if (eventDetails && !eventDetails.is_passed) {
             let newDetails = { ...eventDetails };
-            
+
             if (eventDetails.user_response === "going") {
                 newDetails.going_count--;
             } else if (eventDetails.user_response === "not_going") {

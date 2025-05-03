@@ -8,54 +8,59 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     try {
       const formData = new FormData();
+      const birthdate = e.target.date.value;
+
       formData.append("email", e.target.email.value);
       formData.append("password", e.target.password.value);
       formData.append("firstName", e.target.firstName.value);
       formData.append("lastName", e.target.lastName.value);
-      formData.append("dateOfBirth", e.target.date.value);
+      formData.append("dateOfBirth", birthdate);
       formData.append("avatar", e.target.avatar.files[0]);
       formData.append("nickname", e.target.nickname.value);
       formData.append("aboutMe", e.target.aboutme.value);
 
-      // if (!checkDataValidation(data)) {
-      // setError('Invalid form. Please try again.');
-      // return;
-      // }
+      const err = checkDataValidation(formData);
+      if (err != null) {
+        throw new Error(err);
+      }
 
       const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/signin`, {
         method: 'POST',
         body: formData
-      })
+      });
 
       if (res.ok) {
         window.location.href = '/login';
       } else {
-        throw new Error('faild to singup');
+        const resulErr = await res.json()         
+        throw new Error(resulErr.error);
       }
 
     } catch (error) {
-      setError('Failed to submit the form. Please try again.');
+      setError(error.toString());
     }
   };
+
 
   return (
     <div className="signup-container">
       <h1>Signup</h1>
       <form className="signup-form" onSubmit={handleSubmit}>
         <label htmlFor="firstName">First Name</label>
-        <input type="text" name="firstName" id="firstname" required />
+        <input type="text" name="firstName" id="firstname" /*required*/ />
 
         <label htmlFor="lastName">Last Name</label>
-        <input type="text" name="lastName" id="lastname" required />
-        
+        <input type="text" name="lastName" id="lastname" /*required*/ />
+
         <label htmlFor="email">Email</label>
-        <input type="email" name="email" id="email" required />
+        <input /*type="email"*/ name="email" id="email" /*required*/ />
 
         <label htmlFor="password">Password</label>
-        <input type="password" name="password" id="password" required />
+        <input type="password" name="password" id="password" /*required*/ />
 
         <label htmlFor="nickname">Nickname (Optional)</label>
         <input type="text" name="nickname" id="nickname" />
@@ -77,24 +82,40 @@ export default function Signup() {
   );
 }
 
+function isAtLeast18(birthdateStr) {
+  const birthdate = new Date(birthdateStr);
+  const today = new Date();
+
+  if (isNaN(birthdate.getTime())) {
+    throw new Error("Invalid date format");
+  }
+
+  let age = today.getFullYear() - birthdate.getFullYear();
+
+  const hasHadBirthdayThisYear =
+    today.getMonth() > birthdate.getMonth() ||
+    (today.getMonth() === birthdate.getMonth() && today.getDate() >= birthdate.getDate());
+
+  if (!hasHadBirthdayThisYear) {
+    age--;
+  }
+
+  return age >= 18;
+}
+
 function checkDataValidation(data) {
-  // if (!data.password.length <= 0 || !data.firstName.length <= 0 || !data.lastName.length <= 0 || (data.aboutMe && data.aboutMe.length > 100)) {
-  // return false;
-  // }
-  // 
-  // const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  // if (!emailRegex.test(data.email)) {
-  // return false;
-  // }
-  // 
-  // 
-  // if (isNaN(new Date(data.dateOfBirth))) {
-  // return false;
-  // }
+  if ((data.has('password') && data.get('password').length <= 0) || (data.has('firstName') && data.get('firstName').length <= 0) || (data.has('lastName') && data.get('lastName').length <= 0)) {
+    return 'user information is not match the wiwwiwiwi';
+  }
 
-  // if (data.avatarUrl && !/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(data.avatarUrl)) {
-  // return false;
-  // }
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (data.has('email') && !emailRegex.test(data.get('email'))) {
+    return 'is not a valid email';
+  }
 
-  return true;
+  if (data.has('dateOfBirth') && !isAtLeast18(data.get('dateOfBirth'))) {
+    return 'You must be at least 18 years old to sign up.';
+  }
+
+  return null;
 }

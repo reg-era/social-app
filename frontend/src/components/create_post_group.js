@@ -38,6 +38,9 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     const handlePost = async (e) => {
         e.preventDefault();
         try {
+            if (newPost.trim().length <= 0) {
+                return
+            }
             const form = new FormData();
             form.append("post", newPost);
             form.append("group_id", groupId);

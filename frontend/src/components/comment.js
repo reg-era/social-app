@@ -75,7 +75,7 @@ const CreateCommentCard = ({ postId }) => {
     const handleComment = async (e) => {
         e.preventDefault();
         try {
-            const comment = e.target.comment.value
+            const comment = e.target.comment.value.trim()
             if (comment.length <= 0) {
                 return
             }
@@ -114,14 +114,13 @@ const CreateCommentCard = ({ postId }) => {
 
     useEffect(() => {
         getComments();
-    }, []);
+    }, [loading]);
 
     return (
         <div className="post-comments">
             {!endOfComment && <button onClick={(e) => getComments()}>show more</button>}
             {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url} />))}
             <div className="add-comment">
-                <div className="comment-avatar"></div>
                 <form className="messageBox" onSubmit={handleComment} >
                     <div className="fileUploadWrapper">
                         <label htmlFor="file">

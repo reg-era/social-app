@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/context/auth_context";
 import { useState } from "react";
 
 const CreateEventCard = ({ onCreateEvent, groupId }) => {
@@ -7,6 +8,9 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
     const [description, setDescription] = useState('');
     const [eventDate, setEventDate] = useState('');
     const [error, setError] = useState('');
+
+    const { token, loading } = useAuth();
+
 
     const handleCreateEvent = async (e) => {
         e.preventDefault();
@@ -17,7 +21,7 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": document.cookie.slice("auth_session=".length),
+                    "Authorization": token,
                 },
                 body: JSON.stringify({ title, description, event_date: eventDate, group_id: groupId }),
             });
@@ -40,20 +44,20 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
     return (
         <form className="create-event-card" onSubmit={handleCreateEvent}>
             <div className="create-event-header">
-                <input 
-                    type="text" 
-                    placeholder="Event Title" 
-                    value={title} 
+                <input
+                    type="text"
+                    placeholder="Event Title"
+                    value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
-                <textarea 
-                    placeholder="Event Description" 
-                    value={description} 
+                <textarea
+                    placeholder="Event Description"
+                    value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
-                <input 
-                    type="datetime-local" 
-                    value={eventDate} 
+                <input
+                    type="datetime-local"
+                    value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
                 />
                 {error && <p className="error-message">{error}</p>}

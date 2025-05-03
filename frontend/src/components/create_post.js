@@ -68,7 +68,7 @@ const CreatePostCard = ({ onCreatePost }) => {
     const handlePost = async (e) => {
         e.preventDefault();
         try {
-            const post = e.target.post.value
+            const post = e.target.post.value.trim()
             if (post.length <= 0) {
                 return
             }
