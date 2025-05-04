@@ -10,6 +10,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
     const [file, setFile] = useState('');
     const [imagePreview, setImagePreview] = useState('');
     const [fileName, setFileName] = useState('');
+    const [isThrottling, setIsThrottling] = useState(false);
 
     const getComments = async () => {
         try {
@@ -28,7 +29,7 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
             if (res.ok) {
                 const data = await res.json();
                 if (data) {
-                    setComments(data);
+                    setComments(data.reverse());
                 }
             } else {
                 console.error('Failed to fetch comments');
@@ -40,9 +41,12 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
 
     const handleCreateComment = async (e) => {
         e.preventDefault();
+        if (isThrottling) return;
         if (!newComment.trim() && !e.target.fileInputComment.files[0]) return;
 
         try {
+            setIsThrottling(true);
+
             const formData = new FormData();
             formData.append('groupID', groupID);
             formData.append('postID', postId);
@@ -75,6 +79,11 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
             }
         } catch (error) {
             console.error('Error creating comment:', error);
+        } finally {
+            // Reset throttling after 1 second
+            setTimeout(() => {
+                setIsThrottling(false);
+            }, 1000);
         }
     };
 
@@ -107,7 +116,6 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                 />
             ))}
             <form className="add-comment" onSubmit={handleCreateComment}>
-                <div className="comment-avatar"></div>
                 <div className="comment-input-container">
                     <input 
                         type="text" 
@@ -134,7 +142,9 @@ const CreateCommentCardGroup = ({ postId, groupID }) => {
                             <span>Selected file: {fileName}</span>
                         </div>
                     )}
-                    <button type="submit">Send</button>
+                    <button type="submit" disabled={isThrottling}>
+                        {isThrottling ? 'Sending...' : 'Send'}
+                    </button>
                 </div>
             </form>
         </div>
@@ -157,7 +167,6 @@ const CommentCard = ({ userName, content, image }) => {
 
     return (
         <div className="comment-item">
-            <div className="comment-avatar"></div>
             <div className="comment-content">
                 <div className="comment-author">{userName}</div>
                 <div className="comment-text">{content}</div>
@@ -165,8 +174,9 @@ const CommentCard = ({ userName, content, image }) => {
                     <div className="post-image"
                         style={{
                                 backgroundImage: `url(${newImage})`,
-                                backgroundSize: 'cover'
-                            }}>
+                                backgroundRepeat: 'no-repeat',
+                                backgroundSize: 'content',
+}}>
                     </div>
                 )}
             </div>

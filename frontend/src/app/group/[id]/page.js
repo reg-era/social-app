@@ -10,7 +10,6 @@ import Navigation from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
 import PostCard from '@/components/post';
 import CreatePostCardGroup from '@/components/create_post_group';
-import GroupInvitations from '@/components/group_invitations';
 import CreateEventCard from '@/components/create_event';
 import EventList from '@/components/event_list';
 import MembersList from '@/components/MembersList';
@@ -56,13 +55,10 @@ const GroupDetailPage = () => {
             });
             if (response.status === 400 || response.status === 403) {
                 setError(response.status)
-                throw new Error('Failed to fetch group data');
             }
 
             if (!response.ok) {
                 console.log(response.status);
-                throw new Error('Failed to fetch group data');
-
             }
 
             const data = await response.json();
