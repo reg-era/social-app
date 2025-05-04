@@ -118,7 +118,7 @@ const CreateCommentCard = ({ postId }) => {
 
     return (
         <div className="post-comments">
-            {/* {!endOfComment && <button onClick={(e) => getComments()}>show more</button>} */}
+            {!endOfComment && <button onClick={(e) => getComments()}>show more</button>}
             {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url} />))}
             <div className="add-comment">
                 <form className="messageBox" onSubmit={handleComment} >
@@ -203,7 +203,7 @@ const CommentCard = ({ userName, content, imageUrl }) => {
             }}
             ></div>
             <div className="comment-content">
-                <div className="comment-author">{userName}</div>
+                <div className="comment-author">@{userName}</div>
                 <div className="comment-text">
                     {content}
                     {imageUrl !== '' && (
