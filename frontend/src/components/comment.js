@@ -118,8 +118,8 @@ const CreateCommentCard = ({ postId }) => {
 
     return (
         <div className="post-comments">
-            {/* {!endOfComment && <button onClick={(e) => getComments()}>show more</button>} */}
-            {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.userName} content={comment.content} imageUrl={comment.image_url} />))}
+            {[...comments.values()].map((comment) => (<CommentCard key={comment.comment_id} userName={comment.author_name} content={comment.content} imageUrl={comment.image_url} />))}
+            {!endOfComment && <button className='show-more' onClick={(e) => getComments()}>show more</button>}
             <div className="add-comment">
                 <form className="messageBox" onSubmit={handleComment} >
                     <div className="fileUploadWrapper">
@@ -168,8 +168,6 @@ const CreateCommentCard = ({ postId }) => {
 
 const CommentCard = ({ userName, content, imageUrl }) => {
     const [newImageURL, setImageURL] = useState('');
-    const [profileImage, setProfileImage] = useState('/default_profile.jpg');
-
     const { token, loading } = useAuth();
 
 
@@ -193,27 +191,24 @@ const CommentCard = ({ userName, content, imageUrl }) => {
     useEffect(() => {
         imageUrl != '' && getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imageUrl}`, true);
         // imageProfileUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
-    }, []);
+    }, [loading]);
+
+    console.log();
+    
 
     return (
         <div className="comment-item">
-            <div className="comment-avatar" style={{
-                backgroundImage: `url(${profileImage})`,
-                backgroundSize: 'cover'
-            }}
-            ></div>
             <div className="comment-content">
                 <div className="comment-author">{userName}</div>
-                <div className="comment-text">
-                    {content}
-                    {imageUrl !== '' && (
-                        <div className="post-image"
-                            style={{
-                                backgroundImage: `url(${newImageURL})`,
-                                backgroundSize: 'cover'
-                            }}>
-                        </div>
-                    )}
+                <div className="comment-text">{content}{imageUrl !== '' && (
+                    <div className="post-image"
+                        style={{
+                            backgroundImage: `url(${newImageURL})`,
+                            backgroundSize: 'content',
+                            background:'fixed',
+                        }}>
+                    </div>
+                )}
                 </div>
             </div>
         </div>

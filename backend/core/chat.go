@@ -44,7 +44,6 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(target, "group_") {
 			group_id, err := strconv.Atoi(strings.TrimPrefix(target, "group_"))
 			if err != nil {
-				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Status Bad Request"})
 				return
 			}
@@ -65,7 +64,6 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			for data.Next() {
 				var msg Msg
 				if err := data.Scan(&msg.Sender, &msg.Content, &msg.CreateAt, &msg.EmailSender); err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
 				}
@@ -93,7 +91,6 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			for data.Next() {
 				var msg Msg
 				if err := data.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreateAt, &msg.EmailSender, &msg.EmailReceiver); err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
 				}
@@ -128,13 +125,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 				}
 				contact = append(contact, user)
 			}
-			fmt.Print(contact)
 			utils.RespondWithJSON(w, http.StatusOK, contact)
 		}
 	case http.MethodPost:
 		var msg Msg
 		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
@@ -146,12 +141,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 
 		if group_param != "" {
 			isGroupMsg = true
-			query = `INSERT INTO messages ( sender_id, group_id, content,created_at) VALUES( ?, ?, ?, ? );`
-			params = []any{userId, msg.Group_id, msg.Content, time.Now().UTC(),}
+			query = `INSERT INTO messages ( sender_id, group_id, content, created_at ) VALUES( ?, ?, ?, ? );`
+			params = []any{userId, msg.Group_id, msg.Content, time.Now().UTC()}
 
 			allMembers, err := api.ReadAll("SELECT user_id FROM group_members WHERE group_id = ? AND status = 'accepted';", msg.Group_id)
 			if err != nil {
-				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 				return
 			}
@@ -160,7 +154,6 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 			for allMembers.Next() {
 				var member_id int
 				if err := allMembers.Scan(&member_id); err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})
 					return
 				}
@@ -169,12 +162,11 @@ func (api *API) HandleChat(w http.ResponseWriter, r *http.Request) {
 		} else {
 			query = `INSERT INTO messages ( sender_id, receiver_id, content, created_at)
 					VALUES(?, (SELECT id FROM users WHERE email = ?), ?, ?);`
-			params = []any{userId, msg.EmailReceiver, msg.Content, time.Now().UTC(),}
+			params = []any{userId, msg.EmailReceiver, msg.Content, time.Now().UTC()}
 		}
 
 		msgID, err := api.Create(query, params...)
 		if err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
