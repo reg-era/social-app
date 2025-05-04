@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import EventResponseButtons from "./event_buttons";
 import { useAuth } from "@/context/auth_context";
+import { timeAgo } from "@/utils/helper";
 
 const EventCard = ({ event }) => {
     const { token, loading } = useAuth();
@@ -54,7 +55,7 @@ const EventCard = ({ event }) => {
         <div className="event-card">
             <h3>{event.title}</h3>
             <p>{event.description}</p>
-            <p><strong>Date:</strong> {event.event_date}</p>
+            <p><strong>Date:</strong> {timeAgo(event.event_date)}</p>
             <p><strong>Created By:</strong> {eventDetails ? 
                 `${eventDetails.creator_first_name} ${eventDetails.creator_last_name}` : 
                 'Loading...'}

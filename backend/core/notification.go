@@ -64,14 +64,13 @@ func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
 
 	result, err := tx.Exec(`
 	INSERT INTO notifications (user_id, related_id, type, content, group_id, created_at)
-	VALUES (?, ?, ?, ?,?, ?)`,
+	VALUES (?, ?, ?, ? , ? , ?)`,
 		notif.Receiver, // user_id
 		notif.Sender,   // related_id
 		notif.Type,     // type
 		notif.Content,  // content
-		notif.GroupID)  // group_id
-		time.Now().UTC()
-
+		notif.GroupID,  // group_id
+		time.Now().UTC())
 	if err != nil {
 		fmt.Printf("Error inserting notification: %v\n", err)
 		return fmt.Errorf("operation failed")

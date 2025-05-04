@@ -48,7 +48,10 @@ export const getDownloadImage = async (link, token) => {
 };
 
 export function timeAgo(date, now = new Date()) {
-    const seconds = Math.floor((now - new Date(date)) / 1000);
+    const diffInSeconds = Math.floor((new Date(date) - now) / 1000);
+    const isFuture = diffInSeconds > 0;
+    const seconds = Math.abs(diffInSeconds);
+
     const intervals = [
         { label: "year", seconds: 31536000 },
         { label: "month", seconds: 2592000 },
@@ -61,7 +64,8 @@ export function timeAgo(date, now = new Date()) {
     for (const interval of intervals) {
         const count = Math.floor(seconds / interval.seconds);
         if (count > 0) {
-            return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
+            const label = `${count} ${interval.label}${count !== 1 ? 's' : ''}`;
+            return isFuture ? `in ${label}` : `${label} ago`;
         }
     }
 
