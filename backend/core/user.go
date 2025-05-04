@@ -132,23 +132,39 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 	} else if target == "post" {
 		targetEmail := r.URL.Query().Get("user")
 		var query string
-		var args any
+		var args []any
 		if targetEmail != "" {
-			query = `SELECT users.firstname, users.lastname, users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
-			JOIN users ON posts.user_id = users.id 
-			WHERE users.email = ? 
-			ORDER BY posts.created_at DESC `
-			args = targetEmail
+			query = `
+        SELECT users.firstname, users.lastname, users.email, users.avatarUrl, 
+               posts.id, posts.content, posts.image_url, posts.created_at 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id 
+        WHERE users.email = ? 
+        AND (
+            posts.visibility = 'public'
+            OR (posts.visibility = 'followers' AND EXISTS (
+                SELECT 1 FROM follows 
+                WHERE follower_id = ? AND following_id = users.id
+            ))
+            OR (posts.visibility = 'private' AND EXISTS (
+                SELECT 1 FROM post_viewers 
+                WHERE post_id = posts.id AND user_id = ?
+            ))
+        )
+        ORDER BY posts.created_at DESC`
+			args = []any{targetEmail, userId, userId}
 		} else {
-			query = `SELECT users.firstname, users.lastname, users.email, users.avatarUrl, posts.id, posts.content, posts.image_url, posts.created_at FROM posts 
-			JOIN users ON posts.user_id = users.id 
-			WHERE users.id = ? 
-			ORDER BY posts.created_at DESC `
-			args = userId
+			query = `SELECT users.firstname, users.lastname, users.email, users.avatarUrl, 
+                posts.id, posts.content, posts.image_url, posts.created_at 
+                FROM posts 
+                JOIN users ON posts.user_id = users.id 
+                WHERE users.id = ? 
+                ORDER BY posts.created_at DESC`
+			args = []any{userId}
 		}
 
 		response := []Post{}
-		data, err := a.ReadAll(query, args)
+		data, err := a.ReadAll(query, args...)
 		if err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
