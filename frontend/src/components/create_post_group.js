@@ -80,6 +80,7 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
     }
 
     const handleFileChange = (e) => {
+        e.preventDefault()
         const file = e.target.files[0];
         if (file) {
             setFileName(file.name); // Set the file name
@@ -95,6 +96,9 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                         <div className="post-input">
                             <input name="post" type="text" value={newPost} onChange={(e) => setNewPost(e.target.value)} placeholder="Write something to the group..." />
                         </div>
+
+                        {error && <p className="error-message">{error}</p>}
+                        <button type="submit" className="submit-button">Post</button>
 
                         <input
                             id="fileInputPost"
@@ -133,9 +137,6 @@ const CreatePostCardGroup = ({ onCreatePost, groupId }) => {
                             </div>
                         </div>
                     )}
-
-                    {error && <p className="error-message">{error}</p>}
-                    <button type="submit" className="submit-button">Post</button>
                 </div>
             </div>
             {fileName && (
