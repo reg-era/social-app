@@ -6,10 +6,31 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/navbar';
 import BackHome from '@/components/back_home';
 import { ProfileHeader, ProfilePost, ProfileFollower } from '@/components/profile';
+import { useAuth } from '@/context/auth_context';
+import { useRouter } from 'next/navigation';
 
 const ForeingProfile = ({ params }) => {
     const [userEmail, setUserEmail] = useState('');
     const [activeTab, setActiveTab] = useState('posts');
+
+    const { token, loading } = useAuth();
+    const router = useRouter()
+
+    const checkIsOwner = async () => {
+        try {
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/search?target=${userEmail}&isowner=true`, {
+                headers: {
+                    'Authorization': token,
+                },
+            });
+
+            if (!res.ok) {
+                router.push('/profile')
+            }
+        } catch (error) {
+            console.log('Error: ', error);
+        }
+    }
 
     useEffect(() => {
         if (params) {
@@ -18,7 +39,10 @@ const ForeingProfile = ({ params }) => {
                 setUserEmail(decodedEmail);
             });
         }
-    }, [params]);
+        if (token && userEmail != '') {
+            checkIsOwner()
+        }
+    }, [params, loading]);
 
     if (!userEmail) {
         return <div>Loading...</div>;

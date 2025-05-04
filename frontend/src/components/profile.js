@@ -16,26 +16,22 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
     const [error, setError] = useState(null);
 
     const getUserInfo = useCallback(async () => {
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
-                headers: {
-                    'Authorization': token,
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                data.avatarUrl = await getDownloadImage(data.avatarUrl, token)
-                setUser(data)
-            } else {
-                setActiveTab('none')
-                if (res.status === 404) {
-                    setError(404)
-                } else if (res.status === 401) {
-                    setError(401)
-                }
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user${(!isOwnProfile && userEmail) ? (`?target=${userEmail}`) : ''}`, {
+            headers: {
+                'Authorization': token,
+            },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            data.avatarUrl = await getDownloadImage(data.avatarUrl, token)
+            setUser(data)
+        } else {
+            setActiveTab('none')
+            if (res.status === 404) {
+                setError(404)
+            } else if (res.status === 401) {
+                setError(401)
             }
-        } catch (error) {
-            console.error(error)
         }
     }, [isOwnProfile, userEmail, token, setActiveTab]);
 
@@ -48,47 +44,39 @@ export const ProfileHeader = ({ setActiveTab, userEmail }) => {
 
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
     const togglePrivacy = async () => {
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/change-vis`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': token,
-                },
-            });
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/change-vis`, {
+            method: 'POST',
+            headers: {
+                'Authorization': token,
+            },
+        });
 
-            if (res.ok) {
-                const data = await res.json();
-                setUser({ ...user, isPublic: data.isPublic });
-                setShowPrivacySettings(false);
-            } else {
-                console.error('Failed to fetch userinfos');
-            }
-        } catch (error) {
-            console.error(error);
+        if (res.ok) {
+            const data = await res.json();
+            setUser({ ...user, isPublic: data.isPublic });
+            setShowPrivacySettings(false);
+        } else {
+            console.error('Failed to fetch userinfos');
         }
     };
 
     const toggleFollow = async () => {
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    email: userEmail,
-                }),
-                headers: {
-                    'Authorization': token,
-                },
-            });
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/follow`, {
+            method: 'POST',
+            body: JSON.stringify({
+                email: userEmail,
+            }),
+            headers: {
+                'Authorization': token,
+            },
+        });
 
-            if (res.ok) {
-                const data = await res.json();
-                setUser({ ...user, isFollowing: data.state });
-                setShowPrivacySettings(false);
-            } else {
-                console.error('Failed to fetch userinfos');
-            }
-        } catch (error) {
-            console.error(error);
+        if (res.ok) {
+            const data = await res.json();
+            setUser({ ...user, isFollowing: data.state });
+            setShowPrivacySettings(false);
+        } else {
+            console.error('Failed to fetch userinfos');
         }
     };
 
@@ -210,30 +198,26 @@ export const ProfilePost = ({ userEmail }) => {
 
     useEffect(() => {
         const getUserPosts = async () => {
-            try {
-                const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=post${userEmail ? `&user=${userEmail}` : ''}`, {
-                    headers: {
-                        Authorization: token,
-                    },
-                });
+            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=post${userEmail ? `&user=${userEmail}` : ''}`, {
+                headers: {
+                    Authorization: token,
+                },
+            });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    setPosts(data);
-                } else {
-                    switch (res.status) {
-                        case 401:
-                            setError(401);
-                            break;
-                        case 404:
-                            setError(404);
-                            break;
-                        default:
-                            setError(500);
-                    }
+            if (res.ok) {
+                const data = await res.json();
+                setPosts(data);
+            } else {
+                switch (res.status) {
+                    case 401:
+                        setError(401);
+                        break;
+                    case 404:
+                        setError(404);
+                        break;
+                    default:
+                        setError(500);
                 }
-            } catch (error) {
-                setError(500);
             }
         };
 
@@ -275,28 +259,24 @@ export const ProfileFollower = ({ activeTab, userEmail }) => {
     const [error, setError] = useState(null);
 
     const getUserFollowers = useCallback(async () => {
-        try {
-            const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
-                headers: {
-                    'Authorization': token,
-                },
-            });
+        const res = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/user?target=${activeTab === 'following' ? 'following' : 'follower'}${(!isOwnProfile && userEmail) ? `&user=${userEmail}` : ''}`, {
+            headers: {
+                'Authorization': token,
+            },
+        });
 
-            if (res.ok) {
-                const data = await res.json();
-                data.forEach(async (user) => {
-                    const downloaded = await getDownloadImage(user.avatarUrl, token)
-                    user.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
-                });
-                setUsers(data)
-            } else {
-                switch (res.status) {
-                    case 401: setError(401);
-                    case 404: setError(404);
-                }
+        if (res.ok) {
+            const data = await res.json();
+            data.forEach(async (user) => {
+                const downloaded = await getDownloadImage(user.avatarUrl, token)
+                user.avatarUrl = (downloaded === null) ? '/default_profile.jpg' : downloaded;
+            });
+            setUsers(data)
+        } else {
+            switch (res.status) {
+                case 401: setError(401);
+                case 404: setError(404);
             }
-        } catch (error) {
-            setError(500)
         }
     }, [activeTab, isOwnProfile, token, userEmail]);
 
