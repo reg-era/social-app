@@ -47,8 +47,8 @@ export const getDownloadImage = async (link, token) => {
     }
 };
 
-export function timeAgo(date) {
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+export function timeAgo(date, now = new Date()) {
+    const seconds = Math.floor((now - new Date(date)) / 1000);
     const intervals = [
         { label: "year", seconds: 31536000 },
         { label: "month", seconds: 2592000 },

@@ -53,6 +53,183 @@ body {
     margin: 0.5rem;
 }
 
+/*****comments***/
+
+.messageBox {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    padding: .8rem 1rem;
+    color: var(--text-color);
+    outline: none;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .messageBox:focus-within {
+    border: 1px solid rgb(110, 110, 110);
+  }
+  .fileUploadWrapper {
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  
+  #file {
+    display: none;
+  }
+  .fileUploadWrapper label {
+    cursor: pointer;
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .fileUploadWrapper label svg {
+    height: 18px;
+  }
+  .fileUploadWrapper label svg path {
+    transition: all 0.3s;
+  }
+  .fileUploadWrapper label svg circle {
+    transition: all 0.3s;
+  }
+  .fileUploadWrapper label:hover svg path {
+    stroke: #fff;
+  }
+  .fileUploadWrapper label:hover svg circle {
+    stroke: #fff;
+    fill: #3c3c3c;
+  }
+  .fileUploadWrapper label:hover .tooltip {
+    display: block;
+    opacity: 1;
+  }
+  .tooltip {
+    position: absolute;
+    top: -40px;
+    display: none;
+    opacity: 0;
+    color: white;
+    font-size: 10px;
+    text-wrap: nowrap;
+    background-color: #000;
+    padding: 6px 10px;
+    border: 1px solid #3c3c3c;
+    border-radius: 5px;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.596);
+    transition: all 0.3s;
+  }
+  #messageInput {
+    width: 200px;
+    height: 100%;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    padding-left: 10px;
+    color: white;
+  }
+  #messageInput:focus ~ #sendButton svg path,
+  #messageInput:valid ~ #sendButton svg path {
+    fill: #3c3c3c;
+    stroke: white;
+  }
+  
+  #sendButton {
+    width: fit-content;
+    height: 100%;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  #sendButton svg {
+    height: 18px;
+    transition: all 0.3s;
+  }
+  #sendButton svg path {
+    transition: all 0.3s;
+  }
+  #sendButton:hover svg path {
+    fill: #3c3c3c;
+    stroke: white;
+  }
+  .post-comments {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comment-item {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.comment-content {
+    margin-left: 10px;
+    background: var(--input-bg);
+    padding: 0.7rem;
+    border-radius: 1rem;
+    flex: 1;
+}
+
+.comment-author {
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.comment-like,
+.comment-reply {
+    cursor: pointer;
+    color: #b8b8d4;
+}
+
+.comment-like:hover,
+.comment-reply:hover {
+    color: var(--primary-color);
+}
+
+.comment-time {
+    color: #b8b8d4;
+    margin-left: auto;
+}
+
+.add-comment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.add-comment input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    padding: 0.8rem 1rem;
+    color: var(--text-color);
+    outline: none;
+}
+.comments {
+    margin-right: 1rem;
+}
+
 /* Animation */
 @keyframes fadeIn {
     from {
@@ -173,12 +350,32 @@ body {
     margin: 0.5rem;
 
 }
+.post-options {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 10px;
+}
 
+.post-options:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
 .create-event-card textarea {
     height: 80px;
     resize: none;
 }
-
+.invite-search-item {
+    background-color: #ffffff1a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 10px;
+    transition: all .2s;
+}
 /* Submit Button */
 .submit-button {
     background: var(--primary-color);
@@ -879,7 +1076,10 @@ textarea {
         right: 0;
         border-radius: 0;
     }
-
+    .post-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
     .group-chat-header {
         border-radius: 0;
     }

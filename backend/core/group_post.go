@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -47,7 +48,7 @@ func (a *API) HandleGroupPost(w http.ResponseWriter, r *http.Request) {
 			imagePath = path.Join("api/global/", imagePath) // Ensure correct path
 		}
 
-		postId, err := a.Create(`INSERT INTO group_posts (group_id, user_id, content, image_url, visibility) VALUES (?, ?, ?, ?, ?)`, groupId, userId, content, imagePath, visibility)
+		postId, err := a.Create(`INSERT INTO group_posts (group_id, user_id, content, image_url, visibility,created_at) VALUES (?, ?, ?, ?,?, ?)`, groupId, userId, content, imagePath, visibility,time.Now().UTC())
 		if err != nil {
 			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"faild": "Status Internal Server Error"})

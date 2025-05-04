@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -64,12 +65,13 @@ func (a *API) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 		}
 
 		commentId, err := a.Create(
-			`INSERT INTO group_comments (group_id, post_id, user_id, content, image_url) VALUES (?, ?, ?, ?, ?)`,
+			`INSERT INTO group_comments (group_id, post_id, user_id, content, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 			groupId,
 			postId,
 			userId,
 			content,
 			imagePath,
+			time.Now().UTC(),
 		)
 		if err != nil {
 			fmt.Println(err)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -71,9 +72,9 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	exec_res, err := tx.Exec(
-		`INSERT INTO events (title, description, event_date, group_id, creator_id)
-		VALUES (?, ?, ?, ?, ?)`,
-		event.Title, event.Description, event.EventDate, event.GroupID, userId,
+		`INSERT INTO events (title, description, event_date, group_id, creator_id, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		event.Title, event.Description, event.EventDate, event.GroupID, userId, time.Now().UTC(),
 	)
 	if err != nil {
 		fmt.Println("Failed to create event:", err)
@@ -236,10 +237,10 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = a.Create(`
-		INSERT INTO event_responses (event_id, user_id, response)
-		VALUES (?, ?, ?)
+		INSERT INTO event_responses (event_id, user_id, response,created_at)
+		VALUES (?, ?, ?, ?)
 		ON CONFLICT(event_id, user_id) DO UPDATE SET response = ?`,
-		request.EventID, userID, request.Response, request.Response)
+		request.EventID, userID, request.Response, request.Response, time.Now().UTC(),)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to save response"})

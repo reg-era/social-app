@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -62,13 +63,14 @@ func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
 	fmt.Printf("Attempting to add notification: %+v\n", notif)
 
 	result, err := tx.Exec(`
-	INSERT INTO notifications (user_id, related_id, type, content, group_id)
-	VALUES (?, ?, ?, ?, ?)`,
+	INSERT INTO notifications (user_id, related_id, type, content, group_id, created_at)
+	VALUES (?, ?, ?, ?,?, ?)`,
 		notif.Receiver, // user_id
 		notif.Sender,   // related_id
 		notif.Type,     // type
 		notif.Content,  // content
 		notif.GroupID)  // group_id
+		time.Now().UTC()
 
 	if err != nil {
 		fmt.Printf("Error inserting notification: %v\n", err)

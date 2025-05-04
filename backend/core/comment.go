@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"social/pkg/utils"
 )
@@ -50,11 +51,12 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			imagePath = path.Join("api/global/", imagePath)
 		}
 		commentId, err := a.Create(
-			`INSERT INTO comments (post_id, user_id, content, image_url) VALUES (?, ?, ?, ?)`,
+			`INSERT INTO comments (post_id, user_id, content, image_url, created_at) VALUES (?, ?, ?, ?, ?)`,
 			postId,
 			userId,
 			content,
 			imagePath,
+			time.Now().UTC(),
 		)
 		if err != nil {
 			utils.RespondWithJSON(
