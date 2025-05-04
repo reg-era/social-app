@@ -6,6 +6,7 @@ import { useWebSocket } from '@/context/ws_context';
 import { useState, useEffect, useRef } from 'react';
 import { EMOJI_CATEGORIES } from '@/utils/emoji';
 import { useAuth } from '@/context/auth_context';
+import { timeAgo } from '@/utils/helper';
 
 const Conversation = ({ email, username, imageProfUrl }) => {
     const { token, loading } = useAuth();
@@ -191,7 +192,7 @@ const Conversation = ({ email, username, imageProfUrl }) => {
                         <div ref={index === 0 ? topMessageRef : null} key={index} className={`message ${(email == message.email_receiver) ? "sent" : "received"}`}>
                             <div className="message-content">
                                 <p>{message.content}</p>
-                                <span className="message-time">{message.create_at}</span>
+                                <span className="message-time">{timeAgo(message.create_at)}</span>
                             </div>
                         </div>
                     )
