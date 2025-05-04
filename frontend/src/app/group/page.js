@@ -3,11 +3,10 @@
 import '@/style/home.css';
 import '@/style/group.css';
 
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Add useCallback import
 import Link from 'next/link';
 
 // Import existing components
@@ -28,8 +27,10 @@ const GroupsPage = () => {
   const [inviteList, setInviteList] = useState([]);
   const [errorMessge, setErrorMessage] = useState('');
 
-  // Fetch groups on mount
-  const fetchGroups = async () => {
+  // Wrap fetchGroups with useCallback
+  const fetchGroups = useCallback(async () => {
+    if (!token) return; // Add token check
+
     try {
       const response = await fetch(`http://${process.env.NEXT_PUBLIC_GOSERVER}/api/group/all`, {
         headers: {
@@ -44,11 +45,11 @@ const GroupsPage = () => {
       console.error('Error fetching groups:', error);
       setGroups([]);
     }
-  };
+  }, [token]); // Add token as dependency
 
   useEffect(() => {
     fetchGroups();
-  }, []);
+  }, [fetchGroups]); // This will now work correctly
 
   // Create group handler
   const handleCreateGroup = async (e) => {
