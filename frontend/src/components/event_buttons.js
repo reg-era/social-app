@@ -27,9 +27,7 @@ const EventResponseButtons = ({ eventId, userResponse, onResponseChange }) => {
             if (res.ok) {
                 setResponse(finalResponse); 
                 onResponseChange(finalResponse);
-            } else {
-                throw new Error("Failed to respond to event");
-            }
+            } 
         } catch (error) {
             console.log("Error responding to event:", error);
         }

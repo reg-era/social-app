@@ -27,17 +27,19 @@ type Event struct {
 }
 
 type EventDetails struct {
-	ID            int    `json:"id"`
-	GroupID       int    `json:"group_id"`
-	Title         string `json:"title"`
-	Description   string `json:"description"`
-	CreatorID     int    `json:"creator_id"`
-	EventDate     string `json:"event_date"`
-	CreatedAt     string `json:"created_at"`
-	GoingCount    int    `json:"going_count"`
-	NotGoingCount int    `json:"not_going_count"`
-	UserResponse  string `json:"user_response"`
-	IsPassed      bool   `json:"is_passed"`
+	ID               int    `json:"id"`
+	GroupID          int    `json:"group_id"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	CreatorID        int    `json:"creator_id"`
+	CreatorFirstName string `json:"creator_first_name"`
+	CreatorLastName  string `json:"creator_last_name"`
+	EventDate        string `json:"event_date"`
+	CreatedAt        string `json:"created_at"`
+	IsPassed         bool   `json:"is_passed"`
+	GoingCount       int    `json:"going_count"`
+	NotGoingCount    int    `json:"not_going_count"`
+	UserResponse     string `json:"user_response"`
 }
 
 func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +101,6 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("event and notifications created")
 	utils.RespondWithJSON(w, http.StatusCreated, EventResponse{EventID: int(lastID), Response: "Event created successfully"})
 }
 
@@ -150,12 +151,15 @@ func (a *API) HandleGetEventDetails(w http.ResponseWriter, r *http.Request) {
 
 	var eventDetails EventDetails
 	err = a.Read(`
-		SELECT id, group_id, title, description, creator_id, event_date, created_at,
-		CASE WHEN event_date < datetime('now') THEN 1 ELSE 0 END AS is_passed
-		FROM events
-		WHERE id = ?`, eventID).Scan(
+		SELECT e.id, e.group_id, e.title, e.description, e.creator_id, 
+			   u.firstname, u.lastname, e.event_date, e.created_at,
+			   CASE WHEN e.event_date < datetime('now') THEN 1 ELSE 0 END AS is_passed
+		FROM events e
+		LEFT JOIN users u ON e.creator_id = u.id
+		WHERE e.id = ?`, eventID).Scan(
 		&eventDetails.ID, &eventDetails.GroupID, &eventDetails.Title,
 		&eventDetails.Description, &eventDetails.CreatorID,
+		&eventDetails.CreatorFirstName, &eventDetails.CreatorLastName,
 		&eventDetails.EventDate, &eventDetails.CreatedAt, &eventDetails.IsPassed)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
@@ -193,11 +197,12 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 		EventID  int    `json:"event_id"`
 		Response string `json:"response"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		fmt.Println(err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 		return
 	}
+	fmt.Println(request)
 
 	if request.Response != "going" && request.Response != "not_going" {
 		utils.RespondWithJSON(w, http.StatusBadRequest,
@@ -208,6 +213,7 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	var eventExists bool
 	err := a.Read(`SELECT EXISTS(SELECT 1 FROM events WHERE id = ?)`, request.EventID).Scan(&eventExists)
 	if err != nil || !eventExists {
+		fmt.Println("Event not found:", err)
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
 	}
@@ -215,6 +221,7 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	var groupID int
 	err = a.Read(`SELECT group_id FROM events WHERE id = ?`, request.EventID).Scan(&groupID)
 	if err != nil {
+		fmt.Println("Failed to get group ID:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to get event details"})
 		return
@@ -237,10 +244,10 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = a.Create(`
-		INSERT INTO event_responses (event_id, user_id, response,created_at)
-		VALUES (?, ?, ?, ?)
-		ON CONFLICT(event_id, user_id) DO UPDATE SET response = ?`,
-		request.EventID, userID, request.Response, request.Response, time.Now().UTC(),)
+		INSERT INTO event_responses (event_id, user_id, response, created_at)
+		VALUES (?, ?, ?, datetime('now'))
+		ON CONFLICT(event_id, user_id) DO UPDATE SET response = ?, created_at = datetime('now')`,
+		request.EventID, userID, request.Response, request.Response)
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to save response"})

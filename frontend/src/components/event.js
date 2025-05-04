@@ -19,6 +19,7 @@ const EventCard = ({ event }) => {
                 if (res.ok) {
                     const data = await res.json();
                     setEventDetails(data);
+                    console.log("Event details:", data);
                 }
             } catch (error) {
                 console.log("Error fetching event details:", error);
@@ -26,7 +27,7 @@ const EventCard = ({ event }) => {
         };
 
         fetchEventDetails();
-    }, [event.id]);
+    }, [event.id, loading, token]);
 
     const handleResponseChange = (newResponse) => {
         if (eventDetails && !eventDetails.is_passed) {
@@ -54,7 +55,10 @@ const EventCard = ({ event }) => {
             <h3>{event.title}</h3>
             <p>{event.description}</p>
             <p><strong>Date:</strong> {event.event_date}</p>
-            <p><strong>Created By:</strong> {event.creator_id}</p>
+            <p><strong>Created By:</strong> {eventDetails ? 
+                `${eventDetails.creator_first_name} ${eventDetails.creator_last_name}` : 
+                'Loading...'}
+            </p>
             {eventDetails && (
                 <>
                     {eventDetails.is_passed ? (
