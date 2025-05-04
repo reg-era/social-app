@@ -141,7 +141,6 @@ func (a *API) HandlePost(w http.ResponseWriter, r *http.Request) {
 
 		var post Post
 		if err := resPost.Scan(&post.User.FirstName, &post.User.LastName, &post.User.Email, &post.User.AvatarUrl, &post.ID, &post.Content, &post.ImageURL, &post.CreatedAt); err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(
 				w,
 				http.StatusInternalServerError,

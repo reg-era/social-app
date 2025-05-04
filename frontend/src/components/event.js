@@ -20,7 +20,6 @@ const EventCard = ({ event }) => {
                 if (res.ok) {
                     const data = await res.json();
                     setEventDetails(data);
-                    console.log("Event details:", data);
                 }
             } catch (error) {
                 console.log("Error fetching event details:", error);

@@ -2,8 +2,8 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+
 	"social/pkg/utils"
 )
 
@@ -27,7 +27,6 @@ func (a *API) Consumed(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	fmt.Printf("Processing consumed notification ID: %d for user ID: %d\n", consumed.NotificationID, userID)
 
 	var notifType string
 	if err := a.Read(`SELECT type FROM notifications WHERE id = ? AND user_id = ?`,

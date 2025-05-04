@@ -11,8 +11,6 @@ export const handleLogout = async (e) => {
             },
         });
         if (res.ok) {
-            console.log("logout");
-
             document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             connected && websocket.close()
             router.push('/login')
@@ -28,7 +26,6 @@ export const getDownloadImage = async (link, token) => {
             return '/default_profile.jpg'
         }
         const newLink = `http://${process.env.NEXT_PUBLIC_GOSERVER}/${link}`
-        console.log('downloading: ', newLink);
         const res = await fetch(newLink, {
             headers: {
                 'Authorization': token,

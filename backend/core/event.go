@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,7 +50,6 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		GroupID     string `json:"group_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		fmt.Println(err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 		return
 	}
@@ -79,7 +77,6 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		event.Title, event.Description, event.EventDate, event.GroupID, userId, time.Now().UTC(),
 	)
 	if err != nil {
-		fmt.Println("Failed to create event:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create event"})
 		return
 	}
@@ -91,7 +88,6 @@ func (a *API) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.sendEventNotifications(event.GroupID, event.Title, userId, tx); err != nil {
-		fmt.Println("Warning: Failed to send notifications:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to create notifications"})
 		return
 	}
@@ -198,11 +194,9 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 		Response string `json:"response"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		fmt.Println(err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 		return
 	}
-	fmt.Println(request)
 
 	if request.Response != "going" && request.Response != "not_going" {
 		utils.RespondWithJSON(w, http.StatusBadRequest,
@@ -213,7 +207,6 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	var eventExists bool
 	err := a.Read(`SELECT EXISTS(SELECT 1 FROM events WHERE id = ?)`, request.EventID).Scan(&eventExists)
 	if err != nil || !eventExists {
-		fmt.Println("Event not found:", err)
 		utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Event not found"})
 		return
 	}
@@ -221,7 +214,6 @@ func (a *API) HandleRespondToEvent(w http.ResponseWriter, r *http.Request) {
 	var groupID int
 	err = a.Read(`SELECT group_id FROM events WHERE id = ?`, request.EventID).Scan(&groupID)
 	if err != nil {
-		fmt.Println("Failed to get group ID:", err)
 		utils.RespondWithJSON(w, http.StatusInternalServerError,
 			map[string]string{"error": "Failed to get event details"})
 		return

@@ -192,8 +192,6 @@ const CommentCard = ({ userName, content, imageUrl }) => {
         imageUrl != '' && getDownloadImage(`http://${process.env.NEXT_PUBLIC_GOSERVER}/${imageUrl}`, true);
         // imageProfileUrl != '' && getDownloadImage(`http://127.0.0.1:8080/${imageProfileUrl}`, false);
     }, [loading]);
-
-    console.log();
     
 
     return (

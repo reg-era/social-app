@@ -38,25 +38,20 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			WHERE follower_id = ? AND following_id = ? )`,
 			userId, targetUserID).Scan(&exists)
 		if err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}
 
-		fmt.Println(exists, userId, targetUserID)
 		if exists {
-			fmt.Println("fired delete 1", exists)
 			_, err = tx.Exec(`DELETE FROM follows
 			WHERE following_id = ? AND follower_id = ?`, targetUserID, userId) // Corrected parameter order
 			if err != nil {
-				fmt.Println("Error deleting follow relationship:", err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unfollow error"})
 				return
 			}
 
 			// Commit the transaction after deletion
 			if err = tx.Commit(); err != nil {
-				fmt.Println("Failed to commit transaction after deletion:", err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not complete unfollow action"})
 				return
 			}
@@ -79,25 +74,21 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				targetUserID,
 			)
 			if err != nil {
-				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 				return
 			}
 
 			// Commit the transaction
 			if err = tx.Commit(); err != nil {
-				fmt.Println("Failed to commit transaction:", err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not complete follow action"})
 				return
 			}
 
-			fmt.Println("Followed user successfully")
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"state": "followed"})
 		} else {
 			var requested int
 			err := tx.QueryRow(`SELECT COUNT(*) FROM follow_requests WHERE follower_id = ? AND following_id = ?`, userId, targetUserID).Scan(&requested)
 			if err != nil {
-				fmt.Println(err)
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not check follow request"})
 				return
 			}
@@ -105,7 +96,6 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 			if requested > 0 {
 				_, err = tx.Exec(`DELETE FROM follow_requests WHERE follower_id = ? AND following_id = ?`, userId, targetUserID)
 				if err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not remove follow request"})
 					return
 				}
@@ -116,14 +106,12 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				result, err := tx.Exec(`INSERT INTO follow_requests (follower_id, following_id)
 				VALUES( ? , ? )`, userId, targetUserID)
 				if err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not follow user"})
 					return
 				}
 
 				requestId, err := result.LastInsertId()
 				if err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not get request ID"})
 					return
 				}
@@ -132,7 +120,6 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 				var actionerEmail string
 				if err := tx.QueryRow(`SELECT following_id, u.email FROM follow_requests f
 				JOIN users u ON f.follower_id = u.id WHERE f.id = ?`, requestId).Scan(&receiver, &actionerEmail); err != nil {
-					fmt.Println(err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not follow user"})
 					return
 				}
@@ -145,14 +132,12 @@ func (a *API) HandleFollow(w http.ResponseWriter, r *http.Request) {
 					Content:  fmt.Sprintf("%s Want to follow you", actionerEmail),
 				}, tx)
 				if err != nil {
-					fmt.Println("Failed to add notification:", err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not create notification"})
 					return
 				}
 
 				// Commit the transaction
 				if err = tx.Commit(); err != nil {
-					fmt.Println("Failed to commit transaction:", err)
 					utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Could not complete follow request"})
 					return
 				}

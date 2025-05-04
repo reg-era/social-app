@@ -1,10 +1,10 @@
 package core
 
 import (
-	"fmt"
 	"net/http"
-	"social/pkg/utils"
 	"strconv"
+
+	"social/pkg/utils"
 )
 
 func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +15,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 		groupIDStr := r.URL.Query().Get("group_id")
 		groupID, err := strconv.Atoi(groupIDStr)
 		if err != nil || groupID <= 0 {
-			fmt.Println(err)
 
 			utils.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid group ID"})
 			return
@@ -30,7 +29,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-
 		var group Group
 
 		err = a.Read(`
@@ -38,9 +36,7 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 			FROM groups g
 			JOIN users u ON g.creator_id = u.id
 			WHERE g.id = ?`, groupID).Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID, &group.CreatedAt, &group.CreatorName)
-
 		if err != nil {
-			fmt.Println(err)
 
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch group detail"})
 			return
@@ -51,7 +47,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 			JOIN users u ON gm.user_id = u.id
 			WHERE gm.group_id = ?`, groupID)
 		if err != nil {
-			fmt.Println(err)
 
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch group members"})
 			return
@@ -62,7 +57,6 @@ func (a *API) HandleGroupDetails(w http.ResponseWriter, r *http.Request) {
 		for membersData.Next() {
 			var member Member
 			if err := membersData.Scan(&member.UserID, &member.UserName, &member.Status); err != nil {
-				fmt.Println(err)
 
 				utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to scan member data"})
 				return
@@ -98,7 +92,6 @@ func (a *API) HandleGroupInvitations(w http.ResponseWriter, r *http.Request) {
         JOIN groups g ON gm.group_id = g.id
         WHERE gm.user_id = ? AND gm.status = 'pending' AND gm.invitation_type = 'invite'
     `, userId)
-
 	if err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch invitations"})
 		return

@@ -129,7 +129,6 @@ const GroupsPage = () => {
 
       if (response.ok) {
         fetchGroups()
-        console.log('Join request sent successfully');
       } else {
         console.error('Failed to send join request');
       }

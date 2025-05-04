@@ -57,9 +57,7 @@ const GroupDetailPage = () => {
                 setError(response.status)
             }
 
-            if (!response.ok) {
-                console.log(response.status);
-            }
+         
 
             const data = await response.json();
             setGroupData(data);
@@ -148,7 +146,6 @@ const GroupDetailPage = () => {
             setInviteEmail('');
         } catch (error) {
             alert(error)
-            console.log('Error sending invite:', error);
         }
     };
 

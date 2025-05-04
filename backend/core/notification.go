@@ -60,9 +60,7 @@ func (api *API) HandleNotif(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
-	fmt.Printf("Attempting to add notification: %+v\n", notif)
-
-	result, err := tx.Exec(`
+	_, err := tx.Exec(`
 	INSERT INTO notifications (user_id, related_id, type, content, group_id, created_at)
 	VALUES (?, ?, ?, ? , ? , ?)`,
 		notif.Receiver, // user_id
@@ -72,12 +70,9 @@ func (api *API) AddNotificationTx(notif *Note, tx *sql.Tx) error {
 		notif.GroupID,  // group_id
 		time.Now().UTC())
 	if err != nil {
-		fmt.Printf("Error inserting notification: %v\n", err)
 		return fmt.Errorf("operation failed")
 	}
 
-	id, _ := result.LastInsertId()
-	fmt.Printf("Successfully inserted notification with ID: %d\n", id)
 	return nil
 }
 

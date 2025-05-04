@@ -203,7 +203,6 @@ func (a *API) HandleUser(w http.ResponseWriter, r *http.Request) {
 				utils.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "User Status Not Found"})
 				return
 			}
-			fmt.Println(err)
 			utils.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "status internal server error"})
 			return
 		}

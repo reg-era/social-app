@@ -19,16 +19,13 @@ export const WebSocketProvider = ({ children }) => {
         setWebSocket(ws);
 
         ws.onopen = () => {
-            console.log('WebSocket Connected');
             setConnected(true);
         };
 
         ws.onmessage = (event) => {
-            console.log('Message received:', JSON.parse(event.data));
         };
 
         ws.onclose = (event) => {
-            console.log('WebSocket Closed', event.code);
             setConnected(false);
         };
 

@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"net/http"
 	"path"
 	"strconv"
@@ -108,7 +107,6 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 		ORDER BY c.created_at DESC
 		LIMIT 3 OFFSET (3 * ?) `, postId, page)
 		if err != nil {
-			fmt.Println(err)
 			utils.RespondWithJSON(
 				w,
 				http.StatusInternalServerError,
@@ -123,7 +121,6 @@ func (a *API) HandleComment(w http.ResponseWriter, r *http.Request) {
 			var comment Comment
 			var first, last string
 			if err := dataRows.Scan(&first, &last, &comment.ID, &comment.PostID, &comment.Content, &comment.ImageUrl, &comment.CreatedAt); err != nil {
-				fmt.Println(err)
 				utils.RespondWithJSON(
 					w,
 					http.StatusInternalServerError,

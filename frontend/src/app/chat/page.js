@@ -37,7 +37,6 @@ const ChatPage = () => {
         }
     }
 
-console.log("users: ", users);
     useEffect(() => {
         !loading && getConversations()
     }, [loading])
@@ -57,7 +56,6 @@ console.log("users: ", users);
                                 <div className="chat-user-info">
                                     <div className="chat-user-top">
                                         <div className="chat-user-name">{`${user.firstName} ${user.lastName}`}</div>
-                                        <div className="chat-message-time">{timeAgo(user.time)}</div>
                                     </div>
                                     <div className="chat-user-bottom">
                                         <div className="chat-last-message">{user.lastMessage}</div>

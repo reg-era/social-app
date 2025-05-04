@@ -98,7 +98,6 @@ const CreatePostCard = ({ onCreatePost }) => {
                 setFile('')
             }
         } catch (error) {
-            console.log(error);
             setError('Failed to submit the Post. Please try again.');
         }
     }

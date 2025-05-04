@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
                 },
             });
             if (res.ok) {
-                console.log('session token is set: ', token_cookie)
                 setToken(token_cookie);
             }
         } catch (error) {

@@ -36,7 +36,6 @@ const CreateEventCard = ({ onCreateEvent, groupId }) => {
                 throw new Error("Failed to create event");
             }
         } catch (error) {
-            console.log(error);
             setError("Failed to create event. Try again.");
         }
     };
