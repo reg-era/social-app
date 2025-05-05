@@ -18,6 +18,10 @@ services:
       - app-network
     depends_on:
       - backend
+    environment:
+      # Pass the backend service name as the host for NEXT_PUBLIC_GOSERVER
+      NEXT_PUBLIC_GOSERVER: "backend:8080"
+      GOSERVER: "backend:8080"
 
 networks:
   app-network:

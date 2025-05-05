@@ -3,6 +3,8 @@ WORKDIR /app
 
 COPY . .
 
+ENV NEXT_PUBLIC_GOSERVER=0.0.0.0:8080
+
 RUN npm install
 
 RUN npm run build
@@ -14,6 +16,10 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
+
+# Add the environment variable to the runtime container
+
+ENV NEXT_PUBLIC_GOSERVER=0.0.0.0:8080
 
 EXPOSE 3000
 
